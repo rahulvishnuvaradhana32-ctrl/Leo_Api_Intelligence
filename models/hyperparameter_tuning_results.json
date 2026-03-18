@@ -1,0 +1,142 @@
+{
+  "total_trials": 8,
+  "best_config": {
+    "trial": 1,
+    "hidden_size": 32,
+    "num_layers": 1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "best_val_loss": 0.6845905715976951,
+    "avg_auc": 0.5000178921159381,
+    "per_horizon": {
+      "horizon_1": 0.4998820754716981,
+      "horizon_5": 0.4999596373589791,
+      "horizon_15": 0.5002119635171371
+    },
+    "training_time_sec": 47.030633211135864
+  },
+  "all_results": [
+    {
+      "trial": 1,
+      "hidden_size": 32,
+      "num_layers": 1,
+      "batch_size": 32,
+      "lr": 0.001,
+      "best_val_loss": 0.6845905715976951,
+      "avg_auc": 0.5000178921159381,
+      "per_horizon": {
+        "horizon_1": 0.4998820754716981,
+        "horizon_5": 0.4999596373589791,
+        "horizon_15": 0.5002119635171371
+      },
+      "training_time_sec": 47.030633211135864
+    },
+    {
+      "trial": 2,
+      "hidden_size": 32,
+      "num_layers": 1,
+      "batch_size": 32,
+      "lr": 0.005,
+      "best_val_loss": 0.6849111696041977,
+      "avg_auc": 0.5,
+      "per_horizon": {
+        "horizon_1": 0.5,
+        "horizon_5": 0.5,
+        "horizon_15": 0.5
+      },
+      "training_time_sec": 40.532490730285645
+    },
+    {
+      "trial": 3,
+      "hidden_size": 32,
+      "num_layers": 2,
+      "batch_size": 32,
+      "lr": 0.001,
+      "best_val_loss": 0.6847018397439009,
+      "avg_auc": 0.5,
+      "per_horizon": {
+        "horizon_1": 0.5,
+        "horizon_5": 0.5,
+        "horizon_15": 0.5
+      },
+      "training_time_sec": 109.87875413894653
+    },
+    {
+      "trial": 4,
+      "hidden_size": 32,
+      "num_layers": 2,
+      "batch_size": 32,
+      "lr": 0.005,
+      "best_val_loss": 0.6846168092064766,
+      "avg_auc": 0.5000059318294606,
+      "per_horizon": {
+        "horizon_1": 0.5000177954883821,
+        "horizon_5": 0.5,
+        "horizon_15": 0.5
+      },
+      "training_time_sec": 56.008026361465454
+    },
+    {
+      "trial": 5,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "batch_size": 32,
+      "lr": 0.001,
+      "best_val_loss": 0.6848094659065133,
+      "avg_auc": 0.4999942490168125,
+      "per_horizon": {
+        "horizon_1": 0.5,
+        "horizon_5": 0.5,
+        "horizon_15": 0.4999827470504374
+      },
+      "training_time_sec": 71.03953051567078
+    },
+    {
+      "trial": 6,
+      "hidden_size": 64,
+      "num_layers": 1,
+      "batch_size": 32,
+      "lr": 0.005,
+      "best_val_loss": 0.6854632721780968,
+      "avg_auc": 0.5,
+      "per_horizon": {
+        "horizon_1": 0.5,
+        "horizon_5": 0.5,
+        "horizon_15": 0.5
+      },
+      "training_time_sec": 87.06640601158142
+    },
+    {
+      "trial": 7,
+      "hidden_size": 64,
+      "num_layers": 2,
+      "batch_size": 32,
+      "lr": 0.001,
+      "best_val_loss": 0.6845549558525654,
+      "avg_auc": 0.499974309682059,
+      "per_horizon": {
+        "horizon_1": 0.49998217735675277,
+        "horizon_5": 0.5001945816407728,
+        "horizon_15": 0.4997461700486517
+      },
+      "training_time_sec": 91.79603123664856
+    },
+    {
+      "trial": 8,
+      "hidden_size": 64,
+      "num_layers": 2,
+      "batch_size": 32,
+      "lr": 0.005,
+      "best_val_loss": 0.6845832179858486,
+      "avg_auc": 0.49999386797176526,
+      "per_horizon": {
+        "horizon_1": 0.5,
+        "horizon_5": 0.4999816039152958,
+        "horizon_15": 0.5
+      },
+      "training_time_sec": 85.53320860862732
+    }
+  ],
+  "feature_count": 33,
+  "dataset_size": 99956
+}

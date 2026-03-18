@@ -1,0 +1,58 @@
+{
+  "demo_metadata": {
+    "n_apis": 5,
+    "n_predictions": 2280,
+    "sequence_length": 30,
+    "horizons": [
+      1,
+      5,
+      15
+    ],
+    "risk_thresholds": {
+      "low": 0.35,
+      "high": 0.65
+    }
+  },
+  "per_api_summary": [
+    {
+      "api": "Stock Price API",
+      "avg_failure_prob": 0.3753,
+      "risk_level": "MEDIUM",
+      "auc_horizon_1": 0.7464
+    },
+    {
+      "api": "Forex API",
+      "avg_failure_prob": 0.3442,
+      "risk_level": "LOW",
+      "auc_horizon_1": 0.7415
+    },
+    {
+      "api": "Crypto API",
+      "avg_failure_prob": 0.3665,
+      "risk_level": "MEDIUM",
+      "auc_horizon_1": 0.6884
+    },
+    {
+      "api": "Market Data API",
+      "avg_failure_prob": 0.3866,
+      "risk_level": "MEDIUM",
+      "auc_horizon_1": 0.7691
+    },
+    {
+      "api": "Transaction API",
+      "avg_failure_prob": 0.3666,
+      "risk_level": "MEDIUM",
+      "auc_horizon_1": 0.7254
+    }
+  ],
+  "risk_distribution": {
+    "HIGH": 307,
+    "MEDIUM": 891,
+    "LOW": 1082
+  },
+  "overall_auc": {
+    "horizon_1": 0.7362,
+    "horizon_5": 0.6428,
+    "horizon_15": 0.4873
+  }
+}

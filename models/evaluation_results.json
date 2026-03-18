@@ -1,0 +1,26 @@
+{
+  "baselines": {
+    "LogisticRegression": {
+      "auc": 0.7215258085911
+    },
+    "RandomForest": {
+      "auc": 0.7063525830857348
+    },
+    "XGBoost": {
+      "auc": 0.7231118073566779
+    }
+  },
+  "lstm": {
+    "per_horizon": {
+      "horizon_1": 0.6368029395418947,
+      "horizon_5": 0.6427134294957657,
+      "horizon_15": 0.6370606432706654
+    },
+    "avg_auc": 0.6388590041027753
+  },
+  "comparison": {
+    "best_baseline_auc": 0.7231118073566779,
+    "lstm_avg_auc": 0.6388590041027753,
+    "improvement_percent": -11.651421315036634
+  }
+}

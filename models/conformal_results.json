@@ -1,0 +1,32 @@
+{
+  "target_coverage": 90.0,
+  "alpha": 0.1,
+  "cal_sequences": 50000,
+  "test_sequences": 50000,
+  "n_features": 30,
+  "per_horizon": {
+    "h1": {
+      "q_hat": 0.501137,
+      "coverage": 0.8981,
+      "avg_width": 0.9995,
+      "status": "FAIL"
+    },
+    "h5": {
+      "q_hat": 0.503186,
+      "coverage": 0.8986,
+      "avg_width": 0.9989,
+      "status": "FAIL"
+    },
+    "h15": {
+      "q_hat": 0.503306,
+      "coverage": 0.9002,
+      "avg_width": 0.9989,
+      "status": "PASS"
+    }
+  },
+  "summary": {
+    "avg_coverage": 0.899,
+    "avg_width": 0.9991,
+    "all_horizons_pass": false
+  }
+}

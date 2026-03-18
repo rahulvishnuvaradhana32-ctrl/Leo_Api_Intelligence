@@ -1,0 +1,157 @@
+{
+  "baseline_auc": 0.626063,
+  "data_window": 300000,
+  "epochs": 5,
+  "max_sequences": 50000,
+  "experiments": [
+    {
+      "name": "Baseline",
+      "features_removed": [],
+      "n_features": 39,
+      "auc": 0.626063,
+      "auc_drop": 0.0,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.626989,
+        "h5": 0.628073,
+        "h15": 0.623125
+      },
+      "train_time_sec": 385.3
+    },
+    {
+      "name": "No Event Signals",
+      "features_removed": [
+        "error_rate_boost",
+        "rt_multiplier"
+      ],
+      "n_features": 37,
+      "auc": 0.623182,
+      "auc_drop": 0.002881,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.623957,
+        "h5": 0.626095,
+        "h15": 0.619494
+      },
+      "train_time_sec": 328.2
+    },
+    {
+      "name": "No Rolling Stats",
+      "features_removed": [
+        "response_time_rolling_mean",
+        "response_time_rolling_std",
+        "response_time_variance",
+        "error_rate_rolling",
+        "error_volatility"
+      ],
+      "n_features": 34,
+      "auc": 0.624957,
+      "auc_drop": 0.001105,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.624655,
+        "h5": 0.627496,
+        "h15": 0.622722
+      },
+      "train_time_sec": 327.8
+    },
+    {
+      "name": "No Lag Features",
+      "features_removed": [
+        "response_time_lag_1",
+        "response_time_lag_5",
+        "error_rate_lag_1"
+      ],
+      "n_features": 36,
+      "auc": 0.626541,
+      "auc_drop": -0.000479,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.627241,
+        "h5": 0.628818,
+        "h15": 0.623565
+      },
+      "train_time_sec": 320.3
+    },
+    {
+      "name": "No EMA Features",
+      "features_removed": [
+        "response_time_ema_10",
+        "response_time_ema_30",
+        "error_rate_ema_10"
+      ],
+      "n_features": 36,
+      "auc": 0.626302,
+      "auc_drop": -0.000239,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.626365,
+        "h5": 0.628771,
+        "h15": 0.623769
+      },
+      "train_time_sec": 796.5
+    },
+    {
+      "name": "No Cyclical Enc.",
+      "features_removed": [
+        "hour_sin",
+        "hour_cos",
+        "dow_sin",
+        "dow_cos"
+      ],
+      "n_features": 35,
+      "auc": 0.62611,
+      "auc_drop": -4.7e-05,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.627029,
+        "h5": 0.628193,
+        "h15": 0.623108
+      },
+      "train_time_sec": 257.1
+    },
+    {
+      "name": "No API Flags",
+      "features_removed": [
+        "high_frequency_api",
+        "api_complexity"
+      ],
+      "n_features": 37,
+      "auc": 0.6241,
+      "auc_drop": 0.001962,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.625082,
+        "h5": 0.626279,
+        "h15": 0.620941
+      },
+      "train_time_sec": 222.3
+    },
+    {
+      "name": "No Precursor Signals",
+      "features_removed": [
+        "latency_diff_1",
+        "latency_diff_5",
+        "error_rate_diff_1",
+        "error_rate_diff_5",
+        "latency_spike",
+        "error_burst",
+        "instability_index",
+        "latency_slope",
+        "error_slope",
+        "traffic_change",
+        "burst_ratio"
+      ],
+      "n_features": 28,
+      "auc": 0.626196,
+      "auc_drop": -0.000133,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.626674,
+        "h5": 0.628212,
+        "h15": 0.623701
+      },
+      "train_time_sec": 212.8
+    }
+  ]
+}
