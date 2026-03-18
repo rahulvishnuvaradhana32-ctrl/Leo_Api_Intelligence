@@ -1,0 +1,18 @@
+{
+  "sqltools.connections": [
+    {
+      "name": "LEO API Telemetry",
+      "group": "LEO API",
+      "driver": "SQLite",
+      "database": "${workspaceFolder}/data/banking_api_telemetry.db",
+      "previewLimit": 100,
+      "dialectOptions": {}
+    }
+  ],
+  "sqltools.autoOpenSessionFiles": false,
+  "sqltools.format": {
+    "language": "sql",
+    "indentSize": 2
+  },
+  "sqltools.useNodeRuntime": true
+}
