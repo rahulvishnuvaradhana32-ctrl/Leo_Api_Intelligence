@@ -1,0 +1,52 @@
+{
+  "n_transactions": 1000,
+  "seed": 42,
+  "proactive": {
+    "label": "Proactive (LSTM)",
+    "n_transactions": 1000,
+    "successes": 922,
+    "failures": 78,
+    "failure_rate": 0.078,
+    "switches": 0,
+    "avg_latency_sec": 0.28,
+    "cost_per_1000": 3900.0,
+    "annual_cost_usd": 1014000.0,
+    "action_distribution": {
+      "retry": 1000
+    }
+  },
+  "reactive": {
+    "label": "Reactive (baseline)",
+    "n_transactions": 1000,
+    "successes": 863,
+    "failures": 137,
+    "failure_rate": 0.137,
+    "switches": 132,
+    "avg_latency_sec": 0.1636,
+    "cost_per_1000": 6850.0,
+    "annual_cost_usd": 1781000.0,
+    "action_distribution": {
+      "normal": 868,
+      "switch": 132
+    }
+  },
+  "comparison": {
+    "failure_reduction_pct": 43.07,
+    "annual_cost_saving_usd": 767000.0,
+    "annual_failures_avoided": 15340.0
+  },
+  "assumptions": {
+    "cost_per_failure_usd": 50.0,
+    "transactions_per_year": 260000,
+    "high_risk_threshold": 0.65,
+    "low_risk_threshold": 0.35,
+    "latency_normal_sec": 0.12,
+    "latency_retry_sec": 0.28,
+    "latency_switch_sec": 0.45,
+    "backup_fail_multiplier": 0.25
+  },
+  "artifact_paths": {
+    "chart": "models/agent_simulation_chart.png",
+    "json": "models/agent_simulation_results.json"
+  }
+}
