@@ -1,0 +1,47 @@
+=== add_cross_api_features.py  [2026-03-18 23:37:40] ===
+
+Step 1 — Loading data\banking_api_features_clean.csv ...
+  Loaded 1,220,008 rows  (45 columns)  in 12.9s
+  APIs found: ['crypto_api', 'forex_api', 'market_data_api', 'stock_price_api', 'transaction_api']
+
+Step 2 — Parsing, sorting, and bucketing timestamps to 1min ...
+  Date range : 2023-01-01 00:00:00 -> 2024-12-31 00:00:00
+  Time buckets (1min): 200,000  (vs 200,000 exact timestamps)
+  Done in 4.5s
+
+Step 3 — Aggregating and pivoting error_rate_rolling by 1min buckets ...
+  NaN rate before fill: stock=0.0%  forex=0.0%  crypto=0.0%  market=53.6%  transaction=57.9%
+  NaN rate after  fill: stock=0.0%  forex=0.0%  crypto=0.0%  market=0.0%  transaction=0.0%
+  Pivot shape: (200000, 5)  (1.2s)
+  Unique buckets: 200,000
+
+Step 4 — Computing cross-API features (vectorised) ...
+  stock_price_api        done
+  forex_api              done
+  crypto_api             done
+  market_data_api        done
+  transaction_api        done
+  Cross feature df: (1000000, 7)  (0.9s)
+
+Step 5 — Merging cross-API features onto original dataframe ...
+  After merge: (1220008, 50)  (1.0s)
+
+Step 6 — Filling NaN with 0 ...
+  avg_error_rate_others: 443,104 NaN -> 0
+  max_error_rate_others: 443,104 NaN -> 0
+  n_apis_elevated: 443,104 NaN -> 0
+  corr_with_similar_api: 443,104 NaN -> 0
+  systemic_stress_index: 443,104 NaN -> 0
+
+Step 7 — Saving to data\banking_api_features_v6.csv ...
+  Saved 1,220,008 rows  50 columns  430.8 MB  (58.6s)
+
+=== Cross-API Feature Summary ===
+Total rows            : 1,220,008
+New features added    : 5
+avg_error_rate_others       — mean: 0.1044  max: 0.9667  non-zero: 63.7%
+max_error_rate_others       — mean: 0.1535  max: 1.0000  non-zero: 63.7%
+n_apis_elevated             — mean: 2.2956  max: 4        non-zero: 63.7%
+corr_with_similar_api       — mean: 0.1045  max: 1.0000  non-zero: 63.5%
+systemic_stress_index       — mean: 0.3910  max: 3.8667  non-zero: 63.7%
+Output saved -> data\banking_api_features_v6.csv

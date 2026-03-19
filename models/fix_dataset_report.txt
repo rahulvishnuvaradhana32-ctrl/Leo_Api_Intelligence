@@ -1,0 +1,98 @@
+========================================================================
+  LEO API — Dataset Fix Script  |  2026-03-18 10:46:58
+========================================================================
+
+========================================================================
+  STEP 1 — Load existing CSV and SQLite DB
+========================================================================
+  Loading CSV: data\banking_api_features.csv …
+  CSV loaded: 1,889,966 rows × 44 columns
+  Loading DB: data\banking_api_telemetry.db …
+  DB loaded:  2,779,932 rows × 36 columns
+  ⚠ WARNING: DB has no 'data_source' column — cannot filter by source.
+  Falling back: treating ALL DB rows not in CSV as 'db_extended'.
+  DB rows loaded for comparison: 2,779,932
+
+========================================================================
+  STEP 1b — Deduplicate and cross-check
+========================================================================
+  DB rows before dedup : 2,779,932
+  Duplicate rows found  : 2,362,795
+  DB rows after dedup  : 417,137
+  Kaggle rows skipped (already in CSV): 3
+  Kaggle rows newly added              : 417,134
+  Added data_source='synthetic' to existing CSV rows.
+  Computing precursor features for 417,134 new DB rows …
+  Dropping DB-only columns not in CSV: ['id', 'is_pre_open', 'is_market_close']
+
+  Rows after merge: 2,307,100
+
+  Rows per data_source after merge:
+    synthetic           : 1,889,966
+    db_extended         : 417,134
+
+========================================================================
+  STEP 2 — Fix null / unknown error_type
+========================================================================
+  Null error_type before fix  : 2,226,795
+  No 'failure_event' column — skipping backfill step.
+    transaction_api          : filled 18,178 rows → 'cascading_failure'
+    market_data_api          : filled 17,448 rows → 'vendor_upstream_failure'
+    stock_price_api          : filled 17,423 rows → 'market_volatility_overload'
+    crypto_api               : filled 18,022 rows → 'market_volatility_overload'
+    forex_api                : filled 17,981 rows → 'regulatory_load_spike'
+  Filled from api_name mapping : 89,052
+  Healthy rows filled with 'none': 2,137,743
+  Null error_type after fix    : 0  (should be 0)
+
+========================================================================
+  STEP 3 — Joint downsample: transaction_api + market_data_api to ≤25% each
+========================================================================
+  transaction_api before : 909,928  (39.44%)
+  market_data_api before : 787,168  (34.12%)
+  Other APIs (fixed)     : 610,004
+  Failure rows kept      : transaction_api=33,022  market_data_api=32,159
+
+  transaction_api after  : 305,002  (25.00%)
+  market_data_api after  : 305,002  (25.00%)
+  Total rows dropped     : 1,087,092
+
+========================================================================
+  STEP 4 — Save and validate
+========================================================================
+  Saving → data\banking_api_features_clean.csv …
+  Saved 1,220,008 rows.
+
+  === Clean Dataset Summary ===
+  Total rows        : 1,220,008
+  Failure rate      : 13.88%
+  Rows per source   :
+    synthetic                : 1,072,470
+    db_extended              : 147,538
+  Null error_type   : 0  (should be 0)
+  transaction_api % : 25.00%  (should be ≤25%)
+
+========================================================================
+  Sequence Boundary Sanity Check  (cap=300,000 rows, seq_len=30)
+========================================================================
+  Sorting by (api_name, timestamp) …
+  Checking 300,000 rows / 299,971 sequences …
+    … 0%
+    … 9%
+    … 19%
+    … 29%
+    … 39%
+    … 49%
+    … 59%
+    … 69%
+    … 79%
+    … 89%
+    … 99%
+
+  Sequences checked  : 299,971
+  Broken sequences   : 34  (0.01%)
+  ✓ Boundary contamination acceptable (<1%)
+
+========================================================================
+  Fix complete. Original CSV preserved. Clean CSV ready for training.
+========================================================================

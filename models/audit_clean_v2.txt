@@ -1,0 +1,123 @@
+  Auditing file : data/banking_api_features_clean.csv
+  Report output : models/audit_clean_v2.txt
+
+========================================================================
+  1. SOURCE BREAKDOWN  (column: api_name)
+========================================================================
+  Source                               Rows        %  Flags
+  ------------------------------ ----------  -------  --------------------
+  market_data_api                   305,002   25.00%  —
+  transaction_api                   305,002   25.00%  —
+  stock_price_api                   209,998   17.21%  —
+  crypto_api                        200,003   16.39%  —
+  forex_api                         200,003   16.39%  —
+
+  Total rows: 1,220,008
+
+========================================================================
+  2. KEY FEATURE COVERAGE PER SOURCE  (non-zero & non-null %)
+========================================================================
+  Source                         error_rate_b  rt_multiplie  latency_spik   error_burst  instability_  error_rate_r  Flags
+  ------------------------------ ------------  ------------  ------------  ------------  ------------  ------------  ------
+  market_data_api                        3.7%        100.0%         99.0%         30.3%         99.6%         30.3%  —
+  transaction_api                        2.7%        100.0%        100.0%         32.8%        100.0%         32.8%  —
+  stock_price_api                       12.8%        100.0%        100.0%         99.1%        100.0%         99.1%  —
+  crypto_api                             5.8%        100.0%        100.0%         99.7%        100.0%         99.7%  —
+  forex_api                              5.5%        100.0%        100.0%         99.7%        100.0%         99.7%  —
+
+========================================================================
+  3. FAILURE MODE DISTRIBUTION PER SOURCE  (column: error_type)
+========================================================================
+
+  [market_data_api]  total=305,002  failures=32,159  failure_rate=10.54%
+    vendor_upstream_failure                        18,400   57.22% ⚠ DOMINANT (>50%)
+    cascading_failure                               8,268   25.71%
+    400_malformed_request                           2,256    7.02%
+    regulatory_load_spike                           1,388    4.32%
+    market_volatility_overload                        803    2.50%
+    ddos_rate_limit_exceeded                          551    1.71%
+    404_outdated_url                                  287    0.89%
+    500_untested_code_path                            206    0.64%
+
+  [transaction_api]  total=305,002  failures=33,022  failure_rate=10.83%
+    cascading_failure                              26,376   79.87% ⚠ DOMINANT (>50%)
+    market_volatility_overload                      1,551    4.70%
+    regulatory_load_spike                           1,546    4.68%
+    vendor_upstream_failure                           949    2.87%
+    fraud_transaction_failure                         729    2.21%
+    ddos_rate_limit_exceeded                          566    1.71%
+    503_external_dependency_down                      376    1.14%
+    fraudulent_cashout_detected                       282    0.85%
+    fraudulent_transfer_detected                      243    0.74%
+    security_breach_attempt                           237    0.72%
+    401_invalid_session_token                         167    0.51%
+
+  [stock_price_api]  total=209,998  failures=41,518  failure_rate=19.77%
+    market_volatility_overload                     18,959   45.66%
+    network_attack_detected                         8,796   21.19%
+    cascading_failure                               8,441   20.33%
+    410_endpoint_deprecated                         2,012    4.85%
+    regulatory_load_spike                           1,347    3.24%
+    vendor_upstream_failure                           950    2.29%
+    ddos_rate_limit_exceeded                          583    1.40%
+    403_incorrect_api_permission                      265    0.64%
+    404_bad_or_outdated_url                           165    0.40%
+
+  [crypto_api]  total=200,003  failures=31,454  failure_rate=15.73%
+    market_volatility_overload                     19,591   62.28% ⚠ DOMINANT (>50%)
+    cascading_failure                               8,115   25.80%
+    regulatory_load_spike                           1,530    4.86%
+    vendor_upstream_failure                           949    3.02%
+    ddos_rate_limit_exceeded                          582    1.85%
+    503_external_dependency_down                      332    1.06%
+    silent_failure_no_alert                           186    0.59%
+    504_complex_endpoint_timeout                      169    0.54%
+
+  [forex_api]  total=200,003  failures=31,204  failure_rate=15.60%
+    regulatory_load_spike                          19,464   62.38% ⚠ DOMINANT (>50%)
+    cascading_failure                               8,171   26.19%
+    market_volatility_overload                      1,548    4.96%
+    vendor_upstream_failure                           965    3.09%
+    ddos_rate_limit_exceeded                          529    1.70%
+    401_invalid_session                               266    0.85%
+    401_token_expired                                 152    0.49%
+    security_misconfiguration                         109    0.35%
+
+========================================================================
+  4. TEMPORAL COHERENCE — LSTM SEQUENCE BOUNDARY CHECK
+========================================================================
+  Sequence length: 30  |  Cap: 500,000 rows  |  Group: api_name
+
+  Rows checked      : 500,000
+  Total sequences   : 499,971
+  Broken sequences  : 58  (0.01%)
+  ✓ Boundary contamination is low (<1%)
+
+========================================================================
+  5. SQLITE CROSS-CHECK  (data/banking_api_telemetry.db)
+========================================================================
+  DB total rows : 2,779,932
+  CSV total rows: 1,220,008
+  Delta (CSV-DB): -1,559,924 rows
+
+  API                               DB rows
+  ------------------------------ ----------
+  transaction_api                 1,369,614
+  market_data_api                   800,322
+  stock_price_api                   209,996
+  crypto_api                        200,000
+  forex_api                         200,000
+
+  DB failures   : 169,858  (6.11%)
+
+========================================================================
+  RECOMMENDED ACTIONS
+========================================================================
+  1. REVIEW 'market_data_api': single failure mode >50% — augment with other failure types or the model will over-specialise.
+  2. REVIEW 'transaction_api': single failure mode >50% — augment with other failure types or the model will over-specialise.
+  3. REVIEW 'crypto_api': single failure mode >50% — augment with other failure types or the model will over-specialise.
+  4. REVIEW 'forex_api': single failure mode >50% — augment with other failure types or the model will over-specialise.
+
+========================================================================
+  Report complete.
+========================================================================

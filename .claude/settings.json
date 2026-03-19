@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c//**)",
+      "Bash(python scripts/add_cross_api_features.py)"
+    ]
+  }
+}
