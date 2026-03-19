@@ -42,21 +42,35 @@ LATENCY_SWITCH  = 0.45   # backup API switch overhead
 SEQ_LEN = 30
 
 FEATURE_COLS = [
-    'response_time', 'status_code', 'request_count',
-    'hour', 'day_of_week', 'is_weekend', 'is_market_hours',
+    # Core telemetry
+    'response_time', 'request_count',
+    # Time features
+    'hour', 'day_of_week', 'is_market_hours', 'is_financial_peak',
+    'is_weekend', 'is_holiday',
+    # Rolling statistics
     'response_time_rolling_mean', 'response_time_rolling_std',
-    'error_rate_rolling',
-    'response_time_variance', 'error_volatility',
-    'response_time_lag_1', 'response_time_lag_5',
-    'error_rate_lag_1',
-    'response_time_ema_10', 'response_time_ema_30',
-    'error_rate_ema_10',
-    'hour_sin',
-    'traffic_change', 'burst_ratio',
+    'error_rate_rolling', 'response_time_variance', 'error_volatility',
+    # Lag features
+    'response_time_lag_1', 'response_time_lag_5', 'error_rate_lag_1',
+    # EMA features
+    'response_time_ema_10', 'response_time_ema_30', 'error_rate_ema_10',
+    # Cyclical encoding
+    'hour_sin', 'hour_cos', 'dow_sin', 'dow_cos',
+    # API flags
+    'high_frequency_api', 'api_complexity',
+    # Event stress signals
+    'error_rate_boost', 'rt_multiplier',
+    # Precursor signals
     'latency_diff_1', 'latency_diff_5',
     'error_rate_diff_1', 'error_rate_diff_5',
     'latency_spike', 'error_burst', 'instability_index',
     'latency_slope', 'error_slope',
+    # Advanced signals
+    'traffic_change', 'burst_ratio',
+    # Cross-API correlation features — present in banking_api_features_v6.csv
+    'avg_error_rate_others', 'max_error_rate_others',
+    'n_apis_elevated', 'corr_with_similar_api',
+    'systemic_stress_index',
 ]
 
 # Backup mapping
@@ -69,50 +83,65 @@ BACKUP_API = {
 }
 
 
-# ── Model definition (must match training) ────────────────────────────────────
-class MultiHorizonLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, n_horizons, dropout=0.3):
+# ── Model definition (v5 — must match run_lstm_training.py) ───────────────────
+class AttentionPooling(nn.Module):
+    def __init__(self, hidden_size):
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_layers  = num_layers
-        self.lstm        = nn.LSTM(input_size, hidden_size, num_layers,
-                                   batch_first=True, bidirectional=False,
-                                   dropout=dropout if num_layers > 1 else 0.0)
-        self.layer_norm  = nn.LayerNorm(hidden_size)
-        self.dropout     = nn.Dropout(dropout)
-        self.heads       = nn.ModuleList([nn.Linear(hidden_size, 1)
-                                          for _ in range(n_horizons)])
+        self.score = nn.Linear(hidden_size, 1, bias=False)
 
     def forward(self, x):
-        h0  = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0  = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))
-        out  = out[:, -1, :]
-        out  = self.layer_norm(out)
-        out  = self.dropout(out)
+        weights = torch.softmax(self.score(x).squeeze(-1), dim=-1)
+        return (weights.unsqueeze(-1) * x).sum(dim=1)
+
+
+class MultiHorizonLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size, num_layers, n_horizons,
+                 dropout=0.3, bidirectional=True):
+        super().__init__()
+        self.lstm_out = hidden_size * (2 if bidirectional else 1)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
+                            batch_first=True, bidirectional=bidirectional,
+                            dropout=dropout if num_layers > 1 else 0.0)
+        self.layer_norm = nn.LayerNorm(self.lstm_out)
+        self.attn_pool  = AttentionPooling(self.lstm_out)
+        self.dropout    = nn.Dropout(dropout)
+        self.heads      = nn.ModuleList([nn.Linear(self.lstm_out, 1)
+                                         for _ in range(n_horizons)])
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out    = self.layer_norm(out)
+        out    = self.attn_pool(out)
+        out    = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
 
 def _detect_dims(state_dict):
-    lstm_hh = state_dict['lstm.weight_hh_l0']
-    lstm_ih = state_dict['lstm.weight_ih_l0']
-    hidden  = lstm_hh.shape[1]
-    n_in    = lstm_ih.shape[1]
-    n_heads = sum(1 for k in state_dict if k.startswith('heads.') and 'weight' in k)
-    return n_in, hidden, n_heads
+    lstm_ih       = state_dict['lstm.weight_ih_l0']
+    lstm_hh       = state_dict['lstm.weight_hh_l0']
+    bidirectional = 'lstm.weight_ih_l0_reverse' in state_dict
+    hidden        = lstm_hh.shape[1]
+    n_in          = lstm_ih.shape[1]
+    n_heads       = sum(1 for k in state_dict if k.startswith('heads.') and 'weight' in k)
+    return n_in, hidden, n_heads, bidirectional
 
 
 # ── Load model + scaler ───────────────────────────────────────────────────────
 def load_model(model_path: str, scaler_path: str):
     sd        = torch.load(model_path, map_location='cpu')
-    n_in, hidden, n_heads = _detect_dims(sd)
-    print(f"  Model dims: input={n_in}, hidden={hidden}, heads={n_heads}")
-    model = MultiHorizonLSTM(n_in, hidden, num_layers=2, n_horizons=n_heads)
+    n_in, hidden, n_heads, bidir = _detect_dims(sd)
+    print(f"  Model dims: input={n_in}, hidden={hidden}, heads={n_heads}, bidirectional={bidir}")
+    model = MultiHorizonLSTM(n_in, hidden, num_layers=2, n_horizons=n_heads, bidirectional=bidir)
     model.load_state_dict(sd)
     model.eval()
 
-    with open(scaler_path, 'rb') as f:
-        scaler = pickle.load(f)
+    try:
+        import joblib as _jl
+        scaler = _jl.load(scaler_path)
+    except Exception:
+        with open(scaler_path, 'rb') as f:
+            import pickle as _pk
+            scaler = _pk.load(f)
 
     # Trim FEATURE_COLS to match model input size
     feat = FEATURE_COLS[:n_in]

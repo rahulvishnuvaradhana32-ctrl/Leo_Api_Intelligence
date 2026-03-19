@@ -79,7 +79,7 @@ print(f"=== Self-Improving Pipeline  [{RUN_ID}]  mode={MODE} ===\n")
 
 # ── Feature columns (must match run_lstm_training.py exactly) ─────────────────
 FEATURE_COLS = [
-    "response_time", "status_code", "request_count",
+    "response_time", "request_count",
     "hour", "day_of_week", "is_market_hours", "is_financial_peak",
     "is_weekend", "is_holiday",
     "response_time_rolling_mean", "response_time_rolling_std",
@@ -89,6 +89,15 @@ FEATURE_COLS = [
     "hour_sin", "hour_cos", "dow_sin", "dow_cos",
     "high_frequency_api", "api_complexity",
     "error_rate_boost", "rt_multiplier",
+    "latency_diff_1", "latency_diff_5",
+    "error_rate_diff_1", "error_rate_diff_5",
+    "latency_spike", "error_burst", "instability_index",
+    "latency_slope", "error_slope",
+    "traffic_change", "burst_ratio",
+    # Cross-API correlation features — present in banking_api_features_v6.csv
+    "avg_error_rate_others", "max_error_rate_others",
+    "n_apis_elevated", "corr_with_similar_api",
+    "systemic_stress_index",
 ]
 
 # Continuous columns safe to jitter during augmentation
@@ -159,26 +168,41 @@ class TimeSeriesDataset(Dataset):
         }
 
 
+class AttentionPooling(nn.Module):
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.score = nn.Linear(hidden_size, 1, bias=False)
+
+    def forward(self, x):  # x: (B, T, H)
+        w = torch.softmax(self.score(x), dim=1)  # (B, T, 1)
+        return (w * x).sum(dim=1)                # (B, H)
+
+
 class MultiHorizonLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers,
-                 output_size, dropout=0.3):
+                 output_size, dropout=0.3, bidirectional=True):
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_layers  = num_layers
+        self.hidden_size  = hidden_size
+        self.num_layers   = num_layers
+        self.bidirectional = bidirectional
+        lstm_out = hidden_size * 2 if bidirectional else hidden_size
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
-                            batch_first=True, bidirectional=False,
+                            batch_first=True, bidirectional=bidirectional,
                             dropout=dropout if num_layers > 1 else 0)
-        self.norm    = nn.LayerNorm(hidden_size)
-        self.dropout = nn.Dropout(dropout)
-        self.heads   = nn.ModuleList([
-            nn.Linear(hidden_size, 1) for _ in range(output_size)
+        self.layer_norm = nn.LayerNorm(lstm_out)
+        self.attn_pool  = AttentionPooling(lstm_out)
+        self.dropout    = nn.Dropout(dropout)
+        self.heads      = nn.ModuleList([
+            nn.Linear(lstm_out, 1) for _ in range(output_size)
         ])
 
     def forward(self, x):
-        h0  = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0  = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.norm(out[:, -1, :])
+        n_dir = 2 if self.bidirectional else 1
+        h0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size).to(x.device)
+        out, _ = self.lstm(x, (h0, c0))      # (B, T, lstm_out)
+        out = self.layer_norm(out)
+        out = self.attn_pool(out)             # (B, lstm_out)
         out = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
@@ -223,9 +247,21 @@ def _auc_from_arrays(y_true, y_score):
     return float(roc_auc_score(y_true, y_score))
 
 
+def _detect_dims(sd):
+    """Return (n_in, hidden, n_heads, bidirectional) from a state_dict."""
+    n_in   = sd["lstm.weight_ih_l0"].shape[1]
+    hidden = sd["lstm.weight_hh_l0"].shape[1]
+    bidir  = "lstm.weight_ih_l0_reverse" in sd
+    lstm_out = hidden * 2 if bidir else hidden
+    n_heads  = sum(1 for k in sd if k.startswith("heads.") and k.endswith(".weight"))
+    return n_in, hidden, n_heads, bidir
+
+
 def _load_model(model_path, n_features, hidden_size, num_layers, n_horizons):
-    model = MultiHorizonLSTM(n_features, hidden_size, num_layers, n_horizons)
-    model.load_state_dict(torch.load(model_path, map_location="cpu"))
+    sd = torch.load(model_path, map_location="cpu")
+    n_in, hidden, n_heads, bidir = _detect_dims(sd)
+    model = MultiHorizonLSTM(n_in, hidden, num_layers, n_heads, bidirectional=bidir)
+    model.load_state_dict(sd)
     model.eval()
     return model
 

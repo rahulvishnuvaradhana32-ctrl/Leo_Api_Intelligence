@@ -67,7 +67,7 @@ print(f"=== Conformal Prediction  (target coverage: {COVERAGE}%) ===\n")
 
 # ── Feature columns — must match exactly what the model was trained with ──────
 FEATURE_COLS = [
-    "response_time", "status_code", "request_count",
+    "response_time", "request_count",
     "hour", "day_of_week", "is_market_hours", "is_financial_peak",
     "is_weekend", "is_holiday",
     "response_time_rolling_mean", "response_time_rolling_std",
@@ -82,8 +82,12 @@ FEATURE_COLS = [
     "error_rate_diff_1", "error_rate_diff_5",
     "latency_spike", "error_burst", "instability_index",
     "latency_slope", "error_slope",
-    # advanced (included if present in CSV)
+    # advanced signals
     "traffic_change", "burst_ratio",
+    # cross-API correlation features — present in banking_api_features_v6.csv
+    "avg_error_rate_others", "max_error_rate_others",
+    "n_apis_elevated", "corr_with_similar_api",
+    "systemic_stress_index",
 ]
 
 
@@ -91,37 +95,47 @@ FEATURE_COLS = [
 # Model architecture  (identical to run_lstm_training.py)
 # ─────────────────────────────────────────────────────────────────────────────
 
-class MultiHorizonLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size=128, num_layers=2,
-                 output_size=3, dropout=0.3):
+class AttentionPooling(nn.Module):
+    def __init__(self, hidden_size):
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_layers  = num_layers
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
-                            batch_first=True,
-                            dropout=dropout if num_layers > 1 else 0)
-        self.layer_norm = nn.LayerNorm(hidden_size)
-        self.dropout = nn.Dropout(dropout)
-        self.heads   = nn.ModuleList([nn.Linear(hidden_size, 1)
-                                      for _ in range(output_size)])
+        self.score = nn.Linear(hidden_size, 1, bias=False)
 
     def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.layer_norm(out[:, -1, :])
-        out = self.dropout(out)
+        weights = torch.softmax(self.score(x).squeeze(-1), dim=-1)
+        return (weights.unsqueeze(-1) * x).sum(dim=1)
+
+
+class MultiHorizonLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size=128, num_layers=2,
+                 output_size=3, dropout=0.3, bidirectional=True):
+        super().__init__()
+        self.lstm_out = hidden_size * (2 if bidirectional else 1)
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
+                            batch_first=True, bidirectional=bidirectional,
+                            dropout=dropout if num_layers > 1 else 0)
+        self.layer_norm = nn.LayerNorm(self.lstm_out)
+        self.attn_pool  = AttentionPooling(self.lstm_out)
+        self.dropout    = nn.Dropout(dropout)
+        self.heads      = nn.ModuleList([nn.Linear(self.lstm_out, 1)
+                                         for _ in range(output_size)])
+
+    def forward(self, x):
+        out, _ = self.lstm(x)
+        out    = self.layer_norm(out)
+        out    = self.attn_pool(out)
+        out    = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
 
 def _detect_hidden_size(state_dict):
-    """Infer hidden_size and input_size from checkpoint weight shapes."""
-    lstm_ih = state_dict["lstm.weight_ih_l0"]   # shape: [4*hidden, input]
-    lstm_hh = state_dict["lstm.weight_hh_l0"]   # shape: [4*hidden, hidden]
-    hidden  = lstm_hh.shape[1]
-    n_in    = lstm_ih.shape[1]
-    n_heads = sum(1 for k in state_dict if k.startswith("heads.") and "weight" in k)
-    return n_in, hidden, n_heads
+    """Infer hidden_size, input_size, and bidirectionality from checkpoint."""
+    lstm_ih       = state_dict["lstm.weight_ih_l0"]
+    lstm_hh       = state_dict["lstm.weight_hh_l0"]
+    bidirectional = "lstm.weight_ih_l0_reverse" in state_dict
+    hidden        = lstm_hh.shape[1]
+    n_in          = lstm_ih.shape[1]
+    n_heads       = sum(1 for k in state_dict if k.startswith("heads.") and "weight" in k)
+    return n_in, hidden, n_heads, bidirectional
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -315,8 +329,8 @@ def main():
     # ── Load model ─────────────────────────────────────────────────────────────
     print(f"\nLoading model from {args.model_path} ...")
     state_dict = torch.load(args.model_path, map_location="cpu")
-    n_in, hidden, n_heads = _detect_hidden_size(state_dict)
-    print(f"  Detected: input_size={n_in}  hidden={hidden}  heads={n_heads}")
+    n_in, hidden, n_heads, bidir = _detect_hidden_size(state_dict)
+    print(f"  Detected: input_size={n_in}  hidden={hidden}  heads={n_heads}  bidirectional={bidir}")
 
     if n_in != len(available):
         print(f"\n  WARNING: model expects {n_in} features, "
@@ -329,7 +343,7 @@ def main():
             print(f"  FATAL: fewer features than model input — cannot proceed.")
             sys.exit(1)
 
-    model = MultiHorizonLSTM(n_in, hidden, 2, n_heads)
+    model = MultiHorizonLSTM(n_in, hidden, 2, n_heads, bidirectional=bidir)
     model.load_state_dict(state_dict)
     model.eval()
     total_p = sum(p.numel() for p in model.parameters())

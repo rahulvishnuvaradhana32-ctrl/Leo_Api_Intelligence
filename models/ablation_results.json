@@ -1,5 +1,5 @@
 {
-  "baseline_auc": 0.626063,
+  "baseline_auc": 0.635572,
   "data_window": 300000,
   "epochs": 5,
   "max_sequences": 50000,
@@ -8,15 +8,15 @@
       "name": "Baseline",
       "features_removed": [],
       "n_features": 39,
-      "auc": 0.626063,
+      "auc": 0.635572,
       "auc_drop": 0.0,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.626989,
-        "h5": 0.628073,
-        "h15": 0.623125
+        "h1": 0.639541,
+        "h5": 0.636657,
+        "h15": 0.630519
       },
-      "train_time_sec": 385.3
+      "train_time_sec": 276.0
     },
     {
       "name": "No Event Signals",
@@ -25,15 +25,15 @@
         "rt_multiplier"
       ],
       "n_features": 37,
-      "auc": 0.623182,
-      "auc_drop": 0.002881,
+      "auc": 0.635366,
+      "auc_drop": 0.000206,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.623957,
-        "h5": 0.626095,
-        "h15": 0.619494
+        "h1": 0.637571,
+        "h5": 0.638205,
+        "h15": 0.630323
       },
-      "train_time_sec": 328.2
+      "train_time_sec": 295.9
     },
     {
       "name": "No Rolling Stats",
@@ -45,15 +45,15 @@
         "error_volatility"
       ],
       "n_features": 34,
-      "auc": 0.624957,
-      "auc_drop": 0.001105,
+      "auc": 0.635232,
+      "auc_drop": 0.00034,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.624655,
-        "h5": 0.627496,
-        "h15": 0.622722
+        "h1": 0.638132,
+        "h5": 0.636998,
+        "h15": 0.630567
       },
-      "train_time_sec": 327.8
+      "train_time_sec": 219.2
     },
     {
       "name": "No Lag Features",
@@ -63,15 +63,15 @@
         "error_rate_lag_1"
       ],
       "n_features": 36,
-      "auc": 0.626541,
-      "auc_drop": -0.000479,
+      "auc": 0.635687,
+      "auc_drop": -0.000115,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.627241,
-        "h5": 0.628818,
-        "h15": 0.623565
+        "h1": 0.638586,
+        "h5": 0.63721,
+        "h15": 0.631264
       },
-      "train_time_sec": 320.3
+      "train_time_sec": 232.2
     },
     {
       "name": "No EMA Features",
@@ -81,15 +81,15 @@
         "error_rate_ema_10"
       ],
       "n_features": 36,
-      "auc": 0.626302,
-      "auc_drop": -0.000239,
+      "auc": 0.635821,
+      "auc_drop": -0.000249,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.626365,
-        "h5": 0.628771,
-        "h15": 0.623769
+        "h1": 0.638792,
+        "h5": 0.63741,
+        "h15": 0.631262
       },
-      "train_time_sec": 796.5
+      "train_time_sec": 221.5
     },
     {
       "name": "No Cyclical Enc.",
@@ -100,15 +100,15 @@
         "dow_cos"
       ],
       "n_features": 35,
-      "auc": 0.62611,
-      "auc_drop": -4.7e-05,
+      "auc": 0.635863,
+      "auc_drop": -0.00029,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.627029,
-        "h5": 0.628193,
-        "h15": 0.623108
+        "h1": 0.638118,
+        "h5": 0.637845,
+        "h15": 0.631625
       },
-      "train_time_sec": 257.1
+      "train_time_sec": 223.3
     },
     {
       "name": "No API Flags",
@@ -117,15 +117,15 @@
         "api_complexity"
       ],
       "n_features": 37,
-      "auc": 0.6241,
-      "auc_drop": 0.001962,
+      "auc": 0.635684,
+      "auc_drop": -0.000111,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.625082,
-        "h5": 0.626279,
-        "h15": 0.620941
+        "h1": 0.636895,
+        "h5": 0.638487,
+        "h15": 0.631669
       },
-      "train_time_sec": 222.3
+      "train_time_sec": 229.0
     },
     {
       "name": "No Precursor Signals",
@@ -143,15 +143,15 @@
         "burst_ratio"
       ],
       "n_features": 28,
-      "auc": 0.626196,
-      "auc_drop": -0.000133,
+      "auc": 0.63573,
+      "auc_drop": -0.000157,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.626674,
-        "h5": 0.628212,
-        "h15": 0.623701
+        "h1": 0.638385,
+        "h5": 0.637173,
+        "h15": 0.631632
       },
-      "train_time_sec": 212.8
+      "train_time_sec": 217.0
     }
   ]
 }

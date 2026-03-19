@@ -121,3 +121,5 @@ data/
 .DS_Store
 __MACOSX/
 Thumbs.db
+# Claude Code settings (local only)
+.claude/

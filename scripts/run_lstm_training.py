@@ -26,10 +26,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import DataLoader, Dataset
 
-# ── Exactly 39 feature columns in defined order ────────────────────────────────
+# ── Exactly 43 feature columns in defined order ────────────────────────────────
 FEATURE_COLS: List[str] = [
-    # Core telemetry
-    "response_time", "status_code", "request_count",
+    # Core telemetry (status_code removed — r=0.98 with label, dominates learning)
+    "response_time", "request_count",
     # Time features
     "hour", "day_of_week", "is_market_hours", "is_financial_peak",
     "is_weekend", "is_holiday",
@@ -53,9 +53,13 @@ FEATURE_COLS: List[str] = [
     "latency_slope", "error_slope",
     # Advanced signals — from CSV if available
     "traffic_change", "burst_ratio",
+    # Cross-API correlation features — from banking_api_features_v6.csv
+    "avg_error_rate_others", "max_error_rate_others",
+    "n_apis_elevated", "corr_with_similar_api",
+    "systemic_stress_index",
 ]
 
-assert len(FEATURE_COLS) == 39, f"Expected 39 features, got {len(FEATURE_COLS)}"
+assert len(FEATURE_COLS) == 43, f"Expected 43 features, got {len(FEATURE_COLS)}"
 
 EPS = 1e-6
 
@@ -193,7 +197,7 @@ class MultiHorizonLSTM(nn.Module):
 
 # ── Training ───────────────────────────────────────────────────────────────────
 def train(args) -> None:
-    features_path = os.path.join("data", "banking_api_features.csv")
+    features_path = args.data
     if not os.path.exists(features_path):
         print(f"ERROR: {features_path} not found — run integrate_kaggle_data.py first.")
         sys.exit(1)
@@ -552,5 +556,7 @@ if __name__ == "__main__":
                         help="Filter rows from YYYY-MM-DD (inclusive)")
     parser.add_argument("--end_date",            type=str,   default=None,
                         help="Filter rows up to YYYY-MM-DD (inclusive)")
+    parser.add_argument("--data",                type=str,
+                        default=os.path.join("data", "banking_api_features_clean.csv"))
     args = parser.parse_args()
     train(args)

@@ -39,7 +39,7 @@ parser.add_argument("--max_seq",     type=int, default=50_000)
 parser.add_argument("--batch_size",  type=int, default=128)
 parser.add_argument("--seq_len",     type=int, default=30)
 parser.add_argument("--hidden_size", type=int, default=128)
-parser.add_argument("--data_path",   type=str, default="data/banking_api_features.csv")
+parser.add_argument("--data_path",   type=str, default="data/banking_api_features_clean.csv")
 args = parser.parse_args()
 
 HORIZONS    = [1, 5, 15]
@@ -52,9 +52,9 @@ FOCAL_GAMMA = 2.0
 LR          = 0.001
 SEED        = 42
 
-# ── All 28 feature columns (ordered as in run_lstm_training.py) ───────────────
+# ── All 43 feature columns (ordered as in run_lstm_training.py) ───────────────
 ALL_FEATURES = [
-    "response_time", "status_code", "request_count",
+    "response_time", "request_count",
     "hour", "day_of_week", "is_market_hours", "is_financial_peak",
     "is_weekend", "is_holiday",
     "response_time_rolling_mean", "response_time_rolling_std",
@@ -69,8 +69,12 @@ ALL_FEATURES = [
     "error_rate_diff_1", "error_rate_diff_5",
     "latency_spike", "error_burst", "instability_index",
     "latency_slope", "error_slope",
-    # advanced (present only if add_precursor_features.py was run)
+    # advanced signals
     "traffic_change", "burst_ratio",
+    # cross-API correlation features — present in banking_api_features_v6.csv
+    "avg_error_rate_others", "max_error_rate_others",
+    "n_apis_elevated", "corr_with_similar_api",
+    "systemic_stress_index",
 ]
 
 # ── 8 experiments: (display name, features to remove) ─────────────────────────
@@ -88,6 +92,9 @@ EXPERIMENTS = [
                                "latency_spike", "error_burst", "instability_index",
                                "latency_slope", "error_slope",
                                "traffic_change", "burst_ratio"]),
+    ("No Cross-API",          ["avg_error_rate_others", "max_error_rate_others",
+                               "n_apis_elevated", "corr_with_similar_api",
+                               "systemic_stress_index"]),
 ]
 
 
@@ -134,26 +141,41 @@ class TimeSeriesDataset(Dataset):
         }
 
 
+class AttentionPooling(nn.Module):
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.score = nn.Linear(hidden_size, 1, bias=False)
+
+    def forward(self, x):           # x: (B, T, H)
+        w = torch.softmax(self.score(x), dim=1)   # (B, T, 1)
+        return (w * x).sum(dim=1)                  # (B, H)
+
+
 class MultiHorizonLSTM(nn.Module):
     def __init__(self, input_size, hidden_size=128, num_layers=2,
-                 output_size=3, dropout=0.3):
+                 output_size=3, dropout=0.3, bidirectional=True):
         super().__init__()
-        self.hidden_size = hidden_size
-        self.num_layers  = num_layers
+        self.hidden_size   = hidden_size
+        self.num_layers    = num_layers
+        self.bidirectional = bidirectional
+        lstm_out = hidden_size * (2 if bidirectional else 1)
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers,
-                            batch_first=True,
+                            batch_first=True, bidirectional=bidirectional,
                             dropout=dropout if num_layers > 1 else 0)
-        self.norm    = nn.LayerNorm(hidden_size)
-        self.dropout = nn.Dropout(dropout)
-        self.heads   = nn.ModuleList([
-            nn.Linear(hidden_size, 1) for _ in range(output_size)
+        self.layer_norm = nn.LayerNorm(lstm_out)
+        self.attn_pool  = AttentionPooling(lstm_out)
+        self.dropout    = nn.Dropout(dropout)
+        self.heads      = nn.ModuleList([
+            nn.Linear(lstm_out, 1) for _ in range(output_size)
         ])
 
     def forward(self, x):
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.norm(out[:, -1, :])
+        n_dir = 2 if self.bidirectional else 1
+        h0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size)
+        c0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size)
+        out, _ = self.lstm(x, (h0, c0))      # (B, T, lstm_out)
+        out = self.layer_norm(out)
+        out = self.attn_pool(out)             # (B, lstm_out)
         out = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
@@ -191,7 +213,7 @@ def run_experiment(name: str, col_indices: list[int], col_names: list[str],
     pw        = torch.tensor([min(n_success / max(n_fail, 1), 10.0)] * len(HORIZONS))
     criterion = FocalLoss(gamma=FOCAL_GAMMA, pos_weight=pw)
 
-    model     = MultiHorizonLSTM(n_feat, HIDDEN, NUM_LAYERS, len(HORIZONS), DROPOUT)
+    model     = MultiHorizonLSTM(n_feat, HIDDEN, NUM_LAYERS, len(HORIZONS), DROPOUT, bidirectional=True)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
 
     # Cap training sequences
