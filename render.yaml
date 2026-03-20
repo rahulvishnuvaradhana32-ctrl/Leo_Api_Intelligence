@@ -2,9 +2,7 @@ services:
   - type: web
     name: leo-api-predict-intelligence
     runtime: python
+    pythonVersion: "3.11"
     buildCommand: pip install -r requirements-render.txt
     startCommand: python scripts/production_dashboard.py
-    envVars:
-      - key: PORT
-        generateValue: false
     plan: free
