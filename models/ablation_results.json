@@ -1,5 +1,5 @@
 {
-  "baseline_auc": 0.635572,
+  "baseline_auc": 0.63095,
   "data_window": 300000,
   "epochs": 5,
   "max_sequences": 50000,
@@ -7,16 +7,16 @@
     {
       "name": "Baseline",
       "features_removed": [],
-      "n_features": 39,
-      "auc": 0.635572,
+      "n_features": 38,
+      "auc": 0.63095,
       "auc_drop": 0.0,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.639541,
-        "h5": 0.636657,
-        "h15": 0.630519
+        "h1": 0.635897,
+        "h5": 0.631816,
+        "h15": 0.625137
       },
-      "train_time_sec": 276.0
+      "train_time_sec": 809.7
     },
     {
       "name": "No Event Signals",
@@ -24,16 +24,16 @@
         "error_rate_boost",
         "rt_multiplier"
       ],
-      "n_features": 37,
-      "auc": 0.635366,
-      "auc_drop": 0.000206,
+      "n_features": 36,
+      "auc": 0.632066,
+      "auc_drop": -0.001116,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.637571,
-        "h5": 0.638205,
-        "h15": 0.630323
+        "h1": 0.636848,
+        "h5": 0.635346,
+        "h15": 0.624003
       },
-      "train_time_sec": 295.9
+      "train_time_sec": 734.7
     },
     {
       "name": "No Rolling Stats",
@@ -44,16 +44,16 @@
         "error_rate_rolling",
         "error_volatility"
       ],
-      "n_features": 34,
-      "auc": 0.635232,
-      "auc_drop": 0.00034,
+      "n_features": 33,
+      "auc": 0.63148,
+      "auc_drop": -0.00053,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.638132,
-        "h5": 0.636998,
-        "h15": 0.630567
+        "h1": 0.636239,
+        "h5": 0.633981,
+        "h15": 0.624221
       },
-      "train_time_sec": 219.2
+      "train_time_sec": 698.1
     },
     {
       "name": "No Lag Features",
@@ -62,16 +62,16 @@
         "response_time_lag_5",
         "error_rate_lag_1"
       ],
-      "n_features": 36,
-      "auc": 0.635687,
-      "auc_drop": -0.000115,
+      "n_features": 35,
+      "auc": 0.632673,
+      "auc_drop": -0.001723,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.638586,
-        "h5": 0.63721,
-        "h15": 0.631264
+        "h1": 0.634751,
+        "h5": 0.634831,
+        "h15": 0.628437
       },
-      "train_time_sec": 232.2
+      "train_time_sec": 697.5
     },
     {
       "name": "No EMA Features",
@@ -80,16 +80,16 @@
         "response_time_ema_30",
         "error_rate_ema_10"
       ],
-      "n_features": 36,
-      "auc": 0.635821,
-      "auc_drop": -0.000249,
+      "n_features": 35,
+      "auc": 0.632616,
+      "auc_drop": -0.001666,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.638792,
-        "h5": 0.63741,
-        "h15": 0.631262
+        "h1": 0.634868,
+        "h5": 0.634623,
+        "h15": 0.628357
       },
-      "train_time_sec": 221.5
+      "train_time_sec": 692.3
     },
     {
       "name": "No Cyclical Enc.",
@@ -99,16 +99,16 @@
         "dow_sin",
         "dow_cos"
       ],
-      "n_features": 35,
-      "auc": 0.635863,
-      "auc_drop": -0.00029,
+      "n_features": 34,
+      "auc": 0.632274,
+      "auc_drop": -0.001324,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.638118,
-        "h5": 0.637845,
-        "h15": 0.631625
+        "h1": 0.636515,
+        "h5": 0.634911,
+        "h15": 0.625397
       },
-      "train_time_sec": 223.3
+      "train_time_sec": 705.8
     },
     {
       "name": "No API Flags",
@@ -116,16 +116,16 @@
         "high_frequency_api",
         "api_complexity"
       ],
-      "n_features": 37,
-      "auc": 0.635684,
-      "auc_drop": -0.000111,
+      "n_features": 36,
+      "auc": 0.633211,
+      "auc_drop": -0.002261,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.636895,
-        "h5": 0.638487,
-        "h15": 0.631669
+        "h1": 0.637623,
+        "h5": 0.636596,
+        "h15": 0.625416
       },
-      "train_time_sec": 229.0
+      "train_time_sec": 730.5
     },
     {
       "name": "No Precursor Signals",
@@ -142,16 +142,36 @@
         "traffic_change",
         "burst_ratio"
       ],
-      "n_features": 28,
-      "auc": 0.63573,
-      "auc_drop": -0.000157,
+      "n_features": 27,
+      "auc": 0.633735,
+      "auc_drop": -0.002785,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.638385,
-        "h5": 0.637173,
-        "h15": 0.631632
+        "h1": 0.635445,
+        "h5": 0.637231,
+        "h15": 0.62853
       },
-      "train_time_sec": 217.0
+      "train_time_sec": 699.0
+    },
+    {
+      "name": "No Cross-API",
+      "features_removed": [
+        "avg_error_rate_others",
+        "max_error_rate_others",
+        "n_apis_elevated",
+        "corr_with_similar_api",
+        "systemic_stress_index"
+      ],
+      "n_features": 38,
+      "auc": 0.63095,
+      "auc_drop": 0.0,
+      "importance": "Minor",
+      "per_horizon_auc": {
+        "h1": 0.635897,
+        "h5": 0.631816,
+        "h15": 0.625137
+      },
+      "train_time_sec": 705.4
     }
   ]
 }
