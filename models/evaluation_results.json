@@ -1,13 +1,13 @@
 {
   "baselines": {
     "LogisticRegression": {
-      "auc": 0.3591419044115634
+      "auc": 0.7000776064493587
     },
     "RandomForest": {
-      "auc": 0.8551073903304953
+      "auc": 0.7072053549935756
     },
     "XGBoost": {
-      "auc": 0.8672084463050391
+      "auc": 0.7245067482820697
     }
   },
   "lstm": {
@@ -19,8 +19,8 @@
     }
   },
   "comparison": {
-    "best_baseline_auc": 0.8672084463050391,
+    "best_baseline_auc": 0.7245067482820697,
     "lstm_avg_auc": 0.7753832517223941,
-    "improvement_percent": -10.588595507099765
+    "improvement_percent": 7.022226302372103
   }
 }

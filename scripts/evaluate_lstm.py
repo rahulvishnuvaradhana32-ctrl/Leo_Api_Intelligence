@@ -24,12 +24,14 @@ parser.add_argument('--start_date', type=str,
                     help='filter features from this YYYY-MM-DD (inclusive)')
 parser.add_argument('--end_date', type=str,
                     help='filter features up to this YYYY-MM-DD (inclusive)')
+parser.add_argument('--data_path', type=str, default='data/banking_api_features_v6.csv',
+                    help='path to features CSV')
 args = parser.parse_args()
 
 print("=== LSTM Evaluation vs Baselines ===\n")
 
 # Load banking API features
-features_path = 'data/banking_api_features.csv'
+features_path = args.data_path
 if not os.path.exists(features_path):
     print(f"ERROR: {features_path} not found")
     exit(1)

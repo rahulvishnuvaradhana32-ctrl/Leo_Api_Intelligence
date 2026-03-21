@@ -25,11 +25,14 @@ start /min powershell -WindowStyle Hidden -Command "while($true){(New-Object -CO
 call .venv\Scripts\activate.bat
 
 :: Skip training if a good model already exists (avg_auc >= 0.775)
-python -c "import json; d=json.load(open('models/lstm_results.json')); exit(0 if d.get('avg_auc',0) >= 0.775 else 1)" 2>nul
-if %errorlevel%==0 (
-    echo Previous successful training found. Skipping training.
-    goto pipeline
-)
+::python -c "import json; d=json.load(open('models/lstm_results.json')); exit(0 if d.get('avg_auc',0) >= 0.775 else 1)" 2>nul
+::if %errorlevel%==0 (
+::    echo Previous successful training found. Skipping training.
+::   goto pipeline
+::)
+
+:: Always retrain on full dataset — no skip
+echo Retraining on full dataset — no sequence cap...
 
 :: Run full dataset training — no sequence cap this time
 python scripts/run_lstm_training.py ^

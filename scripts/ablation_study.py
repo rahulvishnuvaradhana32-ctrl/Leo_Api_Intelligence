@@ -39,7 +39,7 @@ parser.add_argument("--max_seq",     type=int, default=50_000)
 parser.add_argument("--batch_size",  type=int, default=128)
 parser.add_argument("--seq_len",     type=int, default=30)
 parser.add_argument("--hidden_size", type=int, default=128)
-parser.add_argument("--data_path",   type=str, default="data/banking_api_features_clean.csv")
+parser.add_argument("--data_path",   type=str, default="data/banking_api_features_v6.csv")
 args = parser.parse_args()
 
 HORIZONS    = [1, 5, 15]
