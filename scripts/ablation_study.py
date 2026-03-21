@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ablation_study.py  --  Feature group importance for the FCE Multi-Horizon LSTM.
+ablation_study.py  --  Feature group importance for the LEO API Intelligence Multi-Horizon LSTM.
 
 Removes one feature group at a time, retrains a lightweight model, and
 measures how much average AUC drops.  A larger drop = the group matters more.
@@ -32,7 +32,7 @@ import argparse
 warnings.filterwarnings("ignore")
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
-parser = argparse.ArgumentParser(description="Ablation study for FCE LSTM")
+parser = argparse.ArgumentParser(description="Ablation study for LEO API Intelligence LSTM")
 parser.add_argument("--recent_rows", type=int, default=300_000)
 parser.add_argument("--epochs",      type=int, default=5)
 parser.add_argument("--max_seq",     type=int, default=50_000)
@@ -318,7 +318,7 @@ def plot_results(results: list[dict], baseline_auc: float, out_path: str):
     ax.set_xlabel("AUC Drop vs Baseline", fontsize=11)
     ax.set_title(
         f"Feature Group Importance  (Baseline AUC = {baseline_auc:.4f})\n"
-        "FCE Multi-Horizon LSTM — Ablation Study",
+        "LEO API Intelligence — Ablation Study",
         fontsize=12, pad=12,
     )
     ax.axvline(0, color="#7f8c8d", linewidth=0.8, linestyle="--")
@@ -346,7 +346,7 @@ def plot_results(results: list[dict], baseline_auc: float, out_path: str):
 
 def main():
     t_total = time.time()
-    print("=== FCE Ablation Study ===\n")
+    print("=== LEO API Intelligence Ablation Study ===\n")
 
     # ── Load data ─────────────────────────────────────────────────────────────
     if not os.path.exists(args.data_path):

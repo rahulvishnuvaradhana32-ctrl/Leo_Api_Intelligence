@@ -495,7 +495,7 @@ def train(args) -> None:
     plt.close(fig)
 
     results = {
-        "version":        "v5",
+        "version":        f"v5-h{args.hidden_size}-s{args.sequence_length}-g{args.focal_gamma}",
         "total_time":     total_time,
         "best_val_loss":  float(best_val_loss),
         "avg_auc":        avg_auc,
@@ -546,8 +546,8 @@ if __name__ == "__main__":
     parser.set_defaults(bidirectional=True)
     parser.add_argument("--lr",                  type=float, default=0.001)
     parser.add_argument("--patience",            type=int,   default=6)
-    parser.add_argument("--max_train_sequences", type=int,   default=200_000,
-                        help="Cap training sequences (default 200,000)")
+    parser.add_argument("--max_train_sequences", type=int,   default=None,
+                        help="Cap training sequences (None = use all sequences)")
     parser.add_argument("--focal_gamma",         type=float, default=2.0)
     parser.add_argument("--balance",             action="store_true",
                         default=False,

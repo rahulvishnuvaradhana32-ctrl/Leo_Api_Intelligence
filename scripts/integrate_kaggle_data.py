@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-integrate_kaggle_data.py  --  Real Kaggle data integration for FCE project.
+integrate_kaggle_data.py  --  Real Kaggle data integration for LEO API Intelligence project.
 
 Downloads 5 Kaggle datasets, normalises each to the project schema, engineers
 features using identical logic to generate_production_dataset.py, then appends
@@ -27,11 +27,11 @@ import sqlite3
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-print("=== FCE Kaggle Integration Pipeline ===\n")
+print("=== LEO API Intelligence Kaggle Integration Pipeline ===\n")
 
 # -- CLI -----------------------------------------------------------------------
 parser = argparse.ArgumentParser(
-    description="Download and integrate real Kaggle datasets into the FCE project",
+    description="Download and integrate real Kaggle datasets into the LEO API Intelligence project",
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 parser.add_argument(
@@ -1118,7 +1118,7 @@ def main():
             import traceback
             result["error"] = str(e)
             print(f"  [FAIL] Failed: {e}")
-            if os.environ.get("FCE_DEBUG"):
+            if os.environ.get("LEO_DEBUG"):
                 traceback.print_exc()
 
         all_results.append(result)

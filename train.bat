@@ -35,12 +35,21 @@ call .venv\Scripts\activate.bat
 echo Retraining on full dataset — no sequence cap...
 
 :: Run full dataset training — no sequence cap this time
+:: python scripts/run_lstm_training.py ^
+ ::  --data data/banking_api_features_v6.csv ^
+::   --epochs 15 ^
+::   --hidden_size 128 ^
+::   --batch_size 128 ^
+::   --patience 6
+
 python scripts/run_lstm_training.py ^
   --data data/banking_api_features_v6.csv ^
   --epochs 15 ^
-  --hidden_size 128 ^
-  --batch_size 128 ^
-  --patience 6
+  --hidden_size 256 ^
+  --batch_size 64 ^
+  --patience 6 ^
+  --sequence_length 60 ^
+  --focal_gamma 3.0
 
 :: If training failed stop here — do not run pipeline on a broken model
 if %errorlevel% neq 0 (

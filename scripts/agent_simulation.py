@@ -360,7 +360,7 @@ def main(args):
 
     # Load CSV (pre-2025 only — real failure rates)
     print('Step 1 — Loading CSV (pre-2025 rows) ...')
-    csv_path = 'data/banking_api_features.csv'
+    csv_path = args.data
     df = pd.read_csv(csv_path, low_memory=False)
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
     df = df[df['timestamp'] < '2025-01-01'].copy()
@@ -490,6 +490,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--data', type=str,
+                        default=os.path.join("data", "banking_api_features_v6.csv"),
+                        help="Path to features CSV")
     parser.add_argument('--n_transactions', type=int, default=1000,
                         help='Number of transactions to simulate (default: 1000)')
     parser.add_argument('--seed',           type=int, default=42,

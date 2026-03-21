@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-conformal_prediction.py  --  Inductive Conformal Prediction for the FCE LSTM.
+conformal_prediction.py  --  Inductive Conformal Prediction for the LEO API Intelligence LSTM.
 
 Wraps the trained model so every failure probability comes with a
 statistically guaranteed confidence interval.
@@ -45,7 +45,7 @@ from sklearn.preprocessing import StandardScaler
 warnings.filterwarnings("ignore")
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
-parser = argparse.ArgumentParser(description="Conformal prediction for FCE LSTM")
+parser = argparse.ArgumentParser(description="Conformal prediction for LEO API Intelligence LSTM")
 parser.add_argument("--alpha",      type=float, default=0.10,
                     help="Error rate (0.10 → 90%% coverage, 0.05 → 95%%). Default 0.10")
 parser.add_argument("--cal_seq",    type=int,   default=50_000,
@@ -244,7 +244,7 @@ def plot_reliability(probas_all, ytrue_all, horizon_labels, out_path):
     ax_main.plot([0, 1], [0, 1], "k--", alpha=0.4, label="Perfect calibration")
     ax_main.set_ylabel("Actual failure rate", fontsize=11)
     ax_main.set_title(
-        f"Reliability Diagram  (FCE LSTM — {COVERAGE}% Conformal Bands)",
+        f"Reliability Diagram  (LEO API Intelligence — {COVERAGE}% Conformal Bands)",
         fontsize=12, pad=10
     )
     ax_main.legend(fontsize=9)

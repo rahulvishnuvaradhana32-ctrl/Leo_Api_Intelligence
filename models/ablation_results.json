@@ -1,5 +1,5 @@
 {
-  "baseline_auc": 0.63095,
+  "baseline_auc": 0.635965,
   "data_window": 300000,
   "epochs": 5,
   "max_sequences": 50000,
@@ -7,16 +7,16 @@
     {
       "name": "Baseline",
       "features_removed": [],
-      "n_features": 38,
-      "auc": 0.63095,
+      "n_features": 43,
+      "auc": 0.635965,
       "auc_drop": 0.0,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635897,
-        "h5": 0.631816,
-        "h15": 0.625137
+        "h1": 0.643548,
+        "h5": 0.637595,
+        "h15": 0.626752
       },
-      "train_time_sec": 809.7
+      "train_time_sec": 510.0
     },
     {
       "name": "No Event Signals",
@@ -24,16 +24,16 @@
         "error_rate_boost",
         "rt_multiplier"
       ],
-      "n_features": 36,
-      "auc": 0.632066,
-      "auc_drop": -0.001116,
+      "n_features": 41,
+      "auc": 0.63334,
+      "auc_drop": 0.002625,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.636848,
-        "h5": 0.635346,
-        "h15": 0.624003
+        "h1": 0.635668,
+        "h5": 0.638608,
+        "h15": 0.625743
       },
-      "train_time_sec": 734.7
+      "train_time_sec": 531.1
     },
     {
       "name": "No Rolling Stats",
@@ -44,16 +44,16 @@
         "error_rate_rolling",
         "error_volatility"
       ],
-      "n_features": 33,
-      "auc": 0.63148,
-      "auc_drop": -0.00053,
+      "n_features": 38,
+      "auc": 0.632746,
+      "auc_drop": 0.003219,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.636239,
-        "h5": 0.633981,
-        "h15": 0.624221
+        "h1": 0.635081,
+        "h5": 0.637026,
+        "h15": 0.62613
       },
-      "train_time_sec": 698.1
+      "train_time_sec": 514.5
     },
     {
       "name": "No Lag Features",
@@ -62,16 +62,16 @@
         "response_time_lag_5",
         "error_rate_lag_1"
       ],
-      "n_features": 35,
-      "auc": 0.632673,
-      "auc_drop": -0.001723,
+      "n_features": 40,
+      "auc": 0.634883,
+      "auc_drop": 0.001082,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.634751,
-        "h5": 0.634831,
-        "h15": 0.628437
+        "h1": 0.63717,
+        "h5": 0.639486,
+        "h15": 0.627995
       },
-      "train_time_sec": 697.5
+      "train_time_sec": 526.2
     },
     {
       "name": "No EMA Features",
@@ -80,16 +80,16 @@
         "response_time_ema_30",
         "error_rate_ema_10"
       ],
-      "n_features": 35,
-      "auc": 0.632616,
-      "auc_drop": -0.001666,
+      "n_features": 40,
+      "auc": 0.634387,
+      "auc_drop": 0.001578,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.634868,
-        "h5": 0.634623,
-        "h15": 0.628357
+        "h1": 0.636239,
+        "h5": 0.639064,
+        "h15": 0.627858
       },
-      "train_time_sec": 692.3
+      "train_time_sec": 533.2
     },
     {
       "name": "No Cyclical Enc.",
@@ -99,16 +99,16 @@
         "dow_sin",
         "dow_cos"
       ],
-      "n_features": 34,
-      "auc": 0.632274,
-      "auc_drop": -0.001324,
+      "n_features": 39,
+      "auc": 0.636334,
+      "auc_drop": -0.000369,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.636515,
-        "h5": 0.634911,
-        "h15": 0.625397
+        "h1": 0.642735,
+        "h5": 0.63859,
+        "h15": 0.627678
       },
-      "train_time_sec": 705.8
+      "train_time_sec": 566.1
     },
     {
       "name": "No API Flags",
@@ -116,16 +116,16 @@
         "high_frequency_api",
         "api_complexity"
       ],
-      "n_features": 36,
-      "auc": 0.633211,
-      "auc_drop": -0.002261,
+      "n_features": 41,
+      "auc": 0.634127,
+      "auc_drop": 0.001838,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.637623,
-        "h5": 0.636596,
-        "h15": 0.625416
+        "h1": 0.635947,
+        "h5": 0.638959,
+        "h15": 0.627476
       },
-      "train_time_sec": 730.5
+      "train_time_sec": 528.1
     },
     {
       "name": "No Precursor Signals",
@@ -142,16 +142,16 @@
         "traffic_change",
         "burst_ratio"
       ],
-      "n_features": 27,
-      "auc": 0.633735,
-      "auc_drop": -0.002785,
+      "n_features": 32,
+      "auc": 0.637739,
+      "auc_drop": -0.001774,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635445,
-        "h5": 0.637231,
-        "h15": 0.62853
+        "h1": 0.64657,
+        "h5": 0.638189,
+        "h15": 0.628458
       },
-      "train_time_sec": 699.0
+      "train_time_sec": 557.0
     },
     {
       "name": "No Cross-API",
@@ -163,15 +163,15 @@
         "systemic_stress_index"
       ],
       "n_features": 38,
-      "auc": 0.63095,
-      "auc_drop": 0.0,
+      "auc": 0.632184,
+      "auc_drop": 0.003781,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635897,
-        "h5": 0.631816,
-        "h15": 0.625137
+        "h1": 0.634061,
+        "h5": 0.636145,
+        "h15": 0.626345
       },
-      "train_time_sec": 705.4
+      "train_time_sec": 514.1
     }
   ]
 }

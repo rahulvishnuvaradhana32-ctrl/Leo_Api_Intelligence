@@ -1,4 +1,4 @@
-# FCE Banking APIs Reliability Modeling - Project Setup & Status
+# LEO API Intelligence — Project Setup & Status
 
 ## Project Completion Checklist
 

@@ -1,26 +1,26 @@
 {
   "baselines": {
     "LogisticRegression": {
-      "auc": 0.7000776064493587
+      "auc": 0.6951145757730348
     },
     "RandomForest": {
-      "auc": 0.7072053549935756
+      "auc": 0.7240169947192492
     },
     "XGBoost": {
-      "auc": 0.7245067482820697
+      "auc": 0.7322513873257834
     }
   },
   "lstm": {
-    "avg_auc": 0.7753832517223941,
+    "avg_auc": 0.7751846254006907,
     "per_horizon": {
-      "horizon_1": 0.7784830920524167,
-      "horizon_5": 0.7754291077643154,
-      "horizon_15": 0.77223755535045
+      "horizon_1": 0.7784625312535328,
+      "horizon_5": 0.7752340855281309,
+      "horizon_15": 0.7718572594204084
     }
   },
   "comparison": {
-    "best_baseline_auc": 0.7245067482820697,
-    "lstm_avg_auc": 0.7753832517223941,
-    "improvement_percent": 7.022226302372103
+    "best_baseline_auc": 0.7322513873257834,
+    "lstm_avg_auc": 0.7751846254006907,
+    "improvement_percent": 5.863182892927173
   }
 }

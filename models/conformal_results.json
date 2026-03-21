@@ -1,32 +1,32 @@
 {
   "target_coverage": 90.0,
   "alpha": 0.1,
-  "cal_sequences": 50000,
+  "cal_sequences": 100000,
   "test_sequences": 50000,
   "n_features": 43,
   "per_horizon": {
     "h1": {
-      "q_hat": 0.545685,
-      "coverage": 0.8904,
-      "avg_width": 0.9906,
+      "q_hat": 0.555971,
+      "coverage": 0.894,
+      "avg_width": 0.9902,
       "status": "FAIL"
     },
     "h5": {
-      "q_hat": 0.557825,
-      "coverage": 0.8906,
+      "q_hat": 0.552607,
+      "coverage": 0.8932,
       "avg_width": 0.9904,
       "status": "FAIL"
     },
     "h15": {
-      "q_hat": 0.548873,
-      "coverage": 0.8911,
-      "avg_width": 0.9913,
+      "q_hat": 0.554281,
+      "coverage": 0.8937,
+      "avg_width": 0.9908,
       "status": "FAIL"
     }
   },
   "summary": {
-    "avg_coverage": 0.8907,
-    "avg_width": 0.9908,
+    "avg_coverage": 0.8936,
+    "avg_width": 0.9905,
     "all_horizons_pass": false
   }
 }

@@ -78,7 +78,6 @@ echo ================================
 echo Step 5 - Running agent simulation...
 echo ================================
 python scripts/agent_simulation.py ^
-  --data data/banking_api_features_v6.csv ^
   --n_transactions 1000 ^
   --seed 42
 if %errorlevel% neq 0 (

@@ -43,7 +43,7 @@ warnings.filterwarnings("ignore")
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(
-    description="Self-improving LSTM pipeline for FCE banking API failure prediction"
+    description="Self-improving LSTM pipeline for LEO API Intelligence banking API failure prediction"
 )
 parser.add_argument("--dry_run", action="store_true",
                     help="Analyse and report only -- do not retrain or update any files")
