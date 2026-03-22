@@ -109,11 +109,14 @@ class FocalLoss(nn.Module):
         self.pos_weight = pos_weight
 
     def forward(self, logits, targets):
-        bce   = F.binary_cross_entropy_with_logits(
-            logits, targets, pos_weight=self.pos_weight, reduction="none"
+        # Move pos_weight to the same device as logits at runtime so this
+        # module works on both CPU and GPU (Colab) without modification.
+        pw  = self.pos_weight.to(logits.device) if self.pos_weight is not None else None
+        bce = F.binary_cross_entropy_with_logits(
+            logits, targets, pos_weight=pw, reduction="none"
         )
-        probs = torch.sigmoid(logits)
-        p_t   = probs * targets + (1 - probs) * (1 - targets)
+        prob = torch.sigmoid(logits)
+        p_t  = torch.where(targets >= 0.5, prob, 1 - prob)
         return ((1 - p_t) ** self.gamma * bce).mean()
 
 
@@ -146,9 +149,11 @@ class AttentionPooling(nn.Module):
         super().__init__()
         self.score = nn.Linear(hidden_size, 1, bias=False)
 
-    def forward(self, x):           # x: (B, T, H)
-        w = torch.softmax(self.score(x), dim=1)   # (B, T, 1)
-        return (w * x).sum(dim=1)                  # (B, H)
+    def forward(self, x):                                    # x: (B, T, H)
+        # squeeze(-1): (B,T,1) -> (B,T) so softmax runs on the time dimension
+        # dim=-1 matches the reference in run_lstm_training.py exactly.
+        weights = torch.softmax(self.score(x).squeeze(-1), dim=-1)  # (B, T)
+        return (weights.unsqueeze(-1) * x).sum(dim=1)               # (B, H)
 
 
 class MultiHorizonLSTM(nn.Module):
@@ -170,12 +175,12 @@ class MultiHorizonLSTM(nn.Module):
         ])
 
     def forward(self, x):
-        n_dir = 2 if self.bidirectional else 1
-        h0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size)
-        out, _ = self.lstm(x, (h0, c0))      # (B, T, lstm_out)
+        # Let PyTorch initialise h0/c0 to zeros automatically.
+        # Previously created explicit tensors without .to(x.device) which
+        # would crash when running on GPU (Colab).
+        out, _ = self.lstm(x)                # (B, T, lstm_out)
         out = self.layer_norm(out)
-        out = self.attn_pool(out)             # (B, lstm_out)
+        out = self.attn_pool(out)            # (B, lstm_out)
         out = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 

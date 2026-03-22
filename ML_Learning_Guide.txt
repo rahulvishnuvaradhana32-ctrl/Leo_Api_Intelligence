@@ -1,0 +1,814 @@
+================================================================================
+  ML LEARNING GUIDE — Concepts & Techniques Used in LEO API Intelligence
+================================================================================
+  Author  : Rahul Vishnuvardhana
+  Project : LEO API Intelligence — Predictive Reliability Modeling
+  Date    : March 2026
+================================================================================
+
+This guide explains every machine learning concept used in this project in plain
+language. No prior ML knowledge is needed. Each section tells you WHAT the
+concept is, WHY it matters, and HOW it was used in this project.
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+  1.  The Core Problem — What Are We Trying to Solve?
+  2.  Time Series Data — Data That Changes Over Time
+  3.  Sliding Window — Turning Raw Data Into Learning Examples
+  4.  Feature Engineering — Teaching the Model What to Notice
+  5.  StandardScaler — Putting All Numbers on the Same Scale
+  6.  LSTM — The Brain of This Project
+  7.  Bidirectional LSTM — Reading Forwards and Backwards
+  8.  Attention Pooling — Focusing on What Matters
+  9.  Layer Normalization — Keeping Numbers Stable During Training
+ 10.  Multi-Horizon Prediction — Predicting 1, 5, and 15 Steps Ahead
+ 11.  Focal Loss — Dealing With Rare Failures
+ 12.  Pos-Weight — Telling the Model Failures Matter More
+ 13.  Train / Validation / Test Split — Honest Evaluation
+ 14.  Stratified Split — Keeping Failure Rates Balanced
+ 15.  Adam Optimizer — The Engine That Improves the Model
+ 16.  Learning Rate — How Big a Step the Model Takes
+ 17.  ReduceLROnPlateau — Slowing Down When Progress Stalls
+ 18.  Early Stopping — Knowing When to Quit Training
+ 19.  Gradient Clipping — Preventing the Model From Breaking
+ 20.  Baseline Models — The Bar to Beat
+ 21.  ROC-AUC — The Main Accuracy Measure
+ 22.  PR-AUC — Accuracy for Rare Events
+ 23.  Precision@K — Of the Top Alerts, How Many Are Real?
+ 24.  Ablation Study — Understanding Which Features Matter
+ 25.  Conformal Prediction — Honest Uncertainty Estimates
+ 26.  Agent Simulation — Measuring Real-World Value
+ 27.  Self-Improving Pipeline — The Model That Fixes Itself
+ 28.  The Full Pipeline — How Everything Connects
+
+================================================================================
+1. THE CORE PROBLEM — WHAT ARE WE TRYING TO SOLVE?
+================================================================================
+
+Banking APIs (Application Programming Interfaces) are software services that
+handle millions of financial transactions — stock prices, currency exchanges,
+payments. When these APIs fail, trades are lost, money is delayed, and trust
+is broken.
+
+The traditional approach is REACTIVE: an API fails → an alert fires → an
+engineer fixes it. By then, damage is already done.
+
+LEO API Intelligence takes a PROACTIVE approach: look at the recent behaviour
+of an API and PREDICT whether it is likely to fail in the next few minutes
+before it actually fails.
+
+  Reactive:  API fails → alert fires (damage done)
+  Proactive: Model detects early warning signs → alert fires → team intervenes
+             (damage prevented)
+
+This is a BINARY CLASSIFICATION problem: for every moment in time, the model
+answers one question — "Is this API about to fail? Yes or No?"
+
+
+================================================================================
+2. TIME SERIES DATA — DATA THAT CHANGES OVER TIME
+================================================================================
+
+WHAT IT IS:
+  Time series data is a sequence of measurements recorded at regular time
+  intervals. Think of a heartbeat monitor — each reading depends on the ones
+  before it. Normal tabular data (like a spreadsheet) treats each row as
+  independent. Time series data does not — the ORDER of rows matters.
+
+WHY IT MATTERS:
+  An API might look fine right now, but if response times have been slowly
+  creeping up for the last 30 minutes, that pattern is an early warning sign.
+  A model that ignores time order would miss this entirely.
+
+HOW WE USED IT:
+  Our dataset (banking_api_features_v6.csv) contains roughly 3 million rows,
+  each representing one API call logged at a specific timestamp. The data is
+  sorted chronologically before any processing so the model always sees events
+  in the order they happened.
+
+
+================================================================================
+3. SLIDING WINDOW — TURNING RAW DATA INTO LEARNING EXAMPLES
+================================================================================
+
+WHAT IT IS:
+  Imagine looking at the last 60 readings of an API and then guessing whether
+  it will fail in the next 15 minutes. You slide that 60-reading window one
+  step forward, make another prediction, and so on. This is called a sliding
+  window (or sequence window).
+
+WHY IT MATTERS:
+  Neural networks need fixed-size inputs. A sliding window converts a
+  continuous stream of data into thousands of fixed-size "examples" that the
+  model can learn from.
+
+HOW WE USED IT:
+  We use a sequence length of 60 — meaning the model looks at the last 60
+  time steps (roughly 60 minutes of API activity) to make each prediction.
+  From 3 million rows, this produces hundreds of thousands of training examples.
+
+  Code location: scripts/run_lstm_training.py
+    --sequence_length 60
+
+
+================================================================================
+4. FEATURE ENGINEERING — TEACHING THE MODEL WHAT TO NOTICE
+================================================================================
+
+WHAT IT IS:
+  Raw data (response time, error count) is useful, but derived signals — things
+  you calculate FROM the raw data — are often even more useful. Creating these
+  derived signals is called feature engineering.
+
+WHY IT MATTERS:
+  A single high response time might be noise. But if response time has been
+  rising for 5 consecutive readings AND the error rate is also climbing, that
+  combination is a much stronger failure signal. Feature engineering encodes
+  these patterns explicitly.
+
+HOW WE USED IT:
+  We engineered 43 features across several groups:
+
+  ROLLING STATISTICS — averages and variability over recent windows
+    response_time_rolling_mean   — average response time over last N calls
+    response_time_rolling_std    — how much response time is varying
+    error_rate_rolling           — fraction of recent calls that errored
+
+  LAG FEATURES — what the value was 1 or 5 steps ago
+    response_time_lag_1          — response time 1 step ago
+    response_time_lag_5          — response time 5 steps ago
+    Comparing "now" to "1 step ago" reveals sudden changes.
+
+  EMA (EXPONENTIAL MOVING AVERAGE) — a smoothed trend line
+    response_time_ema_10         — short-term trend (last ~10 steps)
+    response_time_ema_30         — longer-term trend (last ~30 steps)
+    If the short EMA crosses above the long EMA, something is accelerating.
+
+  PRECURSOR SIGNALS — early warning indicators computed on the fly
+    latency_diff_1               — how much response time jumped in one step
+    latency_spike                — current vs average (ratio > 2 = alarming)
+    error_burst                  — sudden spike in error rate
+    instability_index            — combined jitter in latency + errors
+    latency_slope                — is latency trending up or down?
+
+  CYCLICAL TIME FEATURES — encoding time as a circle, not a line
+    hour_sin, hour_cos           — encodes the hour of day so 23:59 and 00:01
+                                   are recognised as neighbours, not opposites
+    dow_sin, dow_cos             — same for day of week
+
+  CROSS-API FEATURES — correlations across all 5 APIs simultaneously
+    avg_error_rate_others        — are OTHER APIs also degrading right now?
+    systemic_stress_index        — overall system health score
+    If all 5 APIs degrade together, it is likely infrastructure, not one API.
+
+  Code location: scripts/run_lstm_training.py (FEATURE_COLS list)
+                 scripts/run_lstm_training.py (add_precursor_features function)
+                 data/banking_api_features_v6.csv (pre-computed features)
+
+
+================================================================================
+5. STANDARDSCALER — PUTTING ALL NUMBERS ON THE SAME SCALE
+================================================================================
+
+WHAT IT IS:
+  Neural networks are sensitive to the scale of numbers. Response time might
+  range from 50ms to 2000ms. Error rate ranges from 0.0 to 1.0. Hour of day
+  ranges from 0 to 23. These very different scales confuse gradient descent
+  (the learning algorithm). StandardScaler transforms every feature so it has
+  a mean of 0 and a standard deviation of 1.
+
+WHY IT MATTERS:
+  Without scaling, features with large numerical values dominate the model
+  unfairly. Scaling puts all features on equal footing.
+
+HOW WE USED IT:
+  The scaler is fitted ONLY on training data (first 80% of rows chronologically)
+  to prevent data leakage — we don't want the model to "see" future statistics
+  when normalising the past.
+
+  Code location: scripts/run_lstm_training.py (StandardScaler)
+  Output file  : models/scaler.pkl
+
+
+================================================================================
+6. LSTM — THE BRAIN OF THIS PROJECT
+================================================================================
+
+WHAT IT IS:
+  LSTM stands for Long Short-Term Memory. It is a type of neural network
+  designed specifically for sequential data. Unlike a standard neural network
+  that treats each input independently, an LSTM maintains a "memory" that
+  carries information from earlier time steps forward to later ones.
+
+  Think of it like a reader who remembers what they read on page 1 while
+  reading page 50. A normal neural network forgets page 1 the moment it
+  moves on. An LSTM keeps the relevant parts.
+
+  Internally, an LSTM has three "gates":
+    - Forget gate: decides what to erase from memory
+    - Input gate : decides what new information to write into memory
+    - Output gate: decides what to send out as the answer
+
+WHY IT MATTERS:
+  API failures are not random events — they build up over time. An LSTM can
+  learn that "response time creeping up for 10 steps followed by a small error
+  spike usually precedes a failure in 5 steps." A regular network cannot learn
+  this kind of temporal pattern.
+
+HOW WE USED IT:
+  Architecture:
+    Input   → 43 features per time step
+    LSTM    → 2 layers, 256 hidden units per direction
+    Output  → 3 predictions (1-step, 5-step, 15-step ahead)
+
+  Code location: scripts/run_lstm_training.py (MultiHorizonLSTM class)
+    --hidden_size 256
+    --num_layers  2
+
+
+================================================================================
+7. BIDIRECTIONAL LSTM — READING FORWARDS AND BACKWARDS
+================================================================================
+
+WHAT IT IS:
+  A standard LSTM only reads the sequence from left to right (past to present).
+  A Bidirectional LSTM runs TWO LSTMs simultaneously — one reads left-to-right,
+  the other reads right-to-left. Their outputs are concatenated, giving the
+  model twice as much context.
+
+WHY IT MATTERS:
+  In a 60-step sequence, a pattern at step 30 might only make sense in the
+  context of what happens at step 55. The reverse-direction LSTM can capture
+  this. Bidirectional LSTMs consistently outperform one-directional ones on
+  structured time series.
+
+HOW WE USED IT:
+  Enabled by default in our training script. The hidden size doubles from
+  256 to 512 after concatenation (256 forward + 256 backward).
+
+  Code location: scripts/run_lstm_training.py
+    bidirectional=True (default)
+
+
+================================================================================
+8. ATTENTION POOLING — FOCUSING ON WHAT MATTERS
+================================================================================
+
+WHAT IT IS:
+  After the LSTM processes all 60 time steps, we have 60 output vectors.
+  We need to compress these into one summary vector for the final prediction.
+  The simplest approach is to take the last time step's output. But what if
+  the most important signal happened at step 45, not step 60?
+
+  Attention pooling learns a SCORE for each of the 60 time steps (how
+  important is this moment?), then computes a weighted average — time steps
+  with higher scores contribute more to the final summary.
+
+WHY IT MATTERS:
+  It allows the model to "look back" at the moment that mattered most, rather
+  than being forced to remember everything until the very end.
+
+HOW WE USED IT:
+  A small linear layer learns one score per time step. Softmax turns scores
+  into weights that sum to 1. The final vector is the weighted sum.
+
+  Code location: scripts/run_lstm_training.py (AttentionPooling class)
+
+
+================================================================================
+9. LAYER NORMALIZATION — KEEPING NUMBERS STABLE DURING TRAINING
+================================================================================
+
+WHAT IT IS:
+  During training, the numbers flowing through a neural network can grow very
+  large or very small, making it hard for the network to learn. Layer
+  normalization rescales the activations at each layer to have zero mean and
+  unit variance — keeping everything in a reasonable range.
+
+WHY IT MATTERS:
+  Without normalization, deep networks suffer from "vanishing" or "exploding"
+  gradients — the learning signal either disappears or becomes chaotic. Layer
+  normalization stabilizes training and often improves final accuracy.
+
+HOW WE USED IT:
+  Applied to the full LSTM output sequence before attention pooling, so the
+  attention mechanism sees normalized activations.
+
+  Code location: scripts/run_lstm_training.py (self.layer_norm = nn.LayerNorm)
+
+
+================================================================================
+10. MULTI-HORIZON PREDICTION — PREDICTING 1, 5, AND 15 STEPS AHEAD
+================================================================================
+
+WHAT IT IS:
+  Instead of predicting only "will this API fail in the next 1 minute?", our
+  model simultaneously predicts failure at three future horizons:
+    - Horizon 1  : 1 step ahead  (~1 minute)
+    - Horizon 5  : 5 steps ahead (~5 minutes)
+    - Horizon 15 : 15 steps ahead (~15 minutes)
+
+  Each horizon has its own dedicated output "head" (a small neural network
+  layer) that specializes in that prediction window.
+
+WHY IT MATTERS:
+  A 1-minute warning might not give the team enough time to act. A 15-minute
+  warning gives them time to switch to a backup API before failure. Multiple
+  horizons provide different levels of urgency in one model.
+
+HOW WE USED IT:
+  Three separate Linear output layers (called "heads"), one per horizon.
+  Each is trained with its own loss and its own class weight.
+
+  Code location: scripts/run_lstm_training.py
+    --horizons 1 5 15
+    self.heads = nn.ModuleList([nn.Linear(...) for _ in range(n_horizons)])
+
+
+================================================================================
+11. FOCAL LOSS — DEALING WITH RARE FAILURES
+================================================================================
+
+WHAT IT IS:
+  In our dataset, roughly 5–10% of API calls result in a failure. If we used
+  standard binary cross-entropy loss, the model would quickly learn that
+  "predict no failure every time" achieves 90–95% accuracy — while being
+  completely useless.
+
+  Focal Loss solves this by DOWN-WEIGHTING easy examples (correctly classified
+  normal calls) and UP-WEIGHTING hard examples (the rare failure cases the
+  model is uncertain about). The formula adds a factor (1 - probability)^gamma
+  to the standard loss.
+
+    gamma = 0.0 → standard cross-entropy (no focus)
+    gamma = 2.0 → moderate focus on hard examples
+    gamma = 3.0 → strong focus on hard examples (what we use)
+
+WHY IT MATTERS:
+  Without focal loss, the model ignores failures. With focal loss at gamma=3.0,
+  failures are given proportionally more attention during training.
+
+HOW WE USED IT:
+  Code location: scripts/run_lstm_training.py (FocalLoss class)
+    --focal_gamma 3.0
+
+
+================================================================================
+12. POS-WEIGHT — TELLING THE MODEL FAILURES MATTER MORE
+================================================================================
+
+WHAT IT IS:
+  Works alongside Focal Loss. pos_weight is a multiplier applied to the loss
+  on positive (failure) examples. If there are 9 normal calls for every 1
+  failure, setting pos_weight=9 tells the model: "getting a failure wrong is
+  9 times more costly than getting a normal call wrong."
+
+  For the 15-step horizon (where failures are even rarer), we allow a higher
+  cap of 20.0 instead of 10.0.
+
+WHY IT MATTERS:
+  Ensures the model takes rare failures seriously even when the dataset is
+  heavily imbalanced.
+
+HOW WE USED IT:
+  Computed automatically per-horizon from the training split. No manual tuning
+  needed.
+
+  Code location: scripts/run_lstm_training.py (pw_vals calculation)
+
+
+================================================================================
+13. TRAIN / VALIDATION / TEST SPLIT — HONEST EVALUATION
+================================================================================
+
+WHAT IT IS:
+  We divide data into three non-overlapping sets:
+    Train (80%) : the model learns from this data
+    Validation  (10%) : used during training to check if the model is improving
+                        (and to decide when to stop)
+    Test (10%)  : never seen during training; used only for final evaluation
+
+WHY IT MATTERS:
+  If you test on data you trained on, you get inflated results — the model has
+  "memorized" the answers. The test set gives an honest measure of how the
+  model performs on completely unseen data.
+
+HOW WE USED IT:
+  Stratified 80/10/10 split. The scaler is fitted only on the first 80% of
+  rows chronologically to prevent future data leaking into past normalization.
+
+  Code location: scripts/run_lstm_training.py (train_test_split)
+
+
+================================================================================
+14. STRATIFIED SPLIT — KEEPING FAILURE RATES BALANCED
+================================================================================
+
+WHAT IT IS:
+  With only ~5-10% failures in the data, a random split might accidentally put
+  most failures into training and almost none into the test set (or vice versa).
+  A stratified split ensures that each subset (train, val, test) has the same
+  proportion of failures as the full dataset.
+
+WHY IT MATTERS:
+  If the test set contains very few failures, evaluation metrics become
+  unreliable. Stratification guarantees each split is representative.
+
+HOW WE USED IT:
+  Code location: scripts/run_lstm_training.py
+    train_test_split(..., stratify=fail_labels)
+
+
+================================================================================
+15. ADAM OPTIMIZER — THE ENGINE THAT IMPROVES THE MODEL
+================================================================================
+
+WHAT IT IS:
+  An optimizer is the algorithm that updates the model's internal numbers
+  (weights) after each batch of training examples. Adam (Adaptive Moment
+  Estimation) is the most widely used optimizer in deep learning.
+
+  It works by computing gradients (the direction to move each weight) and
+  applying an adaptive learning rate — weights that haven't moved much get
+  a bigger nudge; weights that have been moving consistently get a smaller,
+  more careful update.
+
+WHY IT MATTERS:
+  Adam converges faster and more reliably than basic gradient descent. It
+  handles sparse gradients well (important when only some features activate
+  for each example).
+
+HOW WE USED IT:
+  Code location: scripts/run_lstm_training.py
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+
+
+================================================================================
+16. LEARNING RATE — HOW BIG A STEP THE MODEL TAKES
+================================================================================
+
+WHAT IT IS:
+  The learning rate controls how much the model changes its weights after each
+  training batch. Think of it as step size when hiking to a valley (the minimum
+  loss):
+    Too large  → you overshoot the valley and bounce around
+    Too small  → you reach the valley eventually but it takes forever
+    Just right → you descend smoothly and efficiently
+
+WHY IT MATTERS:
+  The learning rate is often the single most important hyperparameter in deep
+  learning. A bad learning rate can mean the model never converges at all.
+
+HOW WE USED IT:
+  Starting learning rate: 0.001 (a standard default for Adam).
+  Weight decay (L2 regularization): 1e-4 to prevent overfitting.
+
+  Code location: scripts/run_lstm_training.py
+    --lr 0.001
+
+
+================================================================================
+17. REDUCELRONPLATEAU — SLOWING DOWN WHEN PROGRESS STALLS
+================================================================================
+
+WHAT IT IS:
+  A learning rate scheduler that automatically halves the learning rate when
+  the validation loss stops improving for a set number of epochs (called
+  "patience"). This allows fast early progress with a large learning rate, then
+  fine-tuning with a smaller one later.
+
+WHY IT MATTERS:
+  A fixed learning rate often misses the optimal solution — too large near the
+  end of training. This scheduler adapts automatically without manual tuning.
+
+HOW WE USED IT:
+  Factor 0.5 (halves the LR), patience 2 epochs, minimum LR 1e-5.
+
+  Code location: scripts/run_lstm_training.py
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
+
+
+================================================================================
+18. EARLY STOPPING — KNOWING WHEN TO QUIT TRAINING
+================================================================================
+
+WHAT IT IS:
+  Training for too many epochs causes "overfitting" — the model memorizes the
+  training data and performs worse on new data. Early stopping monitors the
+  validation loss after each epoch. If it does not improve for N consecutive
+  epochs (the patience), training stops and the best checkpoint is restored.
+
+WHY IT MATTERS:
+  Prevents wasted compute time and prevents the model from degrading after
+  reaching its best performance.
+
+HOW WE USED IT:
+  Patience of 6 epochs. The best model weights are saved every time the
+  validation loss improves.
+
+  Code location: scripts/run_lstm_training.py
+    --patience 6
+    torch.save(model.state_dict(), 'models/stress_test_best_model.pth')
+
+
+================================================================================
+19. GRADIENT CLIPPING — PREVENTING THE MODEL FROM BREAKING
+================================================================================
+
+WHAT IT IS:
+  During backpropagation (the process of updating weights), gradients can
+  occasionally become extremely large — called an "exploding gradient." This
+  causes the model weights to jump wildly and the loss to become NaN (Not a
+  Number), effectively breaking the model.
+
+  Gradient clipping caps the gradient norm at a maximum value (1.0 here).
+  If the gradient exceeds this, it is scaled down proportionally.
+
+WHY IT MATTERS:
+  LSTMs are particularly susceptible to exploding gradients because they
+  process long sequences. Clipping is a simple, reliable safeguard.
+
+HOW WE USED IT:
+  Code location: scripts/run_lstm_training.py
+    nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+
+
+================================================================================
+20. BASELINE MODELS — THE BAR TO BEAT
+================================================================================
+
+WHAT IT IS:
+  Before celebrating an LSTM's performance, you need to know: could a much
+  simpler model do just as well? Baseline models are simple, well-understood
+  algorithms used as a comparison point.
+
+  We use three baselines:
+    Logistic Regression  — draws a straight dividing line between classes
+    Random Forest        — an ensemble of many decision trees
+    XGBoost              — gradient boosted trees (often best baseline)
+
+WHY IT MATTERS:
+  If a simple model achieves AUC=0.92 and the LSTM achieves AUC=0.93, the
+  added complexity of the LSTM is not justified. If the LSTM achieves AUC=0.97,
+  the improvement is real and meaningful.
+
+HOW WE USED IT:
+  Code location: scripts/evaluate_lstm.py
+  Output file  : models/evaluation_results.json
+
+
+================================================================================
+21. ROC-AUC — THE MAIN ACCURACY MEASURE
+================================================================================
+
+WHAT IT IS:
+  ROC stands for Receiver Operating Characteristic. AUC stands for Area Under
+  the Curve. Together, ROC-AUC measures how well a model separates the two
+  classes (failure vs no-failure) across ALL possible decision thresholds.
+
+  Interpretation:
+    AUC = 0.5  → the model is no better than random guessing (coin flip)
+    AUC = 0.7  → decent — better than random, but misses a lot
+    AUC = 0.9  → strong — correctly ranks 90% of failure/non-failure pairs
+    AUC = 1.0  → perfect (never achieved in practice)
+
+WHY IT MATTERS:
+  AUC is threshold-independent — it tells you how good the model's probability
+  scores are regardless of where you set the alert threshold.
+
+HOW WE USED IT:
+  Computed separately for each of the three horizons (1, 5, 15 steps).
+  Average AUC across all three horizons is the headline metric.
+
+  Code location: scripts/run_lstm_training.py (roc_auc_score)
+  Visualisation: models/lstm_roc_curves.png
+
+
+================================================================================
+22. PR-AUC — ACCURACY FOR RARE EVENTS
+================================================================================
+
+WHAT IT IS:
+  PR-AUC (Precision-Recall Area Under Curve) is a complementary metric to
+  ROC-AUC, specifically suited for imbalanced datasets.
+
+  Precision = of all failure alerts fired, what fraction were real failures?
+  Recall    = of all real failures, what fraction did we catch?
+
+  PR-AUC summarises the trade-off between these two across all thresholds.
+  For imbalanced data (few failures), PR-AUC is often more informative than
+  ROC-AUC because it directly reflects performance on the minority class.
+
+WHY IT MATTERS:
+  A model could achieve high ROC-AUC by being very good on the majority
+  (non-failure) class. PR-AUC specifically penalises poor performance on the
+  rare failure cases we care about most.
+
+HOW WE USED IT:
+  Reported alongside ROC-AUC for each horizon.
+
+  Code location: scripts/run_lstm_training.py (average_precision_score)
+
+
+================================================================================
+23. PRECISION@K — OF THE TOP ALERTS, HOW MANY ARE REAL?
+================================================================================
+
+WHAT IT IS:
+  In production, an operations team can only handle so many alerts per day.
+  Precision@K asks: "If we take only the top K highest-confidence alerts the
+  model fires, what fraction of them are real failures?"
+
+  K=100 means: of the 100 highest-scored predictions, how many are genuine?
+
+WHY IT MATTERS:
+  ROC-AUC and PR-AUC measure the whole distribution. Precision@K measures
+  the quality of the model's most confident predictions — the ones an
+  operations team would actually act on first.
+
+HOW WE USED IT:
+  Code location: scripts/run_lstm_training.py (precision_at_k function)
+    k=100
+
+
+================================================================================
+24. ABLATION STUDY — UNDERSTANDING WHICH FEATURES MATTER
+================================================================================
+
+WHAT IT IS:
+  An ablation study systematically removes one group of features at a time,
+  retrains the model, and measures how much performance drops. A large drop
+  means that group was critical. A tiny drop means the model barely used it.
+
+  The word "ablation" comes from surgery — removing one part at a time to
+  understand what each part does.
+
+WHY IT MATTERS:
+  It answers a key question: which of the 43 features are doing the heavy
+  lifting? This justifies the feature engineering effort and reveals where
+  future improvements should focus.
+
+HOW WE USED IT:
+  We test seven feature groups:
+    - Core telemetry       (response_time, request_count)
+    - Precursor signals    (latency diffs, spike ratios)
+    - Rolling statistics   (means, standard deviations, error rates)
+    - Lag features         (values 1 and 5 steps ago)
+    - EMA features         (exponential moving averages)
+    - Time features        (hour, day, cyclical encodings)
+    - Cross-API features   (systemic stress index, correlated failures)
+
+  Code location: scripts/ablation_study.py
+  Output chart : models/ablation_results.png
+
+
+================================================================================
+25. CONFORMAL PREDICTION — HONEST UNCERTAINTY ESTIMATES
+================================================================================
+
+WHAT IT IS:
+  Standard neural networks output a number like "72% chance of failure" but
+  give no indication of how reliable that number is. Conformal prediction wraps
+  around any model and produces a GUARANTEED interval:
+
+    "72% ± 11% — we are 90% confident the true probability is between 61%–83%"
+
+  The guarantee is mathematically rigorous: across many predictions, at least
+  90% of the true values will fall within the stated interval.
+
+  Method used: Inductive Conformal Prediction (ICP) / Split Conformal
+    Step 1 — Run the model on a calibration set (data it never trained on)
+    Step 2 — Compute how wrong the model typically is on that set
+    Step 3 — Use those error statistics to build the interval for new inputs
+
+WHY IT MATTERS:
+  In finance, confidence matters as much as accuracy. An alert that says
+  "90% confidence: failure within 15 minutes" is far more actionable than
+  one that says "failure likely" with no uncertainty information.
+
+HOW WE USED IT:
+  Coverage target: 90% (alpha=0.10)
+  Three intervals produced — one per prediction horizon.
+
+  Code location: scripts/conformal_prediction.py
+  Output chart : models/conformal_calibration.png
+
+
+================================================================================
+26. AGENT SIMULATION — MEASURING REAL-WORLD VALUE
+================================================================================
+
+WHAT IT IS:
+  Accuracy metrics (AUC, precision) tell you how good the model is at
+  predicting. But decision-makers want to know: what is the business value?
+  How much does proactive prediction actually save compared to reacting after
+  the fact?
+
+  An agent simulation runs two virtual teams through 1,000 transactions:
+    REACTIVE AGENT  — waits for a failure, then switches to a backup API
+    PROACTIVE AGENT — uses our model to predict failures early and switches
+                      to a backup API BEFORE the failure occurs
+
+  The simulation compares:
+    - Number of failures caught vs missed
+    - Cost of downtime (reactive)  vs  cost of unnecessary switches (proactive)
+    - Net savings from using the predictive model
+
+WHY IT MATTERS:
+  It translates model accuracy into a monetary and operational argument.
+  Showing that the model saves X hours of downtime per month is more compelling
+  than showing AUC=0.95.
+
+HOW WE USED IT:
+  Code location: scripts/agent_simulation.py
+    --n_transactions 1000
+    --seed 42
+  Output: models/agent_simulation_results.json
+          models/agent_simulation_chart.png
+
+
+================================================================================
+27. SELF-IMPROVING PIPELINE — THE MODEL THAT FIXES ITSELF
+================================================================================
+
+WHAT IT IS:
+  In production, data changes over time — this is called "data drift." An API
+  that used to fail once a week might start failing daily. A model trained on
+  last year's data will become less accurate.
+
+  The self-improving pipeline automates model maintenance:
+    Step 1 — Diagnose : measure current AUC per API on recent data
+    Step 2 — Identify : find which API has the worst performance
+    Step 3 — Fix      : augment training data to address the weakness
+    Step 4 — Retrain  : train a compact updated model
+    Step 5 — Compare  : old vs new AUC on the same test set
+    Step 6 — Select   : only replace the model if it genuinely improved
+    Step 7 — Log      : append to an audit log (never overwrite)
+
+WHY IT MATTERS:
+  Without self-improvement, models degrade silently over time. This pipeline
+  detects degradation early and fixes it automatically, reducing the need for
+  constant human intervention.
+
+HOW WE USED IT:
+  Code location: scripts/self_improving_pipeline.py
+  Audit log    : models/self_heal_log.jsonl
+
+
+================================================================================
+28. THE FULL PIPELINE — HOW EVERYTHING CONNECTS
+================================================================================
+
+Here is how every concept above fits together in one end-to-end flow:
+
+  RAW DATA (3M+ API call logs)
+       |
+       v
+  FEATURE ENGINEERING (43 features per row)
+  + StandardScaler normalization
+       |
+       v
+  SLIDING WINDOW (60 steps → sequence examples)
+  + Stratified train/val/test split
+       |
+       v
+  LSTM MODEL TRAINING
+  - Bidirectional LSTM (2 layers, 256 units)
+  - LayerNorm → Attention Pooling
+  - Focal Loss + Pos-Weight (handles class imbalance)
+  - Adam optimizer + ReduceLROnPlateau + Early Stopping
+  - Gradient Clipping (safety)
+       |
+       v
+  EVALUATION
+  - ROC-AUC, PR-AUC, Precision@100 per horizon
+  - Baseline comparison (LogReg, RF, XGBoost)
+  - Ablation study (which features matter?)
+       |
+       v
+  UNCERTAINTY QUANTIFICATION
+  - Conformal Prediction (90% guaranteed intervals)
+       |
+       v
+  BUSINESS IMPACT MEASUREMENT
+  - Agent Simulation (proactive vs reactive cost savings)
+       |
+       v
+  PRODUCTION DEPLOYMENT
+  - FastAPI dashboard at http://localhost:8000
+  - Self-improving pipeline for continuous maintenance
+
+--------------------------------------------------------------------------------
+  Files to run (in order):
+    1. train.bat             → trains the LSTM
+    2. run_pipeline.bat      → evaluation + conformal + simulation + dashboard
+--------------------------------------------------------------------------------
+
+================================================================================
+  END OF GUIDE
+================================================================================
+  Author  : Rahul Vishnuvardhana
+  Project : LEO API Intelligence — Predictive Reliability Modeling
+  GitHub  : https://github.com/rahulvishnuvaradhana32-ctrl/FCE_project
+================================================================================

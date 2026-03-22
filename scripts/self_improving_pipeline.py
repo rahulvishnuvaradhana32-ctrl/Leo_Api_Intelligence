@@ -60,6 +60,8 @@ parser.add_argument("--min_improvement", type=float, default=0.001,
 parser.add_argument("--seq_len", type=int, default=30)
 parser.add_argument("--horizons", nargs="+", type=int, default=[1, 5, 15])
 parser.add_argument("--hidden_size", type=int, default=128)
+parser.add_argument("--num_layers",  type=int, default=2,
+                    help="LSTM layers for retraining — must match the trained checkpoint")
 parser.add_argument("--focal_gamma", type=float, default=2.0)
 parser.add_argument("--data_path",  type=str, default="data/banking_api_features_v6.csv")
 parser.add_argument("--model_path", type=str, default="models/stress_test_best_model.pth")
@@ -132,11 +134,13 @@ class FocalLoss(nn.Module):
         self.pos_weight = pos_weight
 
     def forward(self, logits, targets):
-        bce   = F.binary_cross_entropy_with_logits(
-            logits, targets, pos_weight=self.pos_weight, reduction="none"
+        # Move pos_weight to the same device as logits — required for Colab GPU.
+        pw  = self.pos_weight.to(logits.device) if self.pos_weight is not None else None
+        bce = F.binary_cross_entropy_with_logits(
+            logits, targets, pos_weight=pw, reduction="none"
         )
-        probs = torch.sigmoid(logits)
-        p_t   = probs * targets + (1 - probs) * (1 - targets)
+        prob = torch.sigmoid(logits)
+        p_t  = torch.where(targets >= 0.5, prob, 1 - prob)
         return ((1 - p_t) ** self.gamma * bce).mean()
 
 
@@ -173,9 +177,10 @@ class AttentionPooling(nn.Module):
         super().__init__()
         self.score = nn.Linear(hidden_size, 1, bias=False)
 
-    def forward(self, x):  # x: (B, T, H)
-        w = torch.softmax(self.score(x), dim=1)  # (B, T, 1)
-        return (w * x).sum(dim=1)                # (B, H)
+    def forward(self, x):                                    # x: (B, T, H)
+        # squeeze(-1): (B,T,1) -> (B,T) so softmax runs on the time dimension.
+        weights = torch.softmax(self.score(x).squeeze(-1), dim=-1)  # (B, T)
+        return (weights.unsqueeze(-1) * x).sum(dim=1)               # (B, H)
 
 
 class MultiHorizonLSTM(nn.Module):
@@ -197,12 +202,12 @@ class MultiHorizonLSTM(nn.Module):
         ])
 
     def forward(self, x):
-        n_dir = 2 if self.bidirectional else 1
-        h0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size).to(x.device)
-        c0 = torch.zeros(self.num_layers * n_dir, x.size(0), self.hidden_size).to(x.device)
-        out, _ = self.lstm(x, (h0, c0))      # (B, T, lstm_out)
+        # PyTorch initialises h0/c0 to zeros automatically — no need to
+        # create them explicitly. Previously created without .to(x.device)
+        # which would crash on GPU.
+        out, _ = self.lstm(x)                # (B, T, lstm_out)
         out = self.layer_norm(out)
-        out = self.attn_pool(out)             # (B, lstm_out)
+        out = self.attn_pool(out)            # (B, lstm_out)
         out = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
@@ -563,7 +568,9 @@ def step4_retrain(df_augmented: pd.DataFrame,
     pw        = torch.tensor([min(n_success / max(n_fail, 1), 10.0)] * len(HORIZONS))
     criterion = FocalLoss(gamma=args.focal_gamma, pos_weight=pw)
 
-    model     = MultiHorizonLSTM(len(available), args.hidden_size, 2, len(HORIZONS))
+    # Use args.num_layers (default 2) instead of hardcoded 2 so retraining
+    # always matches the architecture of the checkpoint being improved.
+    model     = MultiHorizonLSTM(len(available), args.hidden_size, args.num_layers, len(HORIZONS))
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=args.retrain_epochs, eta_min=1e-5
@@ -658,11 +665,11 @@ def step5_compare(df_test,
     """
     print("\nStep 5 -- Comparing old vs new model on held-out test set ...")
 
-    old_model  = _load_model(old_model_path, n_features, args.hidden_size, 2, len(HORIZONS))
+    old_model  = _load_model(old_model_path, n_features, args.hidden_size, args.num_layers, len(HORIZONS))
     old_scaler = joblib.load(old_scaler_path)
     old_aucs   = _eval_model_on_df(old_model, old_scaler, df_test)
 
-    new_model  = _load_model(new_model_path, n_features, args.hidden_size, 2, len(HORIZONS))
+    new_model  = _load_model(new_model_path, n_features, args.hidden_size, args.num_layers, len(HORIZONS))
     new_scaler = joblib.load(new_scaler_path)
     new_aucs   = _eval_model_on_df(new_model, new_scaler, df_test)
 

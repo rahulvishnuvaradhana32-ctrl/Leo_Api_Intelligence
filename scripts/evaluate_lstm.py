@@ -6,11 +6,14 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, random_split
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, classification_report, confusion_matrix
+from sklearn.preprocessing import StandardScaler
+import joblib
 import xgboost as xgb
 import warnings
 import argparse
@@ -46,13 +49,31 @@ if args.end_date:
     df = df[df['timestamp'] <= pd.to_datetime(args.end_date)]
 print(f"After date filtering: {df.shape}")
 
-# Select feature columns for baselines
-feature_cols = [
-    'hour', 'day_of_week', 'is_weekend', 'is_market_hours',
-    'response_time_rolling_mean', 'response_time_rolling_std', 'error_rate_rolling',
-    'response_time_variance', 'error_volatility',
-    'is_financial_peak', 'high_frequency_api'
+# All 43 feature columns — same as run_lstm_training.py.
+# Baselines now use the full engineered feature set for a fair comparison.
+# Previously 11 features; expanding gives XGBoost/RF access to precursor signals
+# and cross-API features, making the comparison honest.
+FEATURE_COLS = [
+    "response_time", "request_count",
+    "hour", "day_of_week", "is_market_hours", "is_financial_peak",
+    "is_weekend", "is_holiday",
+    "response_time_rolling_mean", "response_time_rolling_std",
+    "error_rate_rolling", "response_time_variance", "error_volatility",
+    "response_time_lag_1", "response_time_lag_5", "error_rate_lag_1",
+    "response_time_ema_10", "response_time_ema_30", "error_rate_ema_10",
+    "hour_sin", "hour_cos", "dow_sin", "dow_cos",
+    "high_frequency_api", "api_complexity",
+    "error_rate_boost", "rt_multiplier",
+    "latency_diff_1", "latency_diff_5",
+    "error_rate_diff_1", "error_rate_diff_5",
+    "latency_spike", "error_burst", "instability_index",
+    "latency_slope", "error_slope",
+    "traffic_change", "burst_ratio",
+    "avg_error_rate_others", "max_error_rate_others",
+    "n_apis_elevated", "corr_with_similar_api",
+    "systemic_stress_index",
 ]
+feature_cols = FEATURE_COLS
 
 # Prepare data (filter to existing columns)
 available_cols = [c for c in feature_cols if c in df.columns]
@@ -126,21 +147,58 @@ results['baselines']['XGBoost'] = {'auc': float(xgb_auc)}
 print("Loading LSTM model...")
 model_path = 'models/stress_test_best_model.pth'
 if os.path.exists(model_path):
+    # ── Correct architecture — must match run_lstm_training.py exactly ──────
+    # Previous version was: unidirectional, hidden=64, no attention, no LayerNorm,
+    # single FC layer. That caused a RuntimeError on load and fell back to
+    # lstm_results.json, making the LSTM look weaker than it really is.
+
+    class AttentionPooling(nn.Module):
+        """Scalar attention over timesteps — identical to run_lstm_training.py."""
+        def __init__(self, hidden_size):
+            super().__init__()
+            self.score = nn.Linear(hidden_size, 1, bias=False)
+
+        def forward(self, x):                                    # x: (B, T, H)
+            weights = torch.softmax(self.score(x).squeeze(-1), dim=-1)  # (B, T)
+            return (weights.unsqueeze(-1) * x).sum(dim=1)               # (B, H)
+
     class MultiHorizonLSTM(nn.Module):
-        def __init__(self, input_size, hidden_size, num_layers, output_size):
-            super(MultiHorizonLSTM, self).__init__()
-            self.hidden_size = hidden_size
-            self.num_layers = num_layers
-            self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True, bidirectional=False)
-            self.fc = nn.Linear(hidden_size, output_size)
+        """BiLSTM + LayerNorm + AttentionPooling + per-horizon heads (v5)."""
+        def __init__(self, input_size, hidden_size, num_layers,
+                     n_horizons, dropout=0.3, bidirectional=True):
+            super().__init__()
+            self.lstm_out = hidden_size * (2 if bidirectional else 1)
+            self.lstm = nn.LSTM(
+                input_size, hidden_size, num_layers,
+                batch_first=True, bidirectional=bidirectional,
+                dropout=dropout if num_layers > 1 else 0.0,
+            )
+            self.layer_norm = nn.LayerNorm(self.lstm_out)
+            self.attn_pool  = AttentionPooling(self.lstm_out)
+            self.dropout    = nn.Dropout(dropout)
+            self.heads = nn.ModuleList(
+                [nn.Linear(self.lstm_out, 1) for _ in range(n_horizons)]
+            )
 
         def forward(self, x):
-            h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-            c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-            out, _ = self.lstm(x, (h0, c0))
-            out = out[:, -1, :]
-            out = self.fc(out)
-            return out
+            out, _ = self.lstm(x)
+            out    = self.layer_norm(out)
+            out    = self.attn_pool(out)
+            out    = self.dropout(out)
+            return torch.cat([h(out) for h in self.heads], dim=1)
+
+    def _detect_dims(state_dict):
+        """Auto-detect hidden_size, n_features, n_horizons, bidirectional
+        from checkpoint weights so this script never needs updating when
+        the training config changes."""
+        lstm_hh       = state_dict["lstm.weight_hh_l0"]
+        lstm_ih       = state_dict["lstm.weight_ih_l0"]
+        bidirectional = "lstm.weight_ih_l0_reverse" in state_dict
+        hidden        = lstm_hh.shape[1]
+        n_in          = lstm_ih.shape[1]
+        n_horizons    = sum(1 for k in state_dict
+                           if k.startswith("heads.") and k.endswith(".weight"))
+        return n_in, hidden, n_horizons, bidirectional
 
     class TimeSeriesDataset(Dataset):
         def __init__(self, df, sequence_length, horizons, feature_cols=None):
@@ -169,14 +227,25 @@ if os.path.exists(model_path):
             target_tensor = torch.tensor(targets, dtype=torch.float32)
             return {'sequence': seq_tensor, 'targets': target_tensor}
 
-    # Prepare data for LSTM
-    lstm_feature_cols = ['response_time', 'status_code', 'request_count', 'hour', 'day_of_week',
-                         'response_time_rolling_mean', 'response_time_rolling_std', 'error_rate_rolling',
-                         'response_time_variance', 'error_volatility']
-    lstm_available = [c for c in lstm_feature_cols if c in df.columns]
-    
+    # Use all 43 features — same as training.
+    # Previously used only 10 hardcoded features which meant the model was
+    # evaluated on a different input space than it was trained on.
+    lstm_available = [c for c in FEATURE_COLS if c in df.columns]
+    print(f"  LSTM features available: {len(lstm_available)}/43")
+
     df_lstm = df[lstm_available + ['success']].copy()
     df_lstm[lstm_available] = df_lstm[lstm_available].fillna(0).astype(np.float32)
+
+    # Apply the same scaler used during training so inputs are normalised
+    scaler_path = 'models/scaler.pkl'
+    if os.path.exists(scaler_path):
+        scaler = joblib.load(scaler_path)
+        df_lstm[lstm_available] = scaler.transform(
+            df_lstm[lstm_available]
+        ).astype(np.float32)
+        print("  Scaler applied from models/scaler.pkl")
+    else:
+        print("  Warning: models/scaler.pkl not found — using unscaled features")
     
     sequence_length = 30
     prediction_horizons = [1, 5, 15]
@@ -194,7 +263,9 @@ if os.path.exists(model_path):
                 subtest = torch.utils.data.Subset(dataset, test_idx)
                 loader = DataLoader(subtest, batch_size=32, shuffle=False)
                 # train a fresh model on subtrain for few epochs
-                model_fold = MultiHorizonLSTM(len(lstm_available), 64, 2, len(prediction_horizons)).to('cpu')
+                sd_cv = torch.load(model_path, map_location='cpu')
+                n_in_cv, hid_cv, nh_cv, bd_cv = _detect_dims(sd_cv)
+                model_fold = MultiHorizonLSTM(n_in_cv, hid_cv, 2, nh_cv, bidirectional=bd_cv).to('cpu')
                 optim = torch.optim.Adam(model_fold.parameters(), lr=0.001)
                 crit = nn.BCEWithLogitsLoss()
                 for ep in range(3):
@@ -240,8 +311,15 @@ if os.path.exists(model_path):
             
             device = torch.device('cpu')
             try:
-                lstm_model = MultiHorizonLSTM(len(lstm_available), 64, 2, len(prediction_horizons)).to(device)
-                lstm_model.load_state_dict(torch.load(model_path, map_location=device))
+                sd = torch.load(model_path, map_location=device)
+                n_in, hidden, n_heads, bidir = _detect_dims(sd)
+                print(f"  Checkpoint: input={n_in}  hidden={hidden}  "
+                      f"horizons={n_heads}  bidir={bidir}")
+                lstm_model = MultiHorizonLSTM(
+                    n_in, hidden, num_layers=2,
+                    n_horizons=n_heads, bidirectional=bidir
+                ).to(device)
+                lstm_model.load_state_dict(sd)
                 lstm_model.eval()
 
                 all_targets = []

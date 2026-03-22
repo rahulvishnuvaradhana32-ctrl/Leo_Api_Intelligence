@@ -34,7 +34,7 @@ echo ================================
 echo Step 2 - Evaluating against baselines...
 echo ================================
 python scripts/evaluate_lstm.py ^
-  --data data/banking_api_features_v6.csv ^
+  --data data/banking_api_features_v7.csv ^
   --end_date 2024-12-31
 if %errorlevel% neq 0 (
     echo FAILED: evaluate_lstm.py
@@ -48,10 +48,10 @@ echo ================================
 echo Step 3 - Running ablation study...
 echo ================================
 python scripts/ablation_study.py ^
-  --data data/banking_api_features_v6.csv ^
-  --recent_rows 300000 ^
-  --epochs 5 ^
-  --max_seq 50000
+  --data data/banking_api_features_v7.csv ^
+  --recent_rows 500000 ^
+  --epochs 10 ^
+  --max_seq 100000
 if %errorlevel% neq 0 (
     echo FAILED: ablation_study.py
     goto cleanup
@@ -64,8 +64,8 @@ echo ================================
 echo Step 4 - Running conformal prediction...
 echo ================================
 python scripts/conformal_prediction.py ^
-  --cal_seq 100000 ^
-  --test_seq 50000
+  --cal_seq 2000000 ^
+  --test_seq 100000
 if %errorlevel% neq 0 (
     echo FAILED: conformal_prediction.py
     goto cleanup
@@ -78,12 +78,12 @@ echo ================================
 echo Step 5 - Running agent simulation...
 echo ================================
 python scripts/agent_simulation.py ^
-  --n_transactions 1000 ^
-  --seed 42
-if %errorlevel% neq 0 (
-    echo FAILED: agent_simulation.py
-    goto cleanup
-)
+  --data data/banking_api_features_v7.csv ^
+  --n_transactions 10000 ^
+  --seed %RANDOM% ^
+  --threshold 0.30 ^
+  --cost_per_failure 150
+if %errorlevel% neq 0 (echo FAILED: agent_simulation.py && goto cleanup)
 echo DONE: Agent simulation complete
 
 :: ── STEP 6 ───────────────────────
@@ -92,7 +92,6 @@ echo ================================
 echo Step 6 - Running self-improving pipeline dry run...
 echo ================================
 python scripts/self_improving_pipeline.py ^
-  --dry_run ^
   --recent_rows 1000000
 if %errorlevel% neq 0 (
     echo FAILED: self_improving_pipeline.py
