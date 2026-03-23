@@ -1,22 +1,22 @@
 {
-  "baseline_auc": 0.635965,
-  "data_window": 300000,
-  "epochs": 5,
-  "max_sequences": 50000,
+  "baseline_auc": 0.852171,
+  "data_window": 500000,
+  "epochs": 10,
+  "max_sequences": 100000,
   "experiments": [
     {
       "name": "Baseline",
       "features_removed": [],
       "n_features": 43,
-      "auc": 0.635965,
+      "auc": 0.852171,
       "auc_drop": 0.0,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.643548,
-        "h5": 0.637595,
-        "h15": 0.626752
+        "h1": 0.859292,
+        "h5": 0.852039,
+        "h15": 0.845181
       },
-      "train_time_sec": 510.0
+      "train_time_sec": 1946.4
     },
     {
       "name": "No Event Signals",
@@ -25,15 +25,15 @@
         "rt_multiplier"
       ],
       "n_features": 41,
-      "auc": 0.63334,
-      "auc_drop": 0.002625,
+      "auc": 0.851768,
+      "auc_drop": 0.000403,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635668,
-        "h5": 0.638608,
-        "h15": 0.625743
+        "h1": 0.858309,
+        "h5": 0.851893,
+        "h15": 0.845103
       },
-      "train_time_sec": 531.1
+      "train_time_sec": 1938.4
     },
     {
       "name": "No Rolling Stats",
@@ -45,15 +45,15 @@
         "error_volatility"
       ],
       "n_features": 38,
-      "auc": 0.632746,
-      "auc_drop": 0.003219,
+      "auc": 0.852661,
+      "auc_drop": -0.000491,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635081,
-        "h5": 0.637026,
-        "h15": 0.62613
+        "h1": 0.858743,
+        "h5": 0.853142,
+        "h15": 0.846099
       },
-      "train_time_sec": 514.5
+      "train_time_sec": 1975.7
     },
     {
       "name": "No Lag Features",
@@ -63,15 +63,15 @@
         "error_rate_lag_1"
       ],
       "n_features": 40,
-      "auc": 0.634883,
-      "auc_drop": 0.001082,
+      "auc": 0.852785,
+      "auc_drop": -0.000614,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.63717,
-        "h5": 0.639486,
-        "h15": 0.627995
+        "h1": 0.860464,
+        "h5": 0.852341,
+        "h15": 0.845548
       },
-      "train_time_sec": 526.2
+      "train_time_sec": 1988.8
     },
     {
       "name": "No EMA Features",
@@ -81,15 +81,15 @@
         "error_rate_ema_10"
       ],
       "n_features": 40,
-      "auc": 0.634387,
-      "auc_drop": 0.001578,
+      "auc": 0.852147,
+      "auc_drop": 2.3e-05,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.636239,
-        "h5": 0.639064,
-        "h15": 0.627858
+        "h1": 0.859215,
+        "h5": 0.851891,
+        "h15": 0.845336
       },
-      "train_time_sec": 533.2
+      "train_time_sec": 1898.6
     },
     {
       "name": "No Cyclical Enc.",
@@ -100,15 +100,15 @@
         "dow_cos"
       ],
       "n_features": 39,
-      "auc": 0.636334,
-      "auc_drop": -0.000369,
+      "auc": 0.851748,
+      "auc_drop": 0.000422,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.642735,
-        "h5": 0.63859,
-        "h15": 0.627678
+        "h1": 0.860795,
+        "h5": 0.851237,
+        "h15": 0.843213
       },
-      "train_time_sec": 566.1
+      "train_time_sec": 1927.0
     },
     {
       "name": "No API Flags",
@@ -117,15 +117,15 @@
         "api_complexity"
       ],
       "n_features": 41,
-      "auc": 0.634127,
-      "auc_drop": 0.001838,
+      "auc": 0.852548,
+      "auc_drop": -0.000378,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.635947,
-        "h5": 0.638959,
-        "h15": 0.627476
+        "h1": 0.859229,
+        "h5": 0.852857,
+        "h15": 0.845558
       },
-      "train_time_sec": 528.1
+      "train_time_sec": 1849.5
     },
     {
       "name": "No Precursor Signals",
@@ -143,15 +143,15 @@
         "burst_ratio"
       ],
       "n_features": 32,
-      "auc": 0.637739,
-      "auc_drop": -0.001774,
+      "auc": 0.852241,
+      "auc_drop": -7e-05,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.64657,
-        "h5": 0.638189,
-        "h15": 0.628458
+        "h1": 0.860441,
+        "h5": 0.851744,
+        "h15": 0.844537
       },
-      "train_time_sec": 557.0
+      "train_time_sec": 1909.6
     },
     {
       "name": "No Cross-API",
@@ -163,15 +163,15 @@
         "systemic_stress_index"
       ],
       "n_features": 38,
-      "auc": 0.632184,
-      "auc_drop": 0.003781,
+      "auc": 0.851496,
+      "auc_drop": 0.000675,
       "importance": "Minor",
       "per_horizon_auc": {
-        "h1": 0.634061,
-        "h5": 0.636145,
-        "h15": 0.626345
+        "h1": 0.858605,
+        "h5": 0.853058,
+        "h15": 0.842824
       },
-      "train_time_sec": 514.1
+      "train_time_sec": 2704.4
     }
   ]
 }

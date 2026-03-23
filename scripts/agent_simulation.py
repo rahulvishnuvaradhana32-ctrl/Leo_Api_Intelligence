@@ -348,6 +348,11 @@ def save_chart(proactive, reactive, out_path: str):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main(args):
+    # Apply dynamic thresholds and cost
+    global HIGH_RISK_THRESHOLD, COST_PER_FAILURE
+    HIGH_RISK_THRESHOLD = args.threshold
+    COST_PER_FAILURE = args.cost_per_failure
+    print(f"  Threshold: {HIGH_RISK_THRESHOLD}  Cost/failure: ${COST_PER_FAILURE}")
     rng = np.random.default_rng(args.seed)
     np.random.seed(args.seed)
 
@@ -491,11 +496,15 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data', type=str,
-                        default=os.path.join("data", "banking_api_features_v6.csv"),
+                        default=os.path.join("data", "banking_api_features_v7.csv"),
                         help="Path to features CSV")
     parser.add_argument('--n_transactions', type=int, default=1000,
                         help='Number of transactions to simulate (default: 1000)')
     parser.add_argument('--seed',           type=int, default=42,
                         help='Random seed for reproducibility')
+    parser.add_argument('--threshold',      type=float, default=0.65,
+                        help='High risk threshold for proactive switching (default: 0.65)')
+    parser.add_argument('--cost_per_failure', type=float, default=50.0,
+                        help='Cost per failure in USD (default: 50.0)')
     args = parser.parse_args()
     main(args)

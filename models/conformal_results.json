@@ -1,32 +1,32 @@
 {
   "target_coverage": 90.0,
   "alpha": 0.1,
-  "cal_sequences": 100000,
-  "test_sequences": 50000,
+  "cal_sequences": 155337,
+  "test_sequences": 100000,
   "n_features": 43,
   "per_horizon": {
     "h1": {
-      "q_hat": 0.555971,
-      "coverage": 0.894,
-      "avg_width": 0.9902,
-      "status": "FAIL"
+      "q_hat": 0.519451,
+      "coverage": 0.9025,
+      "avg_width": 0.9905,
+      "status": "PASS"
     },
     "h5": {
-      "q_hat": 0.552607,
-      "coverage": 0.8932,
-      "avg_width": 0.9904,
-      "status": "FAIL"
+      "q_hat": 0.52068,
+      "coverage": 0.9009,
+      "avg_width": 0.9909,
+      "status": "PASS"
     },
     "h15": {
-      "q_hat": 0.554281,
-      "coverage": 0.8937,
-      "avg_width": 0.9908,
+      "q_hat": 0.525773,
+      "coverage": 0.8998,
+      "avg_width": 0.9929,
       "status": "FAIL"
     }
   },
   "summary": {
-    "avg_coverage": 0.8936,
-    "avg_width": 0.9905,
+    "avg_coverage": 0.9011,
+    "avg_width": 0.9915,
     "all_horizons_pass": false
   }
 }
