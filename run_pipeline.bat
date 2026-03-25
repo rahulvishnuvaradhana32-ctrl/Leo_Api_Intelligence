@@ -81,7 +81,7 @@ python scripts/agent_simulation.py ^
   --data data/banking_api_features_v7.csv ^
   --n_transactions 10000 ^
   --seed %RANDOM% ^
-  --threshold 0.30 ^
+  --threshold 0.55 ^
   --cost_per_failure 150
 if %errorlevel% neq 0 (echo FAILED: agent_simulation.py && goto cleanup)
 echo DONE: Agent simulation complete
