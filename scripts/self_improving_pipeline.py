@@ -6,7 +6,7 @@ Steps:
   1. Diagnose   -- per-API AUC on held-out recent data
   2. Identify   -- worst API, missed failure types, data drift, class collapse
   3. Fix        -- targeted augmentation for each problem found
-  4. Retrain    -- compact training loop on fixed data
+  4. Retrain    -- fine-tune from production weights on fixed data
   5. Compare    -- old vs new AUC on the same held-out test set
   6. Select     -- keep new model only if it improved; always backup old
   7. Log        -- append JSONL entry (never overwrite)
@@ -19,8 +19,6 @@ Usage:
     python scripts/self_improving_pipeline.py --retrain_epochs 25
 """
 
-# BUG FIX 1: removed "from matplotlib.style import available" — unused and
-# shadows the local variable `available` used throughout every function.
 import math
 import os, sys, json, time, shutil, warnings, argparse
 from datetime import datetime
@@ -43,7 +41,7 @@ warnings.filterwarnings("ignore")
 parser = argparse.ArgumentParser(
     description="Self-improving LSTM pipeline for banking API failure prediction"
 )
-parser.add_argument("--dry_run", action="store_true")
+parser.add_argument("--dry_run",         action="store_true")
 parser.add_argument("--recent_rows",     type=int,   default=1_000_000)
 parser.add_argument("--test_fraction",   type=float, default=0.15)
 parser.add_argument("--retrain_epochs",  type=int,   default=25)
@@ -54,19 +52,19 @@ parser.add_argument("--horizons", nargs="+", type=int, default=[1, 5, 15])
 parser.add_argument("--hidden_size",     type=int,   default=256)
 parser.add_argument("--num_layers",      type=int,   default=2)
 parser.add_argument("--focal_gamma",     type=float, default=2.0)
-parser.add_argument("--data_path",   type=str, default="data/banking_api_features_v7.csv")
-parser.add_argument("--model_path",  type=str, default="models/stress_test_best_model.pth")
-parser.add_argument("--scaler_path", type=str, default="models/scaler.pkl")
-parser.add_argument("--results_path",type=str, default="models/lstm_results.json")
-parser.add_argument("--log_path",    type=str, default="models/self_heal_log.jsonl")
+parser.add_argument("--data_path",    type=str, default="data/banking_api_features_v7.csv")
+parser.add_argument("--model_path",   type=str, default="models/stress_test_best_model.pth")
+parser.add_argument("--scaler_path",  type=str, default="models/scaler.pkl")
+parser.add_argument("--results_path", type=str, default="models/lstm_results.json")
+parser.add_argument("--log_path",     type=str, default="models/self_heal_log.jsonl")
 args = parser.parse_args()
 
-RUN_ID  = datetime.now().strftime("%Y%m%d_%H%M%S")
-RUN_TS  = datetime.now().isoformat(timespec="seconds")
-MODE    = "dry_run" if args.dry_run else "full"
-SEQ_LEN = args.seq_len
+RUN_ID   = datetime.now().strftime("%Y%m%d_%H%M%S")
+RUN_TS   = datetime.now().isoformat(timespec="seconds")
+MODE     = "dry_run" if args.dry_run else "full"
+SEQ_LEN  = args.seq_len
 HORIZONS = args.horizons
-MAX_H   = max(HORIZONS)
+MAX_H    = max(HORIZONS)
 
 print(f"=== Self-Improving Pipeline  [{RUN_ID}]  mode={MODE} ===\n")
 
@@ -101,15 +99,19 @@ JITTER_COLS = [
 ]
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
-WORST_API_AUC_THRESHOLD = 0.70
-RECALL_THRESHOLD        = 0.35
-DRIFT_KS_THRESHOLD      = 0.10
-DRIFT_P_THRESHOLD       = 0.05
-DRIFT_MIN_FEATURES      = 2
-IMBALANCE_THRESHOLD     = 0.05
-TARGET_FAILURE_RATE     = 0.13
-OVERSAMPLE_FACTOR       = 5
-DRIFT_WINDOW_FRACTION   = 0.65
+WORST_API_AUC_THRESHOLD  = 0.70
+RECALL_THRESHOLD         = 0.35
+DRIFT_KS_THRESHOLD       = 0.10
+DRIFT_P_THRESHOLD        = 0.05
+DRIFT_MIN_FEATURES       = 2
+IMBALANCE_THRESHOLD      = 0.05
+TARGET_FAILURE_RATE      = 0.13
+OVERSAMPLE_FACTOR        = 5
+DRIFT_WINDOW_FRACTION    = 0.65
+# FIX 3: cap how much augmented data can be added as a fraction of the
+# post-drift pool.  Without this, fraud augmentation hit 22% of pool,
+# causing the model to over-specialise and lose generalisation (-0.04 AUC).
+MAX_AUGMENTATION_FRACTION = 0.10
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -190,9 +192,9 @@ class MultiHorizonLSTM(nn.Module):
 
     def forward(self, x):
         out, _ = self.lstm(x)
-        out = self.layer_norm(out)
-        out = self.attn_pool(out)
-        out = self.dropout(out)
+        out    = self.layer_norm(out)
+        out    = self.attn_pool(out)
+        out    = self.dropout(out)
         return torch.cat([head(out) for head in self.heads], dim=1)
 
 
@@ -214,7 +216,7 @@ def _infer(model, X_scaled, y_raw, seq_len, horizons, batch_size=512):
             logits = model(torch.from_numpy(batch.astype(np.float32)))
             all_probas.append(torch.sigmoid(logits).numpy())
 
-    probas = np.vstack(all_probas)
+    probas         = np.vstack(all_probas)
     target_indices = [np.arange(n_seq) + seq_len + h - 1 for h in horizons]
     return probas, target_indices
 
@@ -226,15 +228,15 @@ def _auc_from_arrays(y_true, y_score):
 
 
 def _detect_dims(sd):
-    n_in   = sd["lstm.weight_ih_l0"].shape[1]
-    hidden = sd["lstm.weight_hh_l0"].shape[1]
-    bidir  = "lstm.weight_ih_l0_reverse" in sd
+    n_in    = sd["lstm.weight_ih_l0"].shape[1]
+    hidden  = sd["lstm.weight_hh_l0"].shape[1]
+    bidir   = "lstm.weight_ih_l0_reverse" in sd
     n_heads = sum(1 for k in sd if k.startswith("heads.") and k.endswith(".weight"))
     return n_in, hidden, n_heads, bidir
 
 
 def _load_model(model_path, n_features, hidden_size, num_layers, n_horizons):
-    sd = torch.load(model_path, map_location="cpu")
+    sd = torch.load(model_path, map_location="cpu", weights_only=True)
     n_in, hidden, n_heads, bidir = _detect_dims(sd)
     model = MultiHorizonLSTM(n_in, hidden, num_layers, n_heads, bidirectional=bidir)
     model.load_state_dict(sd)
@@ -262,17 +264,13 @@ def _eval_model_on_df(model, scaler, df_eval):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Temperature scaling  (must be defined before main() calls it)
-# BUG FIX 2: was placed INSIDE step4_retrain in your version — module-level
-# code (temperature_path, T_val) ran at import time before main() loaded any
-# data, causing NameError on old_model / old_scaler / df_test.
+# Temperature scaling
 # ─────────────────────────────────────────────────────────────────────────────
 
 def fit_temperature_scaling(model, scaler, df_cal, temperature_path):
     """
     Fit a single scalar T so sigmoid(logit(p)/T) is calibrated.
     T < 1 sharpens predictions; T > 1 softens them.
-    Saves T to temperature_path and returns the float value.
     """
     print("  Fitting temperature scaling on calibration data ...")
     available = [c for c in FEATURE_COLS if c in df_cal.columns]
@@ -317,7 +315,8 @@ def step1_diagnose(df_eval, model, scaler):
     per_api   = {}
 
     for api in sorted(df_eval["api_name"].unique()):
-        sub = df_eval[df_eval["api_name"] == api].sort_values("timestamp").reset_index(drop=True)
+        sub = (df_eval[df_eval["api_name"] == api]
+               .sort_values("timestamp").reset_index(drop=True))
         if len(sub) < SEQ_LEN + MAX_H + 10:
             per_api[api] = None
             continue
@@ -333,9 +332,7 @@ def step1_diagnose(df_eval, model, scaler):
 
         aucs = []
         for h_i, h in enumerate(HORIZONS):
-            y_true  = 1 - y_raw[tgt_idx[h_i]]
-            y_score = probas[:, h_i]
-            auc     = _auc_from_arrays(y_true, y_score)
+            auc = _auc_from_arrays(1 - y_raw[tgt_idx[h_i]], probas[:, h_i])
             if not np.isnan(auc):
                 aucs.append(auc)
 
@@ -391,10 +388,7 @@ def step2_identify(df_eval, df_train_pool, per_api_auc, model, scaler):
                 et_str = str(et)
                 if et_str not in recall_by_type:
                     recall_by_type[et_str] = {"tp": 0, "fn": 0}
-                if yp == 1:
-                    recall_by_type[et_str]["tp"] += 1
-                else:
-                    recall_by_type[et_str]["fn"] += 1
+                recall_by_type[et_str]["tp" if yp == 1 else "fn"] += 1
 
         missed = []
         for et, counts in recall_by_type.items():
@@ -443,8 +437,8 @@ def step2_identify(df_eval, df_train_pool, per_api_auc, model, scaler):
         print("  scipy not available -- skipping drift detection")
 
     # 2d. Class imbalance
-    recent_fail_rate = 1 - df_train_pool["success"].mean()
-    problems["failure_rate"]       = float(recent_fail_rate)
+    recent_fail_rate           = 1 - df_train_pool["success"].mean()
+    problems["failure_rate"]   = float(recent_fail_rate)
     problems["imbalance_detected"] = bool(recent_fail_rate < IMBALANCE_THRESHOLD)
     flag = " <-- FLAGGED" if problems["imbalance_detected"] else ""
     print(f"  Recent failure rate: {recent_fail_rate:.2%}{flag}")
@@ -469,7 +463,25 @@ def _jitter(rows: pd.DataFrame, rng, scale=0.05) -> pd.DataFrame:
     return out
 
 
-def step3_fix(df_train_pool: pd.DataFrame, problems: dict) -> tuple[pd.DataFrame, list[str]]:
+def _capped_concat(df_base: pd.DataFrame,
+                   copies: list,
+                   label: str) -> tuple[pd.DataFrame, int]:
+    """
+    Concatenate augmented copies onto df_base, capped at
+    MAX_AUGMENTATION_FRACTION of the current pool size.
+    Returns (new_df, n_rows_actually_added).
+    FIX 3: prevents any single augmentation from dominating the pool.
+    """
+    raw_added = pd.concat(copies, ignore_index=True)
+    cap       = int(len(df_base) * MAX_AUGMENTATION_FRACTION)
+    if len(raw_added) > cap:
+        raw_added = raw_added.iloc[:cap]
+        print(f"    (capped at {cap:,} rows = {MAX_AUGMENTATION_FRACTION:.0%} of pool)")
+    return pd.concat([df_base, raw_added], ignore_index=True), len(raw_added)
+
+
+def step3_fix(df_train_pool: pd.DataFrame,
+              problems: dict) -> tuple[pd.DataFrame, list[str]]:
     print("\nStep 3 -- Applying fixes ...")
     rng        = np.random.default_rng(42)
     fixes      = []
@@ -482,7 +494,7 @@ def step3_fix(df_train_pool: pd.DataFrame, problems: dict) -> tuple[pd.DataFrame
         fixes.append("drift_recency_window")
         print(f"  [drift]     Restricted to most recent {len(df_working):,} rows")
 
-    # Fix B: Worst API over-sampling with varied jitter
+    # Fix B: Worst API over-sampling with varied jitter + cap
     worst_api = problems.get("worst_api")
     worst_auc = problems.get("worst_api_auc")
     if worst_api and worst_auc is not None and worst_auc < WORST_API_AUC_THRESHOLD:
@@ -490,32 +502,29 @@ def step3_fix(df_train_pool: pd.DataFrame, problems: dict) -> tuple[pd.DataFrame
             (df_working["api_name"] == worst_api) & (df_working["success"] == 0)
         ]
         if len(api_failures) > 0:
-            copies = [_jitter(api_failures, rng, scale=0.05 + 0.01 * i)
-                      for i in range(OVERSAMPLE_FACTOR)]
-            df_working = pd.concat([df_working] + copies, ignore_index=True)
-            n_added    = len(api_failures) * OVERSAMPLE_FACTOR
+            copies     = [_jitter(api_failures, rng, scale=0.05 + 0.01 * i)
+                          for i in range(OVERSAMPLE_FACTOR)]
+            df_working, n_added = _capped_concat(df_working, copies, worst_api)
             fixes.append(f"oversample_worst_api:{worst_api}")
             print(f"  [worst_api] +{n_added:,} augmented rows for {worst_api}")
 
-    # Fix C: Missed failure types
+    # Fix C: Missed failure types + cap
     for et in problems.get("missed_failure_types", []):
         et_failures = df_working[
             (df_working["error_type"] == et) & (df_working["success"] == 0)
         ]
         if len(et_failures) > 0:
-            copies = [_jitter(et_failures, rng, scale=0.04)
-                      for _ in range(OVERSAMPLE_FACTOR)]
-            df_working = pd.concat([df_working] + copies, ignore_index=True)
-            n_added    = len(et_failures) * OVERSAMPLE_FACTOR
+            copies     = [_jitter(et_failures, rng, scale=0.04)
+                          for _ in range(OVERSAMPLE_FACTOR)]
+            df_working, n_added = _capped_concat(df_working, copies, et)
             fixes.append(f"boost_missed_type:{et}")
             print(f"  [missed]    +{n_added:,} rows for error_type={et}")
 
     # Fix D: Class imbalance
     if problems["imbalance_detected"]:
         current_fail = 1 - df_working["success"].mean()
-        n_total      = len(df_working)
         n_current_f  = int((1 - df_working["success"]).sum())
-        n_target_f   = int(n_total * TARGET_FAILURE_RATE)
+        n_target_f   = int(len(df_working) * TARGET_FAILURE_RATE)
         n_inject     = max(0, n_target_f - n_current_f)
 
         if n_inject > 0 and n_current_f > 0:
@@ -533,16 +542,12 @@ def step3_fix(df_train_pool: pd.DataFrame, problems: dict) -> tuple[pd.DataFrame
 
     df_working = df_working.sample(frac=1, random_state=42).reset_index(drop=True)
     print(f"  Training pool: {len(df_train_pool):,} -> {len(df_working):,} rows "
-          f"({len(df_working)/max(len(df_train_pool),1):.2f}x)")
+          f"({len(df_working)/max(len(df_train_pool), 1):.2f}x)")
     return df_working, fixes
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STEP 4 -- Retrain
-# BUG FIX 3: `import math` and the temperature_path/T_val block were placed
-# INSIDE step4_retrain in your version — `import` inside a function is legal
-# but the temperature block referenced main()-scope variables that don't exist
-# there, causing NameError at runtime. Both are now at module level.
+# STEP 4 -- Retrain (fine-tune from production weights)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def step4_retrain(df_augmented: pd.DataFrame,
@@ -568,11 +573,14 @@ def step4_retrain(df_augmented: pd.DataFrame,
     if args.max_train_seq > 0 and len(tr) > args.max_train_seq:
         tr = np.random.default_rng(42).choice(tr, size=args.max_train_seq, replace=False)
 
-    train_row_end = int(tr.max()) + SEQ_LEN + MAX_H
-    scaler        = StandardScaler().fit(raw_X[:train_row_end])
-    joblib.dump(scaler, candidate_scaler_path)
+    # ── FIX 2: use production scaler for training so weights and evaluation
+    # see the same scale statistics.  A new scaler fit on the narrow
+    # augmented window misaligns training vs Step-5 evaluation, which uses
+    # the production scaler — this was the main cause of the -0.04 AUC drop.
+    prod_scaler = joblib.load(args.scaler_path)
+    joblib.dump(prod_scaler, candidate_scaler_path)   # required by step6 copy
 
-    full_ds  = TimeSeriesDataset(raw_X, raw_y, SEQ_LEN, HORIZONS, scaler=scaler)
+    full_ds  = TimeSeriesDataset(raw_X, raw_y, SEQ_LEN, HORIZONS, scaler=prod_scaler)
     train_ds = Subset(full_ds, tr.tolist())
     val_ds   = Subset(full_ds, val.tolist())
 
@@ -581,19 +589,27 @@ def step4_retrain(df_augmented: pd.DataFrame,
     pw        = torch.tensor([min(n_success / max(n_fail, 1), 10.0)] * len(HORIZONS))
     criterion = FocalLoss(gamma=args.focal_gamma, pos_weight=pw)
 
-    # Detect production architecture and match it exactly
-    _prod_sd = torch.load(args.model_path, map_location="cpu")
+    # ── FIX 1: load production weights before training (fine-tune, not scratch).
+    # Previously the candidate started from random init with only 250k sequences
+    # — far too few to rebuild the knowledge from the full production training run.
+    # Starting from production weights means epoch 1 begins near 0.71 AUC
+    # instead of ~0.50 from random init.
+    _prod_sd = torch.load(args.model_path, map_location="cpu", weights_only=True)
     _, _prod_hidden, _, _prod_bidir = _detect_dims(_prod_sd)
     model = MultiHorizonLSTM(
         len(available), args.hidden_size, args.num_layers,
         len(HORIZONS), bidirectional=_prod_bidir,
     )
+    model.load_state_dict(_prod_sd)
     print(f"  Candidate architecture: hidden={args.hidden_size}, "
           f"bidirectional={_prod_bidir}, layers={args.num_layers}")
+    print(f"  Starting from production weights (fine-tuning, not scratch)")
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-4)
+    # Fine-tuning uses a 5x smaller LR than scratch training — a larger LR
+    # would destroy the pre-trained representations in the first few epochs.
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0002, weight_decay=1e-4)
 
-    # LR schedule: 3-epoch linear warmup then cosine decay
+    # 3-epoch linear warmup then cosine decay
     def lr_lambda(epoch):
         warmup = 3
         if epoch < warmup:
@@ -601,14 +617,13 @@ def step4_retrain(df_augmented: pd.DataFrame,
         progress = (epoch - warmup) / max(1, args.retrain_epochs - warmup)
         return 0.5 * (1 + math.cos(math.pi * progress))
 
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
-
+    scheduler    = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
     train_loader = DataLoader(train_ds, batch_size=128, shuffle=True,  num_workers=0)
     val_loader   = DataLoader(val_ds,   batch_size=256, shuffle=False, num_workers=0)
 
     best_val_loss  = float("inf")
     patience_count = 0
-    patience       = 5        # slightly more generous than before
+    patience       = 5
     train_losses   = []
     val_losses     = []
 
@@ -660,7 +675,7 @@ def step4_retrain(df_augmented: pd.DataFrame,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STEP 5 -- Compare
+# STEP 5 -- Compare (both models use production scaler)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def step5_compare(df_test,
@@ -669,14 +684,16 @@ def step5_compare(df_test,
                   n_features):
     print("\nStep 5 -- Comparing old vs new model on held-out test set ...")
 
-    old_model  = _load_model(old_model_path, n_features, args.hidden_size, args.num_layers, len(HORIZONS))
+    old_model  = _load_model(old_model_path, n_features, args.hidden_size,
+                              args.num_layers, len(HORIZONS))
     old_scaler = joblib.load(old_scaler_path)
     old_aucs   = _eval_model_on_df(old_model, old_scaler, df_test)
 
-    new_model  = _load_model(new_model_path, n_features, args.hidden_size, args.num_layers, len(HORIZONS))
-    # Use OLD scaler for both — fair comparison on identically scaled inputs.
-    # The candidate scaler was fit on a narrower recent window; using it here
-    # would distort the new model's test-set AUC relative to the old model.
+    new_model  = _load_model(new_model_path, n_features, args.hidden_size,
+                              args.num_layers, len(HORIZONS))
+    # Use OLD (production) scaler for both — fair comparison on identically
+    # scaled inputs.  candidate_scaler_path now holds a copy of the production
+    # scaler (FIX 2), but loading old_scaler here is the explicit guarantee.
     new_aucs   = _eval_model_on_df(new_model, old_scaler, df_test)
     print("  [Note] Both models evaluated with production scaler for fair comparison")
 
@@ -688,14 +705,15 @@ def step5_compare(df_test,
     print(f"  {'Horizon':<12}  {'Old AUC':>10}  {'New AUC':>10}  {'Delta':>8}")
     print(f"  {'-'*44}")
     for h in HORIZONS:
-        k   = f"horizon_{h}"
-        old = old_aucs[k]
-        new = new_aucs[k]
-        d   = new - old if not (np.isnan(old) or np.isnan(new)) else float("nan")
-        arrow = " ^" if (not np.isnan(d) and d > 0) else (" v" if (not np.isnan(d) and d < 0) else "")
-        print(f"  h={h:<10}  {old:>10.4f}  {new:>10.4f}  {d:>+8.4f}{arrow}")
+        k     = f"horizon_{h}"
+        o, n  = old_aucs[k], new_aucs[k]
+        d     = n - o if not (np.isnan(o) or np.isnan(n)) else float("nan")
+        arrow = (" ^" if (not np.isnan(d) and d > 0)
+                 else " v" if (not np.isnan(d) and d < 0) else "")
+        print(f"  h={h:<10}  {o:>10.4f}  {n:>10.4f}  {d:>+8.4f}{arrow}")
     print(f"  {'-'*44}")
-    print(f"  {'Average':<12}  {old_avg:>10.4f}  {new_avg:>10.4f}    {new_avg - old_avg:>+8.4f}")
+    print(f"  {'Average':<12}  {old_avg:>10.4f}  {new_avg:>10.4f}    "
+          f"{new_avg - old_avg:>+8.4f}")
 
     return old_aucs, new_aucs, old_avg, new_avg
 
@@ -792,7 +810,8 @@ def step8_summary(problems, fixes, old_avg, new_avg,
     if args.dry_run:
         print("  Mode    : DRY RUN -- no files were modified")
     print(f"  Runtime : {elapsed_sec:.0f}s")
-    print(f"  Data    : {rows_before:,} rows analysed, {rows_after:,} rows used for retraining")
+    print(f"  Data    : {rows_before:,} rows analysed, "
+          f"{rows_after:,} rows used for retraining")
 
     print(f"\n  Problems found:")
     found_any = False
@@ -801,7 +820,8 @@ def step8_summary(problems, fixes, old_avg, new_avg,
               f"(AUC {problems['worst_api_auc']:.4f} < {WORST_API_AUC_THRESHOLD})")
         found_any = True
     for et in problems.get("missed_failure_types", []):
-        print(f"    - Model keeps missing '{et}' failures (recall < {RECALL_THRESHOLD:.0%})")
+        print(f"    - Model keeps missing '{et}' failures "
+              f"(recall < {RECALL_THRESHOLD:.0%})")
         found_any = True
     if problems["drift_detected"]:
         print("    - Data distribution has shifted significantly (drift detected)")
@@ -819,10 +839,16 @@ def step8_summary(problems, fixes, old_avg, new_avg,
             label  = fix.split(":")[0]
             detail = fix.split(":")[1] if ":" in fix else ""
             desc = {
-                "drift_recency_window":          f"Restricted training to most recent {int(DRIFT_WINDOW_FRACTION*100)}% of data",
-                "oversample_worst_api":          f"Oversampled failures for {detail} ({OVERSAMPLE_FACTOR}x)",
-                "boost_missed_type":             f"Boosted training examples for '{detail}' ({OVERSAMPLE_FACTOR}x)",
-                "inject_failures_for_imbalance": f"Injected synthetic failures to reach {TARGET_FAILURE_RATE:.0%} rate",
+                "drift_recency_window":
+                    f"Restricted training to most recent {int(DRIFT_WINDOW_FRACTION*100)}% of data",
+                "oversample_worst_api":
+                    f"Oversampled failures for {detail} ({OVERSAMPLE_FACTOR}x, capped at "
+                    f"{int(MAX_AUGMENTATION_FRACTION*100)}% of pool)",
+                "boost_missed_type":
+                    f"Boosted training examples for '{detail}' ({OVERSAMPLE_FACTOR}x, capped at "
+                    f"{int(MAX_AUGMENTATION_FRACTION*100)}% of pool)",
+                "inject_failures_for_imbalance":
+                    f"Injected synthetic failures to reach {TARGET_FAILURE_RATE:.0%} rate",
             }
             print(f"    - {desc.get(label, fix)}")
     else:
@@ -857,12 +883,13 @@ def main():
             print(f"ERROR: {label} not found: {p}")
             sys.exit(1)
 
-    # Load recent data
     print(f"Loading last {args.recent_rows:,} rows from {args.data_path} ...")
     df_full = pd.read_csv(args.data_path, low_memory=False)
     df_full["timestamp"] = pd.to_datetime(df_full["timestamp"], errors="coerce")
     if df_full["success"].dtype == object:
-        df_full["success"] = df_full["success"].map({"True": 1, "False": 0}).fillna(0).astype(int)
+        df_full["success"] = (df_full["success"]
+                              .map({"True": 1, "False": 0})
+                              .fillna(0).astype(int))
     else:
         df_full["success"] = df_full["success"].astype(int)
     df_full = df_full.sort_values("timestamp").reset_index(drop=True)
@@ -879,28 +906,28 @@ def main():
     print(f"  Train pool: {len(df_train_pool):,} rows | "
           f"Test (held-out): {len(df_test):,} rows\n")
 
-    # Load existing model + scaler
     n_features = len([c for c in FEATURE_COLS if c in df_recent.columns])
-    old_model  = _load_model(args.model_path, n_features, args.hidden_size, args.num_layers, len(HORIZONS))
+    old_model  = _load_model(args.model_path, n_features, args.hidden_size,
+                              args.num_layers, len(HORIZONS))
     old_scaler = joblib.load(args.scaler_path)
-    print(f"Loaded model ({n_features} features, hidden={args.hidden_size}, heads={len(HORIZONS)})\n")
+    print(f"Loaded model ({n_features} features, hidden={args.hidden_size}, "
+          f"heads={len(HORIZONS)})\n")
 
     if os.path.exists(args.results_path):
         try:
-            recorded_avg = json.load(open(args.results_path))["avg_auc"]
-            print(f"Recorded production AUC (from lstm_results.json): {recorded_avg:.4f}\n")
+            rec = json.load(open(args.results_path))["avg_auc"]
+            print(f"Recorded production AUC (from lstm_results.json): {rec:.4f}\n")
         except Exception:
             pass
 
-    # Temperature scaling — fit once, reuse on subsequent runs
+    # Temperature scaling — fit once on this test window, reuse on later runs
     temperature_path = args.model_path.replace(".pth", "_temperature.pt")
     if not os.path.exists(temperature_path):
         fit_temperature_scaling(old_model, old_scaler, df_test, temperature_path)
     else:
-        T_val = torch.load(temperature_path)["T"]
+        T_val = torch.load(temperature_path, weights_only=True)["T"]
         print(f"  Loaded temperature T = {T_val:.4f}")
 
-    # Steps 1-2
     per_api_auc = step1_diagnose(df_test, old_model, old_scaler)
     problems    = step2_identify(df_test, df_train_pool, per_api_auc, old_model, old_scaler)
 
@@ -922,17 +949,16 @@ def main():
         )
         print(f"\n[DRY RUN] Would apply fixes: "
               f"{'yes' if any_problem else 'no -- model is healthy'}")
-        dummy_retrain = {"best_val_loss": None, "train_losses": [], "val_losses": [],
-                         "n_features": n_features}
-        step7_log(problems, [], dummy_retrain,
-                  old_aucs_test, {}, old_avg_test, float("nan"),
-                  False, "", len(df_train_pool), len(df_train_pool))
+        dummy = {"best_val_loss": None, "train_losses": [],
+                 "val_losses": [], "n_features": n_features}
+        step7_log(problems, [], dummy, old_aucs_test, {},
+                  old_avg_test, float("nan"), False, "",
+                  len(df_train_pool), len(df_train_pool))
         step8_summary(problems, [], old_avg_test, float("nan"),
                       False, len(df_train_pool), len(df_train_pool),
                       time.time() - t_start)
         return
 
-    # Steps 3-8
     df_augmented, fixes = step3_fix(df_train_pool, problems)
     rows_after = len(df_augmented)
 
@@ -941,14 +967,17 @@ def main():
     candidate_scaler_path = args.scaler_path.replace(".pkl", "_candidate.pkl")
 
     try:
-        retrain_stats = step4_retrain(df_augmented, candidate_model_path, candidate_scaler_path)
+        retrain_stats = step4_retrain(
+            df_augmented, candidate_model_path, candidate_scaler_path
+        )
     except Exception as e:
         print(f"\nERROR during retraining: {e}")
         step7_log(problems, fixes, {"error": str(e)},
                   old_aucs_test, {}, old_avg_test, float("nan"),
                   False, "", len(df_train_pool), rows_after)
         step8_summary(problems, fixes, old_avg_test, float("nan"),
-                      False, len(df_train_pool), rows_after, time.time() - t_start)
+                      False, len(df_train_pool), rows_after,
+                      time.time() - t_start)
         raise
 
     if not os.path.exists(candidate_model_path):

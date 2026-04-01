@@ -42,8 +42,8 @@ API_NAMES = [
     "market_data_api",
     "crypto_api",
     "transaction_api",
-    "payment_api",
-    "auth_api",
+    "forex_api",
+    "stock_price_api",
 ]
 
 # ── Full v6 schema column order ────────────────────────────────────────────────
@@ -192,15 +192,15 @@ def _set_api_complexity(df: pd.DataFrame) -> pd.DataFrame:
         "market_data_api": 0.7,
         "crypto_api":      0.9,
         "transaction_api": 0.8,
-        "payment_api":     0.6,
-        "auth_api":        0.4,
+        "forex_api":       0.6,
+        "stock_price_api": 0.4,
     }
     hf_map = {
         "market_data_api": 1,
         "crypto_api":      1,
         "transaction_api": 0,
-        "payment_api":     0,
-        "auth_api":        1,
+        "forex_api":       0,
+        "stock_price_api": 1,
     }
     df["api_complexity"]    = df["api_name"].map(complexity_map).fillna(0.5).astype(np.float32)
     df["high_frequency_api"]= df["api_name"].map(hf_map).fillna(0).astype(np.int8)

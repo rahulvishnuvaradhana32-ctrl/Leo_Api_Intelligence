@@ -53,7 +53,7 @@ parser.add_argument("--cal_seq",    type=int,   default=50_000,
 parser.add_argument("--test_seq",   type=int,   default=50_000,
                     help="Max test sequences (default 50000)")
 parser.add_argument("--seq_len",    type=int,   default=30)
-parser.add_argument("--data_path",  type=str,   default="data/banking_api_features_v6.csv")
+parser.add_argument("--data_path",  type=str,   default="data/banking_api_features_v7.csv")
 parser.add_argument("--model_path", type=str,   default="models/stress_test_best_model.pth")
 parser.add_argument("--scaler_path",type=str,   default="models/scaler.pkl")
 args = parser.parse_args()

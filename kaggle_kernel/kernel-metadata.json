@@ -1,0 +1,16 @@
+{
+  "id": "rahulvishnuvardhana/leo-api-lstm-training",
+  "title": "LEO API LSTM Training v7",
+  "code_file": "train_on_kaggle.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "dataset_sources": [
+    "rahulvishnuvardhana/leo-api-v7-dataset"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

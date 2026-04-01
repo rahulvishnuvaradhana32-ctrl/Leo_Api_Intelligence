@@ -32,7 +32,7 @@ import numpy as np
 import pandas as pd
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--data_path", default="data/banking_api_features_v6.csv")
+parser.add_argument("--data_path", default="data/banking_api_features_v7.csv")
 parser.add_argument("--no_backup", action="store_true",
                     help="Skip creating a .bak copy before writing")
 args = parser.parse_args()

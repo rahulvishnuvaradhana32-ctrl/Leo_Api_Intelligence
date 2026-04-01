@@ -4,5 +4,6 @@ services:
     runtime: python
     pythonVersion: "3.11"
     buildCommand: pip install -r requirements-render.txt
-    startCommand: python scripts/production_dashboard.py
+    startCommand: python scripts/dashboard_server.py
+    healthCheckPath: /health
     plan: free

@@ -11,11 +11,11 @@ import os
 
 # API configurations
 APIS = [
-    {"name": "weather", "file": "apis.weather_api", "port": 8001},
-    {"name": "payment", "file": "apis.payment_api", "port": 8002},
-    {"name": "user_auth", "file": "apis.user_auth_api", "port": 8003},
-    {"name": "database", "file": "apis.database_api", "port": 8004},
-    {"name": "messaging", "file": "apis.messaging_api", "port": 8005},
+    {"name": "stock_price", "file": "apis.stock_price_api", "port": 8001},
+    {"name": "forex", "file": "apis.forex_api", "port": 8002},
+    {"name": "crypto", "file": "apis.crypto_api", "port": 8003},
+    {"name": "market_data", "file": "apis.market_data_api", "port": 8004},
+    {"name": "transaction", "file": "apis.transaction_api", "port": 8005},
 ]
 
 def run_api(api_config):

@@ -147,7 +147,7 @@ def load_data() -> dict:
     ds_stats = {"rows": "—", "fr": "—", "apis": 5, "range": "2023-01 to 2024-12", "kaggle": 5}
     try:
         import pandas as pd
-        csv_path = DATA / "banking_api_features_v6.csv"
+        csv_path = DATA / "banking_api_features_v7.csv"
         if not csv_path.exists():
             csv_path = DATA / "banking_api_features_clean.csv"
         if not csv_path.exists():

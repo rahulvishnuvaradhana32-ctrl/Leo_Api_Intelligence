@@ -14,3 +14,4 @@ mapie
 crepes
 statsmodels
 scipy
+kaggle

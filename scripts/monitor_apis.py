@@ -16,47 +16,46 @@ import json
 # API endpoints configuration
 APIS = [
     {
-        "name": "weather",
-        "url": "http://127.0.0.1:8001/weather",
+        "name": "stock_price",
+        "url": "http://127.0.0.1:8001/stock_price",
         "method": "GET",
-        "params": {"city": "New York"}
+        "params": {"symbol": "AAPL"}
     },
     {
-        "name": "payment",
-        "url": "http://127.0.0.1:8002/process_payment",
+        "name": "forex",
+        "url": "http://127.0.0.1:8002/forex_rate",
         "method": "POST",
         "json": {
-            "amount": 99.99,
-            "card_number": "4111111111111111",
-            "expiry": "12/25"
+            "base_currency": "USD",
+            "quote_currency": "EUR",
+            "amount": 1000.0
         }
     },
     {
-        "name": "user_auth",
-        "url": "http://127.0.0.1:8003/login",
+        "name": "crypto",
+        "url": "http://127.0.0.1:8003/crypto_price",
+        "method": "GET",
+        "params": {"symbol": "BTC", "currency": "USD"}
+    },
+    {
+        "name": "market_data",
+        "url": "http://127.0.0.1:8004/market_data",
         "method": "POST",
         "json": {
-            "username": "testuser",
-            "password": "password123"
+            "symbols": ["AAPL", "GOOGL", "MSFT"],
+            "data_type": "quotes"
         }
     },
     {
-        "name": "database",
-        "url": "http://127.0.0.1:8004/query",
+        "name": "transaction",
+        "url": "http://127.0.0.1:8005/process_transaction",
         "method": "POST",
         "json": {
-            "query": "SELECT * FROM users LIMIT 10",
-            "table": "users"
-        }
-    },
-    {
-        "name": "messaging",
-        "url": "http://127.0.0.1:8005/send_message",
-        "method": "POST",
-        "json": {
-            "to": "+1234567890",
-            "message": "Test message",
-            "priority": "normal"
+            "account_from": "ACC_001",
+            "account_to": "ACC_002",
+            "amount": 500.0,
+            "currency": "USD",
+            "transaction_type": "transfer"
         }
     }
 ]

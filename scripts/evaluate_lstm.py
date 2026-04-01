@@ -27,7 +27,7 @@ parser.add_argument('--start_date', type=str,
                     help='filter features from this YYYY-MM-DD (inclusive)')
 parser.add_argument('--end_date', type=str,
                     help='filter features up to this YYYY-MM-DD (inclusive)')
-parser.add_argument('--data_path', type=str, default='data/banking_api_features_v6.csv',
+parser.add_argument('--data_path', type=str, default='data/banking_api_features_v7.csv',
                     help='path to features CSV')
 args = parser.parse_args()
 
