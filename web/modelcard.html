@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Card · LEO</title>
+<meta name="description" content="LEO model card — intended use, training data, architecture, per-horizon metrics, calibration, limitations and maintenance.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">📋 Model Card</span>
+    <h1 class="page-title">LEO — <span class="grad">MultiHorizonLSTM</span></h1>
+    <p class="page-lede">
+      The honest one-pager: what LEO is for, what it was trained on, how well it does, and — just as
+      importantly — where it shouldn't be trusted. Metrics fill live from the evaluation snapshot.
+    </p>
+  </div>
+
+  <div class="mc-grid">
+
+    <article class="mc-card reveal">
+      <h3>Intended use</h3>
+      <p>Probabilistic <b>early-warning</b> for transactional banking-API estates. Emits failure probability at
+      <b>1, 5 and 15 minutes</b> ahead so an orchestration layer can retry, pre-warm or reroute before customer impact.</p>
+      <ul class="mc-list">
+        <li><b>In scope:</b> per-API risk scoring, proactive failover, capacity heads-up.</li>
+        <li><b>Out of scope:</b> root-cause diagnosis, fraud detection, individual-transaction approval.</li>
+      </ul>
+    </article>
+
+    <article class="mc-card reveal">
+      <h3>Training data</h3>
+      <div class="line"><span>Rows</span><b id="mcRows">—</b></div>
+      <div class="line"><span>Input signals</span><b id="mcFeat">—</b></div>
+      <div class="line"><span>Base failure rate</span><b id="mcBase">—</b></div>
+      <div class="line"><span>APIs</span><b>5 + aggregate</b></div>
+      <div class="line"><span>Window</span><b>2023-01-01 → 2024-12-31</b></div>
+      <p class="mc-note">Hybrid real + synthetically-augmented telemetry; sequence length 30 steps.</p>
+    </article>
+
+    <article class="mc-card reveal">
+      <h3>Architecture</h3>
+      <div class="line"><span>Backbone</span><b>Bi-LSTM + Multi-Head Attention</b></div>
+      <div class="line"><span>Front end</span><b>Conv1d feature extractor</b></div>
+      <div class="line"><span>Hidden / layers</span><b>256 · 2</b></div>
+      <div class="line"><span>Loss</span><b>Focal (γ=2.0) + pos-weight</b></div>
+      <div class="line"><span>Calibration</span><b>Temperature + Conformal (ICP)</b></div>
+      <div class="line"><span>Best val loss</span><b id="mcVal">—</b></div>
+    </article>
+
+    <article class="mc-card wide reveal">
+      <h3>Performance · held-out evaluation</h3>
+      <table class="mc-table">
+        <thead><tr><th>Horizon</th><th>ROC-AUC</th><th>PR-AUC</th><th>P@100</th><th>Coverage</th><th>Status</th></tr></thead>
+        <tbody id="mcTable"></tbody>
+        <tfoot><tr><td>Average</td><td id="mcAvgAuc">—</td><td id="mcAvgPr">—</td><td>1.000</td><td id="mcAvgCov">—</td><td id="mcAvgStatus">—</td></tr></tfoot>
+      </table>
+    </article>
+
+    <article class="mc-card reveal">
+      <h3>Limitations</h3>
+      <ul class="mc-list warn">
+        <li><b>h+15 coverage</b> sits at ~89.98% — a hair under the 90% target; treat the longest horizon as advisory.</li>
+        <li>Synthetic augmentation may under-represent rare, novel failure modes.</li>
+        <li>Calibrated on this estate's distribution — re-calibrate before porting to a new API mix.</li>
+        <li>Latency cost: proactive routing adds ~0.11s avg vs the reactive baseline.</li>
+      </ul>
+    </article>
+
+    <article class="mc-card reveal">
+      <h3>Maintenance & ethics</h3>
+      <ul class="mc-list">
+        <li><b>Self-healing:</b> nightly KS drift test → conditional retrain (see <a href="/drift.html">Drift</a>).</li>
+        <li><b>Monitoring:</b> coverage SLO + error budget per horizon (see <a href="/reliability.html">Reliability</a>).</li>
+        <li><b>Human-in-the-loop:</b> reroute is reversible and logged; no irreversible action is automated.</li>
+        <li><b>Fairness:</b> scores per API endpoint, not per customer — no protected attributes used.</li>
+      </ul>
+    </article>
+
+  </div>
+
+  <nav class="page-jump">
+    <a class="prev" href="/dataset.html"><span class="pj-k">← prev</span><span class="pj-v">Dataset</span></a>
+    <a class="next" href="/cite.html"><span class="pj-k">next →</span><span class="pj-v">Cite the work</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const D = window.LEO_DATA || {};
+  const t = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const pc = (v, d=2) => (v*100).toFixed(d) + '%';
+  const meta = D.meta||{}, lstm = D.lstm||{}, ph = lstm.per_horizon||{}, conf = D.conformal||{}, cph = conf.per_horizon||{}, ds = D.dataset||{};
+
+  t('mcRows', (ds.rows||0).toLocaleString());
+  t('mcFeat', (meta.n_features||43) + ' signals');
+  t('mcBase', pc(ds.failure_rate||0.1388));
+  t('mcVal', (meta.best_val_loss||0).toFixed(4));
+  t('mcAvgAuc', (lstm.avg_auc||0).toFixed(4));
+  t('mcAvgPr', (lstm.avg_pr_auc||0).toFixed(4));
+  t('mcAvgCov', pc(conf.avg_coverage||0.9011));
+  t('mcAvgStatus', conf.all_pass ? 'PASS' : 'PARTIAL');
+
+  const rows = [
+    { k:'h1', label:'1-min' }, { k:'h5', label:'5-min' }, { k:'h15', label:'15-min' },
+  ];
+  const tb = document.getElementById('mcTable');
+  if (tb) tb.innerHTML = rows.map(r => {
+    const m = ph[r.k]||{}, c = cph[r.k]||{};
+    const pass = c.status === 'PASS';
+    return `<tr><td>${r.label}</td><td>${(m.auc||0).toFixed(4)}</td><td>${(m.pr_auc||0).toFixed(4)}</td>
+      <td>${(m.p100!=null?m.p100:1).toFixed(3)}</td><td>${pc(c.coverage||0)}</td>
+      <td><span class="mc-status ${pass?'ok':'bad'}">${c.status||'—'}</span></td></tr>`;
+  }).join('');
+});
+</script>
+</body>
+</html>

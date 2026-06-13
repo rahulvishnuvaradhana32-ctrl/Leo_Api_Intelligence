@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drift Monitor · LEO</title>
+<meta name="description" content="LEO's data-drift monitor — per-signal KS trend across self-healing runs, latest-run drift grid, and retrain triggers.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">📈 Drift Monitor</span>
+    <h1 class="page-title">Catch the data <span class="grad">moving under the model</span></h1>
+    <p class="page-lede">
+      Every night the self-healing pipeline KS-tests each input signal against the training distribution.
+      Here's that record — the trend per signal, what's drifting right now, and when LEO retrained itself.
+    </p>
+  </div>
+
+  <div class="leo-says reveal"
+       data-msg="A model is only as good as the distribution it was trained on. LEO runs a **Kolmogorov–Smirnov test** per signal on a rolling window and retrains only when the effect size is large enough to matter — not on every nervous p-value."></div>
+
+  <section class="rel-section reveal">
+    <div class="drift-summary" id="driftSummary"></div>
+  </section>
+
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Per-signal drift trend</h3>
+        <span class="rel-sub">KS statistic across self-healing runs · dot = flagged drift · source: <span id="driftSource">loading…</span></span></div>
+    </div>
+    <canvas id="driftChart" height="260"></canvas>
+    <div class="drift-legend" id="driftLegend"></div>
+  </section>
+
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Latest run · signal-by-signal</h3>
+        <span class="rel-sub">KS statistic, p-value and drift verdict for the most recent check</span></div>
+    </div>
+    <div class="signal-grid" id="signalGrid"></div>
+  </section>
+
+  <nav class="page-jump">
+    <a class="prev" href="/reliability.html"><span class="pj-k">← prev</span><span class="pj-v">Reliability</span></a>
+    <a class="next" href="/pipeline.html"><span class="pj-k">next →</span><span class="pj-v">Self-healing pipeline</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/drift.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.LEO_DRIFT) window.LEO_DRIFT.init();
+});
+</script>
+</body>
+</html>

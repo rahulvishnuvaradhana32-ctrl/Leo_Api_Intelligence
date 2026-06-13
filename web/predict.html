@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Playground · LEO</title>
+<meta name="description" content="Drive LEO's failure-risk model live — move the signals, watch the 1/5/15-minute risk and the recommended action update in real time.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">⚡ Live Playground</span>
+    <h1 class="page-title">Drive the model — <span class="grad">watch the failure fan open</span></h1>
+    <p class="page-lede">
+      Move the operational signals on the left and LEO re-scores the <em>1, 5 and 15-minute</em> failure
+      risk instantly, with its 90% conformal band and the action it would take. Try the scenario presets.
+    </p>
+  </div>
+
+  <div class="leo-says reveal"
+       data-msg="This public playground runs a **distilled surrogate** of LEO — hand-calibrated to reproduce the real model's behaviour (monotone in the right signals, anchored to the true **13.88% base rate**, longer horizons regressing toward it). The bands use the **real conformal q̂** from calibration. The full **Bi-LSTM + attention** model and every headline metric elsewhere on the site come from the genuine held-out evaluation."></div>
+
+  <div class="predict-stage reveal">
+
+    <!-- ── Controls ── -->
+    <div class="predict-controls">
+      <div class="pc-head">
+        <h3>Input signals</h3>
+        <div class="preset-row">
+          <button data-preset="calm" class="preset active">Calm</button>
+          <button data-preset="degrading" class="preset">Degrading</button>
+          <button data-preset="outage" class="preset">Outage</button>
+        </div>
+      </div>
+
+      <label class="ctrl">
+        <span class="ctrl-k">API endpoint</span>
+        <select id="pApi" class="ctrl-select">
+          <option value="transaction_api">transaction_api</option>
+          <option value="market_data_api">market_data_api</option>
+          <option value="stock_price_api">stock_price_api</option>
+          <option value="crypto_api">crypto_api</option>
+          <option value="forex_api">forex_api</option>
+        </select>
+      </label>
+
+      <label class="ctrl">
+        <span class="ctrl-k">Error rate <b id="pErrV">1.5%</b></span>
+        <input id="pErr" type="range" min="0" max="25" step="0.5" value="1.5">
+      </label>
+
+      <label class="ctrl">
+        <span class="ctrl-k">Response-time multiplier <b id="pRtV">1.0×</b></span>
+        <input id="pRt" type="range" min="1" max="8" step="0.1" value="1">
+      </label>
+
+      <label class="ctrl">
+        <span class="ctrl-k">Error volatility <b id="pVolV">8%</b></span>
+        <input id="pVol" type="range" min="0" max="100" step="1" value="8">
+      </label>
+
+      <label class="ctrl">
+        <span class="ctrl-k">Load (vs nominal) <b id="pTputV">0.9×</b></span>
+        <input id="pTput" type="range" min="0.2" max="3" step="0.1" value="0.9">
+      </label>
+
+      <label class="ctrl">
+        <span class="ctrl-k">Recent failures (last 30 steps) <b id="pRecentV">0</b></span>
+        <input id="pRecent" type="range" min="0" max="15" step="1" value="0">
+      </label>
+    </div>
+
+    <!-- ── Output ── -->
+    <div class="predict-output">
+      <div class="gauge-row">
+        <div class="gauge"><canvas id="gaugeH1"></canvas></div>
+        <div class="gauge"><canvas id="gaugeH5"></canvas></div>
+        <div class="gauge"><canvas id="gaugeH15"></canvas></div>
+      </div>
+
+      <div class="verdict ok" id="verdictCard">
+        <div class="vc-head">
+          <span class="vc-bracket">[</span>
+          <span class="vc-title">SYSTEM · RECOMMENDED ACTION</span>
+          <span class="vc-bracket">]</span>
+          <span class="vc-peak">peak risk <b id="vPeak">—</b></span>
+        </div>
+        <div class="vc-action" id="vAction">—</div>
+        <div class="vc-msg" id="vMsg">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── What-if driver breakdown ── -->
+  <div class="driver-block reveal">
+    <div class="db-head">
+      <h3>What's driving this call?</h3>
+      <p>Signed contribution of each signal to the h+1 risk score (log-odds). Drag a slider and watch the dominant driver shift — this is the what-if view.</p>
+    </div>
+    <div class="driver-bars" id="driverBars"></div>
+    <p class="db-note">
+      Band = 90% conformal coverage (α=0.10), half-width scaled by the calibration q̂ per horizon
+      (h+1 0.519 · h+5 0.521 · h+15 0.526). Action thresholds: retry ≥ 0.35 · reroute ≥ 0.55.
+    </p>
+  </div>
+
+  <nav class="page-jump">
+    <a class="prev" href="/forecasting.html"><span class="pj-k">← prev</span><span class="pj-v">Forecasting</span></a>
+    <a class="next" href="/confidence.html"><span class="pj-k">next →</span><span class="pj-v">Confidence bands</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/predict.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.LEO_PREDICT) window.LEO_PREDICT.init();
+});
+</script>
+</body>
+</html>

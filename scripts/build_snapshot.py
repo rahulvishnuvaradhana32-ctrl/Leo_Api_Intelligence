@@ -29,13 +29,66 @@ def round_list(xs, n=6):
     return [round(float(v), n) for v in xs]
 
 
+def _clean(obj):
+    """Recursively replace NaN/Inf floats with None so the JS literal is sane."""
+    import math
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clean(v) for v in obj]
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    return obj
+
+
+def load_selfheal(max_runs=40):
+    """Parse models/self_heal_log.jsonl → compact timeline for the drift &
+    reliability pages. Each line is one self-healing run with a drift report."""
+    p = MODELS / "self_heal_log.jsonl"
+    runs = []
+    try:
+        for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            prob = r.get("problems_found", {}) or {}
+            drift = prob.get("drift_report", {}) or {}
+            outcome = r.get("outcome", {}) or {}
+            comp = r.get("comparison", {}) or {}
+            runs.append({
+                "run_id": r.get("run_id"),
+                "timestamp": r.get("timestamp"),
+                "mode": r.get("mode"),
+                "rows": (r.get("data", {}) or {}).get("rows_in_recent_window"),
+                "failure_rate": prob.get("failure_rate"),
+                "drift_detected": bool(prob.get("drift_detected")),
+                "imbalance": bool(prob.get("imbalance_detected")),
+                "signals": {
+                    k: {"ks": v.get("ks"), "p": v.get("p"), "drifted": bool(v.get("drifted"))}
+                    for k, v in drift.items()
+                },
+                "model_updated": bool(outcome.get("model_updated")),
+                "delta": comp.get("delta"),
+            })
+    except Exception:
+        pass
+    return _clean(runs[-max_runs:])
+
+
 def main() -> None:
     lstm = load("lstm_results.json", {})
     conf = load("conformal_results.json", {})
     agent = load("agent_simulation_results.json", {})
     abl = load("ablation_results.json", {})
+    selfheal = load_selfheal()
 
     ph = lstm.get("per_horizon", {})
+    conf_summary = conf.get("summary", {}) or {}
+    assumptions = agent.get("assumptions", {}) or {}
 
     payload = {
         "meta": {
@@ -73,6 +126,9 @@ def main() -> None:
                 if conf.get("target_coverage", 0) > 1 else conf.get("target_coverage", 0.9),
             "alpha": conf.get("alpha", 0.1),
             "cal_sequences": conf.get("cal_sequences", 0),
+            "avg_coverage": conf_summary.get("avg_coverage"),
+            "avg_width":    conf_summary.get("avg_width"),
+            "all_pass":     conf_summary.get("all_horizons_pass"),
             "per_horizon": {
                 k: {
                     "q_hat":    v.get("q_hat"),
@@ -108,7 +164,17 @@ def main() -> None:
                 "annual_savings":     agent.get("comparison", {}).get("annual_cost_saving_usd"),
                 "failures_avoided":   agent.get("comparison", {}).get("annual_failures_avoided"),
             },
+            "assumptions": {
+                "cost_per_failure":   assumptions.get("cost_per_failure_usd"),
+                "tx_per_year":        assumptions.get("transactions_per_year"),
+                "high_risk":          assumptions.get("high_risk_threshold"),
+                "low_risk":           assumptions.get("low_risk_threshold"),
+                "lat_normal":         assumptions.get("latency_normal_sec"),
+                "lat_retry":          assumptions.get("latency_retry_sec"),
+                "lat_switch":         assumptions.get("latency_switch_sec"),
+            },
         },
+        "selfheal": selfheal,
         "ablation": {
             "baseline_auc": abl.get("baseline_auc"),
             "experiments": [

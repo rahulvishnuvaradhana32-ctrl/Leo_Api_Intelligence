@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reliability · LEO</title>
+<meta name="description" content="LEO as an SRE control surface — coverage SLOs, error-budget burn-down, an incident timeline, and proactive-vs-reactive impact.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">🛡 Reliability · SLO</span>
+    <h1 class="page-title">A model that speaks <span class="grad">error budget</span></h1>
+    <p class="page-lede">
+      LEO's conformal coverage <em>is</em> an SLO. Here it is as an SRE control surface — budget per horizon,
+      a 30-day burn-down, the self-healing incident timeline, and what proactive routing actually saved.
+    </p>
+  </div>
+
+  <div class="leo-says reveal"
+       data-msg="The coverage guarantee maps cleanly onto **SRE practice**: target **90% coverage** is the SLO, the **10% miscoverage** is the error budget, and each horizon either holds the line or breaches. **h+1** and **h+5** pass with budget to spare; **h+15** sits right on the edge — exactly where a fast-burn alert should fire."></div>
+
+  <!-- ── SLO cards ── -->
+  <section class="rel-section reveal">
+    <h3 class="rel-h">Coverage SLO · error budget per horizon</h3>
+    <div class="slo-cards" id="sloCards"></div>
+  </section>
+
+  <!-- ── Burn-down ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Error-budget burn-down</h3>
+        <span class="rel-sub">illustrative 30-day window · slope set by measured miscoverage</span></div>
+      <div class="burn-legend">
+        <span class="bl slow">slow-burn</span><span class="bl fast">fast-burn → h+15 breaches</span>
+      </div>
+    </div>
+    <canvas id="burnChart" height="240"></canvas>
+  </section>
+
+  <!-- ── Comparison ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Proactive vs reactive routing</h3>
+        <span class="rel-sub">10,000-transaction simulation · live from <code>agent_simulation_results.json</code></span></div>
+    </div>
+    <div class="cmp-headline">
+      <div class="ch"><b>52.07%</b><span>fewer failures</span></div>
+      <div class="ch"><b>$3.10M</b><span>annual savings</span></div>
+      <div class="ch"><b>20,644</b><span>failures averted / yr</span></div>
+    </div>
+    <div class="cmp-legend"><span class="cl pro">Proactive (LEO)</span><span class="cl rea">Reactive (baseline)</span><span class="cl-note">green = winner · lower is better</span></div>
+    <div class="compare-bars" id="compareBars"></div>
+  </section>
+
+  <!-- ── Incident timeline ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Self-healing incident timeline</h3>
+        <span class="rel-sub">real runs · live from <code>self_heal_log.jsonl</code> (<code>/api/drift</code>)</span></div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+  <nav class="page-jump">
+    <a class="prev" href="/confidence.html"><span class="pj-k">← prev</span><span class="pj-v">Confidence bands</span></a>
+    <a class="next" href="/drift.html"><span class="pj-k">next →</span><span class="pj-v">Drift monitor</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/reliability.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.LEO_RELIABILITY) window.LEO_RELIABILITY.init();
+});
+</script>
+</body>
+</html>

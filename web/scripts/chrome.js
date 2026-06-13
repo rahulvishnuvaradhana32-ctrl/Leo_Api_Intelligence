@@ -249,10 +249,14 @@
     { href: '/architecture.html', label: 'Architecture' },
     { href: '/results.html',      label: 'Results' },
     { href: '/forecasting.html',  label: 'Forecasting' },
+    { href: '/predict.html',      label: 'Predict' },
     { href: '/confidence.html',   label: 'Confidence' },
+    { href: '/reliability.html',  label: 'Reliability' },
+    { href: '/drift.html',        label: 'Drift' },
     { href: '/agent.html',        label: 'Agent' },
     { href: '/pipeline.html',     label: 'Pipeline' },
     { href: '/dataset.html',      label: 'Dataset' },
+    { href: '/modelcard.html',    label: 'Model card' },
     { href: '/cite.html',         label: 'Cite' },
   ];
 
@@ -302,13 +306,16 @@
           <a href="/architecture.html">Architecture</a>
           <a href="/results.html">Results</a>
           <a href="/forecasting.html">Forecasting</a>
+          <a href="/predict.html">Live playground</a>
           <a href="/agent.html">Agent</a>
         </div>
         <div class="foot-col">
           <div class="fc-k">More</div>
           <a href="/confidence.html">Confidence bands</a>
+          <a href="/reliability.html">Reliability / SLO</a>
+          <a href="/drift.html">Drift monitor</a>
           <a href="/pipeline.html">Self-healing pipeline</a>
-          <a href="/dataset.html">Dataset</a>
+          <a href="/modelcard.html">Model card</a>
           <a href="/cite.html">Cite the work</a>
         </div>
         <div class="foot-col">

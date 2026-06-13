@@ -71,6 +71,54 @@ async def last_modified():
     return JSONResponse({"last_modified": latest})
 
 
+@app.get("/api/drift")
+async def drift(limit: int = 40):
+    """Live self-healing / drift timeline parsed from models/self_heal_log.jsonl.
+
+    Stdlib-only (no torch/sklearn) so it stays within the free-tier image.
+    The frontend falls back to the baked snapshot in data.js if this 404s,
+    keeping the static build fully portable.
+    """
+    import json as _json
+    import math
+    path = MODELS / "self_heal_log.jsonl"
+    runs = []
+    try:
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = _json.loads(line)
+            except Exception:
+                continue
+            prob = r.get("problems_found", {}) or {}
+            drift_report = prob.get("drift_report", {}) or {}
+            runs.append({
+                "run_id": r.get("run_id"),
+                "timestamp": r.get("timestamp"),
+                "mode": r.get("mode"),
+                "rows": (r.get("data", {}) or {}).get("rows_in_recent_window"),
+                "failure_rate": prob.get("failure_rate"),
+                "drift_detected": bool(prob.get("drift_detected")),
+                "imbalance": bool(prob.get("imbalance_detected")),
+                "signals": {
+                    k: {
+                        "ks": v.get("ks"),
+                        "p": (None if isinstance(v.get("p"), float) and math.isnan(v.get("p")) else v.get("p")),
+                        "drifted": bool(v.get("drifted")),
+                    }
+                    for k, v in drift_report.items()
+                },
+                "model_updated": bool((r.get("outcome", {}) or {}).get("model_updated")),
+            })
+    except FileNotFoundError:
+        return JSONResponse({"error": "no self-heal log on this host"}, status_code=404)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500)
+    return JSONResponse({"runs": runs[-limit:], "count": len(runs)})
+
+
 @app.get("/api/snapshot")
 async def snapshot():
     """Return the bundled data.js payload as raw JSON for programmatic access."""

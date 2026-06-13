@@ -97,6 +97,9 @@ Object.assign(window.LEO_DATA, {
     "target_coverage": 0.9,
     "alpha": 0.1,
     "cal_sequences": 155337,
+    "avg_coverage": 0.9011,
+    "avg_width": 0.9915,
+    "all_pass": false,
     "per_horizon": {
       "h1": {
         "q_hat": 0.519451,
@@ -143,8 +146,437 @@ Object.assign(window.LEO_DATA, {
       "fail_reduction_pct": 52.07,
       "annual_savings": 3096600.0,
       "failures_avoided": 20644.0
+    },
+    "assumptions": {
+      "cost_per_failure": 150.0,
+      "tx_per_year": 260000,
+      "high_risk": 0.55,
+      "low_risk": 0.35,
+      "lat_normal": 0.12,
+      "lat_retry": 0.28,
+      "lat_switch": 0.45
     }
   },
+  "selfheal": [
+    {
+      "run_id": "20260316_175142",
+      "timestamp": "2026-03-16T17:51:42",
+      "mode": "dry_run",
+      "rows": 42500,
+      "failure_rate": 0.0,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0303,
+          "p": 0.0,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0051,
+          "p": 0.945274,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260316_175311",
+      "timestamp": "2026-03-16T17:53:11",
+      "mode": "dry_run",
+      "rows": 255000,
+      "failure_rate": 0.0007529411764706229,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0496,
+          "p": 0.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.3226,
+          "p": 0.0,
+          "drifted": true
+        },
+        "rt_multiplier": {
+          "ks": 0.048,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0032,
+          "p": 0.520645,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.0285,
+          "p": 0.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260316_175406",
+      "timestamp": "2026-03-16T17:54:06",
+      "mode": "dry_run",
+      "rows": 170000,
+      "failure_rate": 0.0,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0311,
+          "p": 0.0,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0021,
+          "p": 0.993105,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260316_175840",
+      "timestamp": "2026-03-16T17:58:40",
+      "mode": "dry_run",
+      "rows": 170000,
+      "failure_rate": 0.0,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0311,
+          "p": 0.0,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0021,
+          "p": 0.993105,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.0,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260316_180449",
+      "timestamp": "2026-03-16T18:04:49",
+      "mode": "dry_run",
+      "rows": 170000,
+      "failure_rate": 0.0059941176470588164,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0009,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0028,
+          "p": 0.90323,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0037,
+          "p": 0.598272,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0006,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.001,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260316_182334",
+      "timestamp": "2026-03-16T18:23:34",
+      "mode": "full",
+      "rows": 170000,
+      "failure_rate": 0.0059941176470588164,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0009,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0028,
+          "p": 0.90323,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0037,
+          "p": 0.598272,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0006,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.001,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": -0.005277
+    },
+    {
+      "run_id": "20260316_184228",
+      "timestamp": "2026-03-16T18:42:28",
+      "mode": "dry_run",
+      "rows": 850000,
+      "failure_rate": 0.025718823529411794,
+      "drift_detected": true,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.2508,
+          "p": 0.0,
+          "drifted": true
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0663,
+          "p": 0.0,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0872,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0148,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.2412,
+          "p": 0.0,
+          "drifted": true
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260318_212631",
+      "timestamp": "2026-03-18T21:26:31",
+      "mode": "dry_run",
+      "rows": 170000,
+      "failure_rate": 0.0059941176470588164,
+      "drift_detected": false,
+      "imbalance": true,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.0009,
+          "p": 1.0,
+          "drifted": false
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.0028,
+          "p": 0.90323,
+          "drifted": false
+        },
+        "rt_multiplier": {
+          "ks": 0.0037,
+          "p": 0.598272,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0006,
+          "p": 1.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.001,
+          "p": 1.0,
+          "drifted": false
+        }
+      },
+      "model_updated": false,
+      "delta": null
+    },
+    {
+      "run_id": "20260323_114635",
+      "timestamp": "2026-03-23T11:46:35",
+      "mode": "full",
+      "rows": 850000,
+      "failure_rate": 0.13750941176470588,
+      "drift_detected": true,
+      "imbalance": false,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.6633,
+          "p": 0.0,
+          "drifted": true
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.1714,
+          "p": 0.0,
+          "drifted": true
+        },
+        "rt_multiplier": {
+          "ks": 0.234,
+          "p": 0.0,
+          "drifted": true
+        },
+        "error_rate_boost": {
+          "ks": 0.0281,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.6421,
+          "p": 0.0,
+          "drifted": true
+        }
+      },
+      "model_updated": false,
+      "delta": -0.016944
+    },
+    {
+      "run_id": "20260324_120557",
+      "timestamp": "2026-03-24T12:05:57",
+      "mode": "full",
+      "rows": 850000,
+      "failure_rate": 0.2361352941176471,
+      "drift_detected": true,
+      "imbalance": false,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.1845,
+          "p": 0.0,
+          "drifted": true
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.2154,
+          "p": 0.0,
+          "drifted": true
+        },
+        "rt_multiplier": {
+          "ks": 0.014,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_rate_boost": {
+          "ks": 0.0156,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.2513,
+          "p": 0.0,
+          "drifted": true
+        }
+      },
+      "model_updated": false,
+      "delta": -0.013454
+    },
+    {
+      "run_id": "20260324_193405",
+      "timestamp": "2026-03-24T19:34:05",
+      "mode": "full",
+      "rows": 1649534,
+      "failure_rate": 0.17960042048239078,
+      "drift_detected": true,
+      "imbalance": false,
+      "signals": {
+        "error_rate_rolling": {
+          "ks": 0.2354,
+          "p": 0.0,
+          "drifted": true
+        },
+        "response_time_rolling_mean": {
+          "ks": 0.7617,
+          "p": 0.0,
+          "drifted": true
+        },
+        "rt_multiplier": {
+          "ks": 0.2335,
+          "p": 0.0,
+          "drifted": true
+        },
+        "error_rate_boost": {
+          "ks": 0.0378,
+          "p": 0.0,
+          "drifted": false
+        },
+        "error_volatility": {
+          "ks": 0.1257,
+          "p": 0.0,
+          "drifted": true
+        }
+      },
+      "model_updated": false,
+      "delta": -0.041409
+    }
+  ],
   "ablation": {
     "baseline_auc": 0.852171,
     "experiments": [
