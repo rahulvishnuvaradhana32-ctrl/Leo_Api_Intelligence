@@ -103,7 +103,7 @@
 
     // conformal band (translucent wedge around p)
     const lo = clamp(p - bw, 0, 1), hi = clamp(p + bw, 0, 1);
-    x.lineWidth = 12; x.strokeStyle = 'rgba(251,191,36,0.18)';
+    x.lineWidth = 12; x.strokeStyle = 'rgba(77,141,255,0.22)';
     x.beginPath(); x.arc(cx, cy, R, ang(lo), ang(hi)); x.stroke();
 
     // value arc
@@ -124,15 +124,15 @@
     });
 
     // center text
-    x.fillStyle = '#fef3c7';
-    x.font = '700 26px Space Grotesk';
+    x.fillStyle = '#EAF1FF';
+    x.font = '700 26px "Fraunces", serif';
     x.textAlign = 'center'; x.textBaseline = 'middle';
     x.fillText((p * 100).toFixed(1) + '%', cx, cy - 2);
-    x.fillStyle = '#9a7b5e';
-    x.font = '10px JetBrains Mono';
+    x.fillStyle = '#8893B0';
+    x.font = '10px "IBM Plex Mono", monospace';
     x.fillText(label, cx, cy + 20);
-    x.fillStyle = '#7a5b3e';
-    x.font = '9px JetBrains Mono';
+    x.fillStyle = '#6F7C9C';
+    x.font = '9px "IBM Plex Mono", monospace';
     x.fillText('±' + (bw * 100).toFixed(0) + ' · 90%', cx, cy + 34);
   }
 

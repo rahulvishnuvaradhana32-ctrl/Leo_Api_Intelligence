@@ -3,76 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Self-healing Pipeline · LEO</title>
-<meta name="description" content="LEO self-improving pipeline — detect drift, augment, retrain, promote.">
+<title>Self-Healing Pipeline · LEO</title>
+<meta name="description" content="LEO's nightly self-improving loop — drift audit, imbalance detection, conditional retraining and a champion-challenger promotion gate that never updates destructively.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
-    <span class="page-tag">06 · Self-Improving Pipeline</span>
-    <h1 class="page-title">Detect drift. Augment. Retrain. <span class="grad">Promote.</span></h1>
+    <span class="page-tag">Self-Healing Pipeline</span>
+    <h1 class="page-title">Detect drift. Retrain. <span class="grad">Promote — safely.</span></h1>
     <p class="page-lede">
-      A closed loop that audits live telemetry, augments minority cases, retrains conditionally and only
-      promotes the new checkpoint if it beats the incumbent. Runs nightly. <em>Logs every decision.</em>
+      A closed loop that audits live telemetry every night, catches the failure modes the current model is
+      missing, retrains only when it helps, and promotes the new checkpoint only if it beats the incumbent.
+      <em>Every decision logged. Never a destructive update.</em>
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="Production model performance degrades as traffic mix and failure modalities evolve. LEO operates a **closed-loop retraining cadence**: nightly drift audit, targeted minority-class augmentation, warm-started retraining and a **champion–challenger promotion gate** that releases the candidate only when both AUC and conformal coverage exceed the incumbent. Every decision is captured in an immutable, audit-ready log."></div>
+       data-msg="Production model performance decays as traffic mix and failure modalities evolve. LEO runs a **closed-loop retraining cadence** at **midnight every night**: a per-signal drift audit, detection of class imbalance and missed failure types, **conditional retraining** that only proceeds when validation loss improves past a threshold, and a **champion–challenger gate** that releases the candidate only when it beats the current model. The incumbent is backed up first, and every decision is captured in an immutable, audit-ready log."></div>
 
-  <div class="pipeline reveal">
-    <div class="pipe-track"></div>
-    <div class="pipe-flow"></div>
+  <!-- ── The nightly loop ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">The nightly loop</h3>
+        <span class="rel-sub">runs as a midnight <code>cron</code> · six gated stages</span></div>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <span class="n"></span><h3>Pull recent window</h3>
+        <p>Roll the most recent traffic window of live telemetry across the full API estate.</p>
+      </div>
+      <div class="step reveal" data-d="1">
+        <span class="n"></span><h3>KS drift test</h3>
+        <p>Run a Kolmogorov–Smirnov test per signal against the training distribution to quantify shift.</p>
+      </div>
+      <div class="step reveal" data-d="2">
+        <span class="n"></span><h3>Detect imbalance</h3>
+        <p>Flag class imbalance and the failure types the current model is missing on the holdout.</p>
+      </div>
+      <div class="step reveal">
+        <span class="n"></span><h3>Conditional retrain</h3>
+        <p>Warm-start a retrain — but only if the candidate's validation loss improves past the threshold.</p>
+      </div>
+      <div class="step reveal" data-d="1">
+        <span class="n"></span><h3>Compare vs current</h3>
+        <p>Score the challenger against the live champion on the same holdout and conformal coverage.</p>
+      </div>
+      <div class="step reveal" data-d="2">
+        <span class="n"></span><h3>Promote or keep</h3>
+        <p>Promote the challenger only if it wins; otherwise keep the incumbent and log the decision.</p>
+      </div>
+    </div>
+  </section>
 
-    <div class="pipe-step">
-      <div class="ps-num">01</div>
-      <div class="ps-glyph">◐</div>
-      <div class="ps-title">Audit</div>
-      <div class="ps-desc">Roll a 7-day window. Compute KS-statistic per signal, per-API failure rate, sequence-length drift.</div>
+  <!-- ── Safeguards ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Safeguards</h3>
+        <span class="rel-sub">why this loop can run unattended</span></div>
     </div>
-    <div class="pipe-step">
-      <div class="ps-num">02</div>
-      <div class="ps-glyph">◑</div>
-      <div class="ps-title">Detect</div>
-      <div class="ps-desc">Flag drift if KS &gt; 0.1 on ≥ 3 signals, or AUC degradation ≥ 1.5% on holdout.</div>
+    <div class="split">
+      <div class="panel">
+        <ul class="feature-list">
+          <li><span class="tick">✓</span><span><b>Minimum-improvement threshold.</b> A candidate is only promoted when it clears a measurable margin over the incumbent — marginal noise never ships.</span></li>
+          <li><span class="tick">✓</span><span><b>Backup before promote.</b> The live checkpoint is archived before any swap, so a rollback is always one step away.</span></li>
+          <li><span class="tick">✓</span><span><b>Never destructive.</b> The loop never overwrites a working model in place — a failed gate simply keeps the champion and records why.</span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="line"><span>Cadence</span><b>Midnight cron · nightly</b></div>
+        <div class="line"><span>Drift test</span><b>KS per signal</b></div>
+        <div class="line"><span>Retrain</span><b>Warm-start · conditional</b></div>
+        <div class="line"><span>Gate</span><b>Champion–challenger</b></div>
+        <div class="line"><span>Promotion</span><b>Only on val-loss improvement</b></div>
+        <div class="line"><span>Audit</span><b>Immutable decision log</b></div>
+        <div class="line"><span>Live</span><b>feeds <a href="/drift.html">drift</a> + <a href="/reliability.html">reliability</a></b></div>
+      </div>
     </div>
-    <div class="pipe-step">
-      <div class="ps-num">03</div>
-      <div class="ps-glyph">◒</div>
-      <div class="ps-title">Augment</div>
-      <div class="ps-desc">SMOTE-ish injection for failure-class shortfalls. Synthetic precursor windows on demand.</div>
-    </div>
-    <div class="pipe-step">
-      <div class="ps-num">04</div>
-      <div class="ps-glyph">◓</div>
-      <div class="ps-title">Retrain</div>
-      <div class="ps-desc">Warm-start from last best. 10 epochs. Lower LR. Same focal-loss, same per-h pos_weight schedule.</div>
-    </div>
-    <div class="pipe-step">
-      <div class="ps-num">05</div>
-      <div class="ps-glyph">◉</div>
-      <div class="ps-title">Promote</div>
-      <div class="ps-desc">Promote only if Δ-AUC ≥ +0.3% AND conformal coverage holds. Otherwise revert + log.</div>
-    </div>
-  </div>
+  </section>
 
   <nav class="page-jump">
-    <a class="prev" href="/agent.html"><span class="pj-k">← prev</span><span class="pj-v">Proactive Agent</span></a>
+    <a class="prev" href="/agent.html"><span class="pj-k">← prev</span><span class="pj-v">Proactive agent</span></a>
     <a class="next" href="/dataset.html"><span class="pj-k">next →</span><span class="pj-v">Dataset</span></a>
   </nav>
 </div></main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 </body>
 </html>

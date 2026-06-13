@@ -4,110 +4,126 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Proactive Agent · LEO</title>
-<meta name="description" content="LEO proactive agent vs reactive baseline — 52% failure reduction, $3.1M annual savings.">
+<meta name="description" content="LEO's proactive routing agent vs a reactive baseline — 52.07% fewer failures, $3.10M annual savings, 20,644 incidents averted per year.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
-    <span class="page-tag">05 · Agent Simulation</span>
+    <span class="page-tag">Proactive Agent</span>
     <h1 class="page-title">Proactive switching cuts failures <span class="grad">in half</span></h1>
     <p class="page-lede">
-      10,000-transaction simulation pitting the LEO-driven proactive agent against a reactive baseline.
-      Same traffic. Same APIs. <em>Different decision policy.</em>
+      A 10,000-transaction simulation pits the LEO-directed proactive agent against a reactive baseline.
+      Same traffic, same APIs — <em>a different decision policy</em>. LEO reroutes before a provider fails;
+      the baseline only reacts after the error lands.
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="A 10,000-transaction controlled simulation benchmarks LEO-directed routing against a reactive baseline. Failure rate falls from **15.25% to 7.31%** — a **52.07% reduction**. Extrapolated over a representative 260,000-transaction annual flow at a $150 cost-per-failure assumption, this represents **20,644 incidents avoided** and an estimated **$3.1M** in recovered operating margin per annum."></div>
+       data-msg="The simulation benchmarks LEO-directed routing against a reactive baseline across **10,000 transactions**. Failure rate falls from **15.25% to 7.31%** — a **52.07% reduction**. Extrapolated over a representative **260,000-transaction** annual flow at a **$150** cost-per-failure assumption, that is **20,644 incidents avoided** and an estimated **$3.10M** in recovered operating margin per year."></div>
 
-  <div class="vs-board reveal">
-    <div class="vs-side proactive">
-      <div class="vs-head">
-        <span class="vs-pill">Proactive · LEO</span>
-        <span class="vs-status">●  online</span>
-      </div>
-      <div class="vs-big">
-        <span class="vs-big-num">731</span>
-        <span class="vs-big-k">failures / 10k requests</span>
-      </div>
-      <div class="vs-mini">
-        <div><span>Failure rate</span><b>7.31%</b></div>
-        <div><span>Auto switches</span><b>1,140</b></div>
-        <div><span>Avg latency</span><b>279 ms</b></div>
-        <div><span>$/1k requests</span><b>$109.6k</b></div>
-      </div>
-      <div class="vs-actions">
-        <div class="va"><span class="va-k">retry</span><div class="va-bar"><span data-p="75.9"></span></div><b>7,593</b></div>
-        <div class="va"><span class="va-k">normal</span><div class="va-bar"><span data-p="12.7"></span></div><b>1,267</b></div>
-        <div class="va"><span class="va-k">switch</span><div class="va-bar"><span data-p="11.4"></span></div><b>1,140</b></div>
-      </div>
+  <!-- ── Headline impact ── -->
+  <section class="rel-section reveal">
+    <h3 class="rel-h">What proactive routing delivered</h3>
+    <div class="cmp-headline">
+      <div class="ch"><b>52.07%</b><span>fewer failures</span></div>
+      <div class="ch"><b>$3.10M</b><span>annual savings</span></div>
+      <div class="ch"><b>20,644</b><span>failures averted / yr</span></div>
     </div>
+  </section>
 
-    <div class="vs-mid">
-      <div class="vs-arrow" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div class="vs-delta">
-        <div class="vsd-k">FAILURE REDUCTION</div>
-        <div class="vsd-v">52.07%</div>
-        <div class="vsd-k">ANNUAL SAVINGS</div>
-        <div class="vsd-v small">$3,096,600</div>
-        <div class="vsd-k">FAILURES AVERTED / YEAR</div>
-        <div class="vsd-v small">20,644</div>
-      </div>
-      <div class="vs-arrow flip" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
+  <!-- ── Comparison ── -->
+  <section class="rel-section reveal" data-d="1">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Proactive vs reactive routing</h3>
+        <span class="rel-sub">10,000-transaction simulation · source <code>agent_simulation_results.json</code></span></div>
     </div>
+    <div class="cmp-legend"><span class="cl pro">Proactive (LEO)</span><span class="cl rea">Reactive (baseline)</span><span class="cl-note">green = winner · lower is better</span></div>
+    <div class="compare-bars">
 
-    <div class="vs-side reactive">
-      <div class="vs-head">
-        <span class="vs-pill warn">Reactive · Baseline</span>
-        <span class="vs-status warn">●  fallback</span>
+      <div class="cmp">
+        <div class="cmp-k">Failure rate</div>
+        <div class="cmp-bars">
+          <div class="cmp-bar pro win"><span style="width:47.93%"></span><i>7.31%</i></div>
+          <div class="cmp-bar rea"><span style="width:100%"></span><i>15.25%</i></div>
+        </div>
       </div>
-      <div class="vs-big">
-        <span class="vs-big-num">1,525</span>
-        <span class="vs-big-k">failures / 10k requests</span>
+
+      <div class="cmp">
+        <div class="cmp-k">Failures / 10k</div>
+        <div class="cmp-bars">
+          <div class="cmp-bar pro win"><span style="width:47.93%"></span><i>731</i></div>
+          <div class="cmp-bar rea"><span style="width:100%"></span><i>1,525</i></div>
+        </div>
       </div>
-      <div class="vs-mini">
-        <div><span>Failure rate</span><b>15.25%</b></div>
-        <div><span>Auto switches</span><b>1,472</b></div>
-        <div><span>Avg latency</span><b>169 ms</b></div>
-        <div><span>$/1k requests</span><b>$228.8k</b></div>
+
+      <div class="cmp">
+        <div class="cmp-k">Provider switches</div>
+        <div class="cmp-bars">
+          <div class="cmp-bar pro win"><span style="width:77.45%"></span><i>1,140</i></div>
+          <div class="cmp-bar rea"><span style="width:100%"></span><i>1,472</i></div>
+        </div>
       </div>
-      <div class="vs-actions">
-        <div class="va"><span class="va-k">normal</span><div class="va-bar"><span data-p="85.3"></span></div><b>8,528</b></div>
-        <div class="va"><span class="va-k">switch</span><div class="va-bar"><span data-p="14.7"></span></div><b>1,472</b></div>
+
+      <div class="cmp">
+        <div class="cmp-k">Cost / 1k tx</div>
+        <div class="cmp-bars">
+          <div class="cmp-bar pro win"><span style="width:47.93%"></span><i>$109,650</i></div>
+          <div class="cmp-bar rea"><span style="width:100%"></span><i>$228,750</i></div>
+        </div>
       </div>
+
+      <div class="cmp">
+        <div class="cmp-k">Avg latency</div>
+        <div class="cmp-bars">
+          <div class="cmp-bar pro"><span style="width:100%"></span><i>0.279s</i></div>
+          <div class="cmp-bar rea win"><span style="width:60.57%"></span><i>0.169s</i></div>
+        </div>
+      </div>
+
     </div>
-  </div>
+  </section>
 
-  <div class="vs-assumptions reveal">
-    <span>Assumptions:</span>
-    <code>cost_per_failure = $150</code>
-    <code>tx/year = 260k</code>
-    <code>high-risk τ = 0.55</code>
-    <code>low-risk τ = 0.35</code>
-    <code>backup-fail × 0.25</code>
-  </div>
+  <!-- ── Decision policy ── -->
+  <section class="rel-section reveal" data-d="2">
+    <h3 class="rel-h">The decision policy</h3>
+    <div class="panel">
+      <div class="line"><span>retry threshold</span><b>risk ≥ 0.35 → retry on the same provider</b></div>
+      <div class="line"><span>reroute threshold</span><b>risk ≥ 0.55 → switch to a healthy backup</b></div>
+      <div class="line"><span>reversibility</span><b>every action is reversible and fully logged</b></div>
+      <div class="line"><span>latency trade-off</span><b>+0.110s avg latency for 52.07% fewer failures</b></div>
+      <p class="muted" style="margin:16px 0 0;font-size:13.5px">
+        LEO acts on forecasted failure risk rather than observed errors. Below the low-risk threshold it stays
+        on the primary provider; between 0.35 and 0.55 it retries; above 0.55 it reroutes ahead of the failure.
+        The modest latency cost — about 110 ms per call — buys a halving of the failure rate, and because every
+        decision is reversible and logged, the policy is safe to run in production and trivial to audit.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Assumptions ── -->
+  <section class="rel-section reveal" data-d="3">
+    <h3 class="rel-h">Assumptions</h3>
+    <div class="stat-grid">
+      <div class="stat"><b>0.55</b><span>high-risk threshold</span></div>
+      <div class="stat"><b>0.35</b><span>low-risk threshold</span></div>
+      <div class="stat"><b>$150</b><span>cost per failure</span></div>
+      <div class="stat"><b>260k</b><span>transactions / year</span></div>
+    </div>
+  </section>
 
   <nav class="page-jump">
-    <a class="prev" href="/confidence.html"><span class="pj-k">← prev</span><span class="pj-v">Confidence bands</span></a>
+    <a class="prev" href="/drift.html"><span class="pj-k">← prev</span><span class="pj-v">Drift monitor</span></a>
     <a class="next" href="/pipeline.html"><span class="pj-k">next →</span><span class="pj-v">Self-healing pipeline</span></a>
   </nav>
 </div></main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 </body>
 </html>

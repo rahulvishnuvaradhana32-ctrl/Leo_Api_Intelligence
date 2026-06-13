@@ -3,196 +3,144 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0a0405">
-<title>LEO — Predictive API Intelligence</title>
-<meta name="description" content="LEO predicts banking-API failures 1, 5 and 15 minutes ahead. Multi-horizon attention-LSTM, conformal coverage, proactive agent.">
+<title>LEO — Predict API failure before your customers feel it</title>
+<meta name="description" content="LEO is a predictive reliability layer for banking & fintech APIs. Multi-horizon failure forecasting with conformal confidence — proactively reroute before customer impact.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 
 <main>
 
-  <section class="hero" id="top">
-    <div class="hero-grid" aria-hidden="true"></div>
-    <div class="hero-orbit" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-
-    <div class="hero-inner">
-      <div class="eyebrow reveal">
-        <span class="dot"></span>
-        <span class="sl-label">[ PREDICTIVE&nbsp;API&nbsp;INTELLIGENCE ]</span>
-      </div>
-
-      <h1 class="hero-title sl-title reveal">
-        <span class="line"><span class="word">Predict</span> the moment <span class="grad">an API</span></span>
-        <span class="line">is <span class="grad">about to fail</span><span class="cursor-bar">_</span></span>
-      </h1>
-
-      <!-- Solo Leveling style SYSTEM card -->
-      <div class="sl-card reveal" data-stagger>
-        <div class="sl-card-head">
-          <span class="sl-bracket">[</span>
-          <span class="sl-glitch" data-text="SYSTEM NOTIFICATION">SYSTEM NOTIFICATION</span>
-          <span class="sl-bracket">]</span>
-          <span class="sl-status"><i></i> ACTIVE</span>
+  <!-- ───────── HERO ───────── -->
+  <section class="hero">
+    <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow reveal">Predictive reliability for financial APIs</span>
+        <h1 class="display reveal" data-d="1">
+          Predict API failure <span class="accent">before</span> your customers feel it.
+        </h1>
+        <p class="lede reveal" data-d="2">
+          LEO is an early-warning layer for transactional banking &amp; fintech APIs. It forecasts
+          service degradation at <strong>1, 5 and 15&nbsp;minutes</strong> ahead — each prediction shipped
+          with a calibrated confidence guarantee, so your routing layer can fail over before impact.
+        </p>
+        <div class="hero-ctas reveal" data-d="2">
+          <a class="btn btn-accent" href="/predict.html">
+            See the live demo
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="/architecture.html">How it works</a>
         </div>
-        <div class="sl-card-body">
-          <div class="sl-row"><span class="sl-k">&gt;</span><span class="sl-v sl-typewriter" data-text="A new API outage has been detected on the horizon.">A new API outage has been detected on the horizon.</span></div>
-          <div class="sl-row"><span class="sl-k">&gt;</span><span class="sl-v sl-typewriter" data-text="Time to failure: 1 / 5 / 15 minutes." data-delay="900">Time to failure: 1 / 5 / 15 minutes.</span></div>
-          <div class="sl-row"><span class="sl-k">&gt;</span><span class="sl-v sl-typewriter" data-text="Confidence: 90.11%   ·   Severity: HIGH" data-delay="1800">Confidence: 90.11%   ·   Severity: HIGH</span></div>
-          <div class="sl-row"><span class="sl-k">&gt;</span><span class="sl-v sl-typewriter alert" data-text="Action available: [ REROUTE ]" data-delay="2700">Action available: [ REROUTE ]</span></div>
-        </div>
-        <div class="sl-card-foot">
-          <div class="sl-stat"><span>LATENCY</span><b>279ms</b></div>
-          <div class="sl-stat"><span>COVERAGE</span><b>90.11%</b></div>
-          <div class="sl-stat"><span>UPTIME</span><b>99.92%</b></div>
+        <div class="hero-trust reveal" data-d="3">
+          <span>Conformal-calibrated</span><span class="sep"></span>
+          <span>Reversible failover</span><span class="sep"></span>
+          <span>Self-healing pipeline</span>
         </div>
       </div>
 
-      <p class="hero-sub reveal">
-        LEO is a multi-horizon attention model that forecasts banking API failures with the interval of
-        <strong>1 min, 5 min and 15 min before they occur</strong> —
-        and ships every prediction with a conformal confidence guaranteed.
-      </p>
-
-      <div class="hero-ctas reveal">
-        <a class="btn primary" href="/results.html">
-          <span>See the results</span>
-          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        </a>
-        <a class="btn ghost" href="/architecture.html"><span>How it works</span></a>
-        <a class="btn link" href="/cite.html"><span>Cite the work →</span></a>
-      </div>
-
-      <div class="hero-rail reveal">
-        <div class="rail-item"><span class="rail-k">Avg AUC</span><span class="rail-v">82.02%</span></div>
-        <div class="rail-item"><span class="rail-k">Coverage guarantee</span><span class="rail-v">90.11%</span></div>
-        <div class="rail-item"><span class="rail-k">Failures averted / yr</span><span class="rail-v">20,644</span></div>
-        <div class="rail-item"><span class="rail-k">Annual savings</span><span class="rail-v">$3.1M</span></div>
+      <!-- product card -->
+      <div class="product-card reveal" data-d="2" aria-hidden="true">
+        <div class="pc-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="t">leo · live forecast</span></div>
+        <div class="pc-body">
+          <span class="pc-chip"><span class="chip-dot"></span> outage detected on the horizon</span>
+          <canvas id="heroSpark" class="pc-spark" height="90"></canvas>
+          <div class="pc-row"><span class="k">Time to failure</span><span class="v">1 / 5 / 15 min</span></div>
+          <div class="pc-row"><span class="k">Confidence</span><span class="v pos">90.1%</span></div>
+          <div class="pc-row"><span class="k">Recommended action</span><span class="v pos">reroute</span></div>
+          <div class="pc-row"><span class="k">Decision latency</span><span class="v">279&nbsp;ms</span></div>
+        </div>
       </div>
     </div>
-
-    <div class="hero-viz" aria-hidden="true">
-      <svg viewBox="0 0 480 480" class="hero-svg">
-        <defs>
-          <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.9"/>
-            <stop offset="60%" stop-color="#dc2626" stop-opacity="0.4"/>
-            <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
-          </radialGradient>
-          <filter id="hglow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-
-        <g class="rings" stroke="rgba(220, 38, 38, 0.18)" fill="none">
-          <circle cx="240" cy="240" r="60"/>
-          <circle cx="240" cy="240" r="120"/>
-          <circle cx="240" cy="240" r="180"/>
-          <circle cx="240" cy="240" r="220"/>
-        </g>
-
-        <g class="ticks" stroke="rgba(251, 191, 36, 0.5)">
-          <g transform="translate(240 240)" class="tick-ring">
-            <line x1="0" y1="-220" x2="0" y2="-208"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(45)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(90)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(135)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(180)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(225)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(270)"/>
-            <line x1="0" y1="-220" x2="0" y2="-208" transform="rotate(315)"/>
-          </g>
-        </g>
-
-        <g id="hero-network"></g>
-
-        <circle cx="240" cy="240" r="58" fill="url(#coreGrad)" class="core-pulse"/>
-        <circle cx="240" cy="240" r="14" fill="#fef3c7" filter="url(#hglow)" class="core-dot"/>
-        <text x="240" y="245" text-anchor="middle" class="core-label">LEO</text>
-
-        <!-- Forecast accuracy tags
-             1-min  → left-upper  (closest to LEO on the left side)
-             5-min  → right-upper (mirrored on the right)
-             15-min → bottom-center (far horizon, at the end)
-             Thin dashed lines connect each tag to the LEO core. -->
-        <g class="horizons">
-          <!-- 1-min  → top-left,  5-min  → top-right (perfectly mirrored, same Y)
-               15-min → bottom-center (unchanged).
-               All three rects are 180×32, text-anchor=middle for proper centering. -->
-          <g transform="translate(40 130)"  class="horizon-tag h1"><rect width="180" height="32" rx="16"/><text x="90" y="21" text-anchor="middle">1 MIN ACCURACY · 83.7%</text></g>
-          <g transform="translate(260 130)" class="horizon-tag h5"><rect width="180" height="32" rx="16"/><text x="90" y="21" text-anchor="middle">5 MIN ACCURACY · 81.4%</text></g>
-          <g transform="translate(150 348)" class="horizon-tag h15"><rect width="180" height="32" rx="16"/><text x="90" y="21" text-anchor="middle">15 MIN ACCURACY · 80.9%</text></g>
-          <!-- connectors from LEO core (240,240) to each tag's inner corner — mirrored. -->
-          <line class="horizon-link h1"  x1="240" y1="240" x2="220" y2="162" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2 3" opacity="0.55"/>
-          <line class="horizon-link h5"  x1="240" y1="240" x2="260" y2="162" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2 3" opacity="0.55"/>
-          <line class="horizon-link h15" x1="240" y1="240" x2="240" y2="348" stroke="#dc2626" stroke-width="1" stroke-dasharray="2 3" opacity="0.55"/>
-        </g>
-      </svg>
-      <div class="viz-readout">
-        <div class="readout-row"><span class="bullet"></span>Listening on <em>5 live APIs</em></div>
-        <div class="readout-row"><span class="bullet warn"></span>1.22M rows · 43 input signals</div>
-        <div class="readout-row"><span class="bullet ok"></span>Calibrated · ICP 90.1%</div>
-      </div>
-    </div>
-
-    <a class="scroll-hint" href="#metrics" aria-label="Scroll for more"><span></span></a>
   </section>
 
-  <section class="metrics" id="metrics" aria-label="Headline metrics">
-    <div class="metric-rack reveal">
+  <!-- ───────── KPI STRIP ───────── -->
+  <section class="kpi-strip">
+    <div class="wrap kpis">
+      <div class="kpi reveal"><div class="num tnum" data-count="3.10" data-dec="2" data-prefix="$" data-suffix="M">$3.10M</div><div class="lab">operational loss recovered / yr</div></div>
+      <div class="kpi reveal" data-d="1"><div class="num tnum" data-count="20644" data-suffix="">20,644</div><div class="lab">outage events averted / yr</div></div>
+      <div class="kpi reveal" data-d="2"><div class="num tnum" data-count="82" data-suffix="%">82%</div><div class="lab">average AUC across horizons</div></div>
+      <div class="kpi reveal" data-d="3"><div class="num tnum" data-count="99.92" data-dec="2" data-suffix="%">99.92%</div><div class="lab">uptime under proactive routing</div></div>
+    </div>
+  </section>
 
-      <div class="metric">
-        <div class="metric-leds"><span class="led g"></span><span class="led a"></span><span class="led r"></span></div>
-        <div class="metric-icon">◈</div>
-        <div class="metric-num" data-odo="82.02" data-decimals="2" data-suffix="%"></div>
-        <div class="metric-label">Average AUC across 3 horizons — how often LEO calls the failure right.</div>
-        <div class="metric-flow"></div>
+  <!-- ───────── FEATURES ───────── -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">The platform</span>
+        <h2 class="display">Three guarantees that make the signal trustworthy.</h2>
+        <p class="lede">Most monitoring tells you what already broke. LEO tells you what's about to — with the calibration and controls a financial operation actually requires.</p>
       </div>
 
-      <div class="metric">
-        <div class="metric-leds"><span class="led g"></span><span class="led a"></span><span class="led r"></span></div>
-        <div class="metric-icon">⧖</div>
-        <div class="metric-num" data-odo="90.11" data-decimals="2" data-suffix="%"></div>
-        <div class="metric-label">Conformal coverage at α = 0.10 — the bounded error guarantee.</div>
-        <div class="metric-flow"></div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-leds"><span class="led g"></span><span class="led a"></span><span class="led r"></span></div>
-        <div class="metric-icon">⬡</div>
-        <div class="metric-num" data-odo="52.07" data-decimals="2" data-suffix="%"></div>
-        <div class="metric-label">Failure reduction · proactive agent vs reactive baseline.</div>
-        <div class="metric-flow"></div>
-      </div>
-
-      <div class="metric">
-        <div class="metric-leds"><span class="led g"></span><span class="led a"></span><span class="led r"></span></div>
-        <div class="metric-icon">$</div>
-        <div class="metric-num" data-odo="3.10" data-decimals="2" data-prefix="$" data-suffix="M"></div>
-        <div class="metric-label">Annual savings · less downtime, fewer reroutes, lower cost.</div>
-        <div class="metric-flow"></div>
+      <div class="features">
+        <article class="feature reveal">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17l5-6 4 4 5-8 4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Multi-horizon forecasting</h3>
+          <p>One forward pass emits failure probability at 1, 5 and 15 minutes — operational, orchestration and capacity windows in a single call.</p>
+          <a class="more" href="/forecasting.html">Explore forecasting →</a>
+        </article>
+        <article class="feature reveal" data-d="1">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3l8 4v5c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V7l8-4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></div>
+          <h3>Conformal confidence</h3>
+          <p>Every prediction ships with a 90% coverage guarantee — a bounded, defensible error rate instead of an uncalibrated score you have to trust blindly.</p>
+          <a class="more" href="/confidence.html">See the bands →</a>
+        </article>
+        <article class="feature reveal" data-d="2">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 1 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M12 8v4l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Proactive agent</h3>
+          <p>Retries, pre-warms and reroutes before the failure lands — cutting failures 52% versus a reactive baseline, with every action reversible and logged.</p>
+          <a class="more" href="/agent.html">Meet the agent →</a>
+        </article>
       </div>
     </div>
+  </section>
 
-    <div class="req-ticker reveal" aria-hidden="true"></div>
+  <!-- ───────── HOW IT WORKS ───────── -->
+  <section class="section bordered">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2 class="display">From raw telemetry to a routing decision.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <span class="n"></span><h3>Ingest signals</h3>
+          <p>43 telemetry signals across your API estate — error rates, latency, volatility — streamed as 30-step sequences.</p>
+        </div>
+        <div class="step reveal" data-d="1">
+          <span class="n"></span><h3>Forecast &amp; calibrate</h3>
+          <p>A Bi-LSTM with attention scores three horizons; conformal calibration wraps each with a 90% interval.</p>
+        </div>
+        <div class="step reveal" data-d="2">
+          <span class="n"></span><h3>Act before impact</h3>
+          <p>Cross the high-risk threshold and the agent reroutes pre-emptively — preserving the customer-facing transaction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <div class="leo-says reveal"
-         data-msg="LEO is a probabilistic early-warning layer for transactional API estates. It forecasts service degradation across **1, 5 and 15-minute horizons** with calibrated confidence — surfacing **82% of incidents** ahead of customer impact, eliminating an estimated **20,644 outage events** annually, and recovering approximately **$3.1M** in operational loss and remediation cost across a representative 260,000-transaction book."></div>
+  <!-- ───────── CTA ───────── -->
+  <section class="section">
+    <div class="wrap">
+      <div class="cta-band reveal">
+        <h2 class="display">Stop paying for outages you could have seen coming.</h2>
+        <p>Bring LEO's early-warning layer to your payment, market-data and transaction APIs — and recover the downtime, reroutes and remediation cost before they hit the books.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-accent" href="/predict.html">Try the live demo</a>
+          <a class="btn btn-ghost" href="/modelcard.html">Read the model card</a>
+        </div>
+      </div>
+    </div>
   </section>
 
 </main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/metrics.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 </body>
 </html>

@@ -16,22 +16,22 @@
   const TAU = Math.PI * 2;
 
   const COLORS = {
-    bg:      '#0a0405',
-    grid:    'rgba(220,140,100,0.08)',
-    text:    '#fcd9a8',
-    mute:    '#7a5b3e',
-    gold:    '#fbbf24',
-    ember:   '#f59e0b',
-    crimson: '#dc2626',
-    blood:   '#991b1b',
-    green:   '#84cc16',
-    amber:   '#fbbf24',
-    red:     '#ef4444',
-    ivory:   '#fef3c7',
+    bg:      '#060912',
+    grid:    'rgba(124,148,210,0.10)',
+    text:    '#A6B2D0',
+    mute:    '#6F7C9C',
+    gold:    '#4D8DFF',   // primary line (electric blue)
+    ember:   '#8B5CF6',   // secondary (violet)
+    crimson: '#A78BFA',   // tertiary (light violet)
+    blood:   '#6D5BE0',
+    green:   '#34D399',
+    amber:   '#4D8DFF',
+    red:     '#F87171',
+    ivory:   '#EAF1FF',
     // legacy aliases kept so old chart code still resolves
-    cyan:    '#fbbf24',
-    violet:  '#dc2626',
-    magenta: '#ea580c',
+    cyan:    '#38BDF8',   // val line (cyan)
+    violet:  '#8B5CF6',
+    magenta: '#A78BFA',
   };
 
   function ctxFor(id) {
@@ -91,8 +91,8 @@
 
     // train area (subtle)
     const grad = x.createLinearGradient(0, padT, 0, h - padB);
-    grad.addColorStop(0, 'rgba(251,191,36,0.25)');
-    grad.addColorStop(1, 'rgba(251,191,36,0)');
+    grad.addColorStop(0, 'rgba(77,141,255,0.25)');
+    grad.addColorStop(1, 'rgba(77,141,255,0)');
     x.fillStyle = grad;
     x.beginPath();
     x.moveTo(sx(0), h - padB);
@@ -110,8 +110,8 @@
 
     // val area
     const grad2 = x.createLinearGradient(0, padT, 0, h - padB);
-    grad2.addColorStop(0, 'rgba(34,211,238,0.30)');
-    grad2.addColorStop(1, 'rgba(34,211,238,0)');
+    grad2.addColorStop(0, 'rgba(56,189,248,0.30)');
+    grad2.addColorStop(1, 'rgba(56,189,248,0)');
     x.fillStyle = grad2;
     x.beginPath();
     x.moveTo(sx(0), h - padB);
@@ -196,9 +196,9 @@
       });
 
       // alert threshold band
-      x.fillStyle = 'rgba(251,191,36,0.06)';
+      x.fillStyle = 'rgba(77,141,255,0.06)';
       x.fillRect(padL, sy(0.55), w - padL - padR, sy(0.35) - sy(0.55));
-      x.strokeStyle = 'rgba(251,191,36,0.35)';
+      x.strokeStyle = 'rgba(77,141,255,0.35)';
       x.setLineDash([4, 4]);
       x.beginPath(); x.moveTo(padL, sy(0.55)); x.lineTo(w - padR, sy(0.55)); x.stroke();
       x.setLineDash([]);
@@ -240,9 +240,9 @@
         x.stroke();
       }
 
-      drawLine(p15, COLORS.crimson, 'rgba(220,38,38,0.18)');
-      drawLine(p5,  COLORS.ember,   'rgba(245,158,11,0.18)');
-      drawLine(p1,  COLORS.gold,    'rgba(251,191,36,0.20)');
+      drawLine(p15, COLORS.crimson, 'rgba(167,139,250,0.18)');
+      drawLine(p5,  COLORS.ember,   'rgba(139,92,246,0.18)');
+      drawLine(p1,  COLORS.gold,    'rgba(77,141,255,0.20)');
 
       // current marker
       if (drawN > 0) {
@@ -258,7 +258,7 @@
           x.beginPath();
           x.arc(sx(i), sy(v), 4.5, 0, TAU);
           x.fill();
-          x.strokeStyle = '#0b0e22';
+          x.strokeStyle = '#060912';
           x.lineWidth = 1.5;
           x.stroke();
         });
@@ -359,7 +359,7 @@
       x.globalAlpha = 1;
 
       // inner hole
-      x.fillStyle = '#0b0e22';
+      x.fillStyle = '#060912';
       x.beginPath();
       x.arc(cx, cy, Ri, 0, TAU);
       x.fill();

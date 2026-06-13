@@ -3,48 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cite · LEO</title>
-<meta name="description" content="Cite LEO — multi-horizon conformal forecasting of banking-API failures.">
+<title>Documentation · LEO</title>
+<meta name="description" content="Cite and reference LEO — multi-horizon conformal forecasting of banking-API failures. BibTeX, source, live API, model and dataset details.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 <main><div class="page">
 
-  <div class="cta-card reveal">
-    <div class="cta-eyebrow">cite the work</div>
-    <h1 class="cta-title">Use LEO in your <span class="grad">research</span>, your <span class="grad">SRE stack</span>, or your <span class="grad">trading desk</span>.</h1>
-    <pre class="bib"><code>@misc{leo2025api,
-  title  = {LEO: Multi-Horizon Conformal Forecasting of Banking-API Failures},
-  author = {Vishnuvardhan, R. and contributors},
-  year   = {2025}
-}</code></pre>
-    <div class="cta-btns">
-      <a class="btn primary" href="https://github.com/" target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 .5C5.5.5 0 6 0 12.5c0 5.3 3.4 9.8 8.2 11.4.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.5-1.4-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.9 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.4-1.3-5.4-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2 1-.3 2-.4 3-.4s2 .1 3 .4c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.4 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6C20.6 22.3 24 17.8 24 12.5 24 6 18.5.5 12 .5z"/></svg>
-        <span>View source</span>
-      </a>
-      <a class="btn ghost" href="/"><span>← Back to home</span></a>
-    </div>
+  <div class="page-head reveal">
+    <span class="page-tag">Cite &amp; Docs</span>
+    <h1 class="page-title">Cite the work, read the <span class="grad">docs</span></h1>
+    <p class="page-lede">
+      LEO is reproducible end-to-end. Every figure on this site traces back to its underlying JSON,
+      and the conformal guarantee is independently verifiable on any held-out partition. Reference it below,
+      browse the source, or hit the live API.
+    </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="The deployment surface is intentionally lean: pure **PyTorch** with no proprietary dependencies, suitable for in-house GPU infrastructure or CPU inference within existing risk-segregated environments. Every result on this site is traceable to its underlying JSON, the training pipeline is reproducible end-to-end, and the conformal guarantee is independently verifiable on any held-out partition. The platform is engineered to **withstand model validation**, not to evade it."></div>
+       data-msg="The deployment surface is intentionally lean: pure **PyTorch** with no proprietary dependencies, suitable for in-house GPU infrastructure or CPU inference inside existing risk-segregated environments. The training pipeline is reproducible end-to-end and every result is traceable to its source JSON. The platform is engineered to **withstand model validation**, not to evade it."></div>
+
+  <!-- ── Citation ── -->
+  <section class="rel-section reveal">
+    <h3 class="rel-h">Citation</h3>
+    <div class="panel">
+      <p class="muted" style="margin:0 0 12px;font-size:13px">BibTeX</p>
+      <pre style="overflow:auto;font-family:var(--mono);font-size:12.5px;color:var(--accent-d);background:var(--bg-2);padding:16px;border-radius:10px">@misc{vishnuvardhana2026leo,
+  author = {Rahul Vishnuvardhana},
+  title  = {LEO: Multi-Horizon Conformal Forecasting of Banking-API Failures},
+  year   = {2026},
+  url    = {https://github.com/rahulvishnuvaradhana32-ctrl/Leo_Api_Intelligence}
+}</pre>
+    </div>
+  </section>
+
+  <!-- ── Quick facts & links ── -->
+  <section class="rel-section reveal" data-d="1">
+    <h3 class="rel-h">Quick facts &amp; links</h3>
+    <div class="split">
+      <div class="panel">
+        <div class="line"><span>source</span><b><a href="https://github.com/rahulvishnuvaradhana32-ctrl/Leo_Api_Intelligence" target="_blank" rel="noopener" style="color:var(--accent-d)">github.com/…/Leo_Api_Intelligence</a></b></div>
+        <div class="line"><span>live api</span><b><a href="https://leo-api-intelligence.onrender.com" target="_blank" rel="noopener" style="color:var(--accent-d)">leo-api-intelligence.onrender.com</a></b></div>
+        <div class="line"><span>license</span><b>MIT</b></div>
+        <div class="line"><span>contact</span><b>Rahul Vishnuvardhana</b></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><b>MIT</b><span>license</span></div>
+        <div class="stat"><b>LSTM</b><span>MultiHorizonLSTM</span></div>
+        <div class="stat"><b>1.22M</b><span>dataset rows</span></div>
+        <div class="stat"><b>2026</b><span>release year</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── What's documented ── -->
+  <section class="rel-section reveal" data-d="2">
+    <h3 class="rel-h">What's documented</h3>
+    <div class="panel">
+      <ul class="feature-list">
+        <li><span class="tick">›</span><span><a href="/architecture.html" style="color:var(--accent-d)">Architecture</a> — system topology, the forecasting service, and the routing agent.</span></li>
+        <li><span class="tick">›</span><span><a href="/modelcard.html" style="color:var(--accent-d)">Model card</a> — MultiHorizonLSTM design, training data, intended use and limits.</span></li>
+        <li><span class="tick">›</span><span><a href="/reliability.html" style="color:var(--accent-d)">Reliability</a> — coverage SLOs, error-budget burn-down, the incident timeline.</span></li>
+        <li><span class="tick">›</span><span><a href="/drift.html" style="color:var(--accent-d)">Drift monitor</a> — per-signal KS tests and the self-healing trigger.</span></li>
+      </ul>
+    </div>
+  </section>
 
   <nav class="page-jump">
-    <a class="prev" href="/dataset.html"><span class="pj-k">← prev</span><span class="pj-v">Dataset</span></a>
+    <a class="prev" href="/modelcard.html"><span class="pj-k">← prev</span><span class="pj-v">Model card</span></a>
     <a class="next" href="/"><span class="pj-k">home →</span><span class="pj-v">Start over</span></a>
   </nav>
 </div></main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 </body>
 </html>

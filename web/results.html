@@ -4,95 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Results · LEO</title>
-<meta name="description" content="LEO results — 82% average AUC across 3 horizons, training trajectory and feature-ablation breakdown.">
+<meta name="description" content="LEO results — 0.8202 average ROC-AUC across three horizons, precision-at-100 of 1.000, training trajectory and feature-group ablation.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
-    <span class="page-tag">02 · Results</span>
+    <span class="page-tag">Results</span>
     <h1 class="page-title">Sequence memory beats every <span class="grad">non-sequential baseline</span></h1>
     <p class="page-lede">
-      Trained on 1.22M sequences of banking-API telemetry. The attention-LSTM lifts AUC well above logistic
-      regression while emitting <em>three calibrated horizons per request</em>.
+      Trained on 1.22M sequences of banking-API telemetry, the attention-LSTM lifts AUC well above
+      conventional baselines while emitting <em>three calibrated horizons per request</em>.
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="On held-out evaluation the model achieves an **average AUC of 0.8202** across all horizons with **precision-at-100 of 1.000** — the hundred highest-confidence alerts contain zero false positives. For operations and incident response, this resolves the conventional precision–recall trade-off: high event capture without alert fatigue, supporting sustained operator trust in the automated signal."></div>
+       data-msg="On held-out evaluation the model reaches an **average ROC-AUC of 0.8202** across all horizons with **precision-at-100 of 1.000** — the hundred highest-confidence alerts contain zero false positives. For incident response this dissolves the usual precision–recall trade-off: high event capture **without alert fatigue**, sustaining operator trust in the automated signal."></div>
 
-  <div class="results-grid reveal">
-    <div class="auc-card">
-      <div class="auc-ring">
-        <svg viewBox="0 0 220 220" class="ring-svg">
-          <defs>
-            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#dc2626"/>
-            </linearGradient>
-          </defs>
-          <circle cx="110" cy="110" r="92" stroke="rgba(255,255,255,0.08)" stroke-width="14" fill="none"/>
-          <circle cx="110" cy="110" r="92" stroke="url(#ringGrad)" stroke-width="14" fill="none"
-            stroke-linecap="round" class="ring-progress" data-target="0.8202"
-            stroke-dasharray="578" stroke-dashoffset="578" transform="rotate(-90 110 110)"/>
-        </svg>
-        <div class="ring-center"><div class="ring-num">82.02%</div><div class="ring-label">avg AUC</div></div>
-      </div>
-      <div class="auc-meta">
-        <div class="line"><span>Architecture</span><b>BiLSTM + Attention</b></div>
-        <div class="line"><span>Hidden</span><b>256</b></div>
-        <div class="line"><span>Best val loss</span><b>0.2107</b></div>
-        <div class="line"><span>Loss</span><b>FocalLoss γ=2.0</b></div>
-      </div>
+  <!-- ── Headline metrics ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Held-out performance</h3>
+        <span class="rel-sub">attention-LSTM · live from <code>lstm_results.json</code></span></div>
     </div>
-
-    <div class="horizon-card" data-horizon="h1">
-      <div class="hc-header"><span class="hc-tag">1-min ahead</span><span class="hc-trend up">▲ best</span></div>
-      <div class="hc-num">0.8373</div>
-      <div class="hc-bar"><span data-p="83.7"></span></div>
-      <div class="hc-foot"><div><span>PR-AUC</span><b>0.5763</b></div><div><span>P@100</span><b>1.000</b></div></div>
+    <div class="stat-grid" id="resultStats">
+      <div class="stat"><b id="statAuc">0.8202</b><span>avg ROC-AUC · 82.02%</span></div>
+      <div class="stat"><b id="statH1">0.8373</b><span>AUC · h+1 (1-min)</span></div>
+      <div class="stat"><b id="statH5">0.8140</b><span>AUC · h+5 (5-min)</span></div>
+      <div class="stat"><b id="statH15">0.8092</b><span>AUC · h+15 (15-min)</span></div>
+      <div class="stat"><b id="statPr">0.5383</b><span>avg PR-AUC</span></div>
+      <div class="stat"><b id="statP100">1.000</b><span>precision @ 100</span></div>
     </div>
+  </section>
 
-    <div class="horizon-card" data-horizon="h5">
-      <div class="hc-header"><span class="hc-tag">5-min ahead</span><span class="hc-trend">●</span></div>
-      <div class="hc-num">0.8140</div>
-      <div class="hc-bar"><span data-p="81.4"></span></div>
-      <div class="hc-foot"><div><span>PR-AUC</span><b>0.5254</b></div><div><span>P@100</span><b>1.000</b></div></div>
-    </div>
-
-    <div class="horizon-card" data-horizon="h15">
-      <div class="hc-header"><span class="hc-tag">15-min ahead</span><span class="hc-trend">●</span></div>
-      <div class="hc-num">0.8092</div>
-      <div class="hc-bar"><span data-p="80.9"></span></div>
-      <div class="hc-foot"><div><span>PR-AUC</span><b>0.5133</b></div><div><span>P@100</span><b>1.000</b></div></div>
-    </div>
-  </div>
-
-  <div class="results-chart reveal">
-    <div class="rc-head">
-      <div><h3>Training trajectory</h3>
-        <span class="rc-sub">30 epochs · live from <code>lstm_results.json</code></span></div>
-      <div class="rc-legend">
-        <span class="lg train">Train</span>
-        <span class="lg val">Validation</span>
+  <!-- ── Training trajectory ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Training trajectory</h3>
+        <span class="rel-sub">30 epochs · live from <code>lstm_results.json</code></span></div>
+      <div class="cmp-legend">
+        <span class="cl pro">Train</span><span class="cl rea">Validation</span>
       </div>
     </div>
-    <canvas id="lossChart" height="220"></canvas>
-  </div>
+    <canvas id="lossChart" class="chart" height="240"></canvas>
+  </section>
 
-  <div class="ablation-row reveal">
-    <div class="abl-head">
-      <h3>Feature-group ablation</h3>
-      <p>Removing any single signal family costs <em>&lt; 0.1% AUC</em> — every group carries weight, none alone is decisive. That's the signature of a well-distributed representation.</p>
+  <!-- ── Feature-group ablation ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Feature-group ablation</h3>
+        <span class="rel-sub">removing any single signal family costs <code>&lt; 0.1% AUC</code> — every group carries weight, none alone is decisive</span></div>
     </div>
-    <div class="abl-bars" id="ablationBars"></div>
-  </div>
+    <div id="ablationBars"></div>
+  </section>
 
   <nav class="page-jump">
     <a class="prev" href="/architecture.html"><span class="pj-k">← prev</span><span class="pj-v">Architecture</span></a>
@@ -100,17 +69,31 @@
   </nav>
 </div></main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/charts.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/charts.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  if (!window.LEO_CHARTS) return;
-  window.LEO_CHARTS.drawLossChart();
-  window.LEO_CHARTS.buildAblationBars();
-  let t; window.addEventListener('resize', () => { clearTimeout(t); t=setTimeout(() => window.LEO_CHARTS.drawLossChart(), 180); });
+  // Pull verified numbers straight from data.js where present.
+  const L = (window.LEO_DATA && window.LEO_DATA.lstm) || null;
+  if (L) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('statAuc', L.avg_auc.toFixed(4));
+    set('statH1',  L.per_horizon.h1.auc.toFixed(4));
+    set('statH5',  L.per_horizon.h5.auc.toFixed(4));
+    set('statH15', L.per_horizon.h15.auc.toFixed(4));
+    set('statPr',  L.avg_pr_auc.toFixed(4));
+    set('statP100', L.per_horizon.h1.p100.toFixed(3));
+  }
+  if (window.LEO_CHARTS) {
+    window.LEO_CHARTS.drawLossChart();
+    window.LEO_CHARTS.buildAblationBars();
+    let t;
+    window.addEventListener('resize', () => {
+      clearTimeout(t);
+      t = setTimeout(() => window.LEO_CHARTS.drawLossChart(), 180);
+    });
+  }
 });
 </script>
 </body>

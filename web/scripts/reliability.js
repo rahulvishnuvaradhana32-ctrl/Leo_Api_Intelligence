@@ -19,9 +19,9 @@
   const pct = (v, d = 2) => (v * 100).toFixed(d) + '%';
 
   const HORIZONS = [
-    { k: 'h1', label: 'h+1', color: '#fbbf24' },
-    { k: 'h5', label: 'h+5', color: '#f59e0b' },
-    { k: 'h15', label: 'h+15', color: '#dc2626' },
+    { k: 'h1', label: 'h+1', color: '#4D8DFF' },
+    { k: 'h5', label: 'h+5', color: '#8B5CF6' },
+    { k: 'h15', label: 'h+15', color: '#A78BFA' },
   ];
 
   function ctxFor(id) {
@@ -79,17 +79,17 @@
 
     x.clearRect(0, 0, w, h);
     // grid + y labels (remaining budget %)
-    x.strokeStyle = 'rgba(220,140,100,0.08)'; x.lineWidth = 1;
+    x.strokeStyle = 'rgba(124,148,210,0.10)'; x.lineWidth = 1;
     [0, 0.25, 0.5, 0.75, 1].forEach(v => {
       const y = sy(v);
       x.beginPath(); x.moveTo(padL, y); x.lineTo(w - padR, y); x.stroke();
-      x.fillStyle = '#7a5b3e'; x.font = '10px JetBrains Mono'; x.textAlign = 'right';
+      x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'right';
       x.fillText((v * 100).toFixed(0) + '%', padL - 6, y + 3);
     });
     // breach line at 0
     x.strokeStyle = 'rgba(239,68,68,0.5)'; x.setLineDash([4, 4]);
     x.beginPath(); x.moveTo(padL, sy(0)); x.lineTo(w - padR, sy(0)); x.stroke(); x.setLineDash([]);
-    x.fillStyle = '#ef4444'; x.font = '10px JetBrains Mono'; x.textAlign = 'left';
+    x.fillStyle = '#ef4444'; x.font = '10px IBM Plex Mono'; x.textAlign = 'left';
     x.fillText('budget exhausted', padL + 6, sy(0) - 5);
 
     HORIZONS.forEach(({ k, color }, idx) => {
@@ -112,15 +112,15 @@
     });
 
     // x label
-    x.fillStyle = '#7a5b3e'; x.font = '10px JetBrains Mono'; x.textAlign = 'center';
+    x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'center';
     ['day 1', 'day 15', 'day 30'].forEach((t, i) => x.fillText(t, sx(i * (N - 1) / 2), h - 9));
 
     // legend
-    x.font = '11px JetBrains Mono'; x.textAlign = 'left';
+    x.font = '11px IBM Plex Mono'; x.textAlign = 'left';
     let lx = padL + 6;
     HORIZONS.forEach(({ label, color }) => {
       x.fillStyle = color; x.fillRect(lx, padT - 12, 10, 3);
-      x.fillStyle = '#fcd9a8'; x.fillText(label, lx + 14, padT - 8);
+      x.fillStyle = '#A6B2D0'; x.fillText(label, lx + 14, padT - 8);
       lx += 56;
     });
   }

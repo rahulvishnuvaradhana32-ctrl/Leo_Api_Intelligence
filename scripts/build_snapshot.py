@@ -207,12 +207,12 @@ window.LEO_DATA.dataset = window.LEO_DATA.dataset || {
   rows: 1220008,
   failure_rate: 0.1388,
   apis: [
-    { name: "transaction_api", share: 0.25,   color: "#dc2626" },
-    { name: "market_data_api", share: 0.25,   color: "#fbbf24" },
-    { name: "stock_price_api", share: 0.103,  color: "#f59e0b" },
-    { name: "crypto_api",      share: 0.104,  color: "#84cc16" },
-    { name: "forex_api",       share: 0.104,  color: "#ea580c" },
-    { name: "other",           share: 0.189,  color: "#fcd34d" }
+    { name: "transaction_api", share: 0.25,   color: "#4D8DFF" },
+    { name: "market_data_api", share: 0.25,   color: "#8B5CF6" },
+    { name: "stock_price_api", share: 0.103,  color: "#38BDF8" },
+    { name: "crypto_api",      share: 0.104,  color: "#34D399" },
+    { name: "forex_api",       share: 0.104,  color: "#A78BFA" },
+    { name: "other",           share: 0.189,  color: "#6D5BE0" }
   ],
   date_range: "2023-01-01 → 2024-12-31"
 };

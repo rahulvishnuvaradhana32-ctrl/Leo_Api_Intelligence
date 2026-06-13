@@ -4,52 +4,58 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forecasting · LEO</title>
-<meta name="description" content="LEO multi-horizon forecasting — three calibrated risk tracks from a single forward pass.">
+<meta name="description" content="LEO multi-horizon forecasting — three calibrated risk tracks at +1, +5 and +15 minutes from a single forward pass, with a 0.55 high-risk threshold.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/base.css?v=11">
-<link rel="stylesheet" href="/styles/components.css?v=11">
-<link rel="stylesheet" href="/styles/animations.css?v=11">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=3">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
-    <span class="page-tag">03 · Multi-Horizon Forecasting</span>
+    <span class="page-tag">Multi-Horizon Forecasting</span>
     <h1 class="page-title">Three calibrated futures from a <span class="grad">single forward pass</span></h1>
     <p class="page-lede">
-      At every step LEO emits a probability of failure at <em>+1, +5 and +15 minutes</em> — drawn together so
-      you can watch the risk fan open and trigger the right action at the right horizon.
+      At every step LEO emits a probability of failure at <em>+1, +5 and +15 minutes</em> — drawn together,
+      so you can watch the risk fan open and trigger the right action at the right horizon.
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="Each timestep emits three calibrated probability tracks corresponding to the **1-minute** (operational reaction), **5-minute** (orchestration window) and **15-minute** (capacity-planning) horizons. When any track crosses the **0.55 high-risk threshold**, the routing layer is authorised to fail-over pre-emptively — preserving SLA compliance and customer-facing transaction integrity without human-in-the-loop confirmation."></div>
+       data-msg="Each timestep emits three calibrated probability tracks: the **1-minute** horizon for operational reaction, the **5-minute** for the orchestration window, and the **15-minute** for capacity planning. When any track crosses the **0.55 high-risk threshold**, the routing layer is authorised to fail over pre-emptively — preserving SLA compliance and transaction integrity without human-in-the-loop confirmation."></div>
 
-  <div class="forecast-stage reveal">
-    <canvas id="forecastChart" height="360"></canvas>
-    <div class="forecast-readout">
-      <div class="fr-row"><span class="fr-k">t</span><b id="fcT">0</b></div>
-      <div class="fr-row"><span class="fr-k h1">h+1</span><b id="fc1">—</b></div>
-      <div class="fr-row"><span class="fr-k h5">h+5</span><b id="fc5">—</b></div>
-      <div class="fr-row"><span class="fr-k h15">h+15</span><b id="fc15">—</b></div>
-      <div class="fr-row alert"><span class="fr-k">action</span><b id="fcAlert">—</b></div>
+  <!-- ── Forecast chart + live readout ── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">Three calibrated futures from a single forward pass</h3>
+        <span class="rel-sub">animated playback · dashed line marks the <code>0.55</code> high-risk threshold</span></div>
+      <div class="cmp-legend">
+        <span class="cl pro">h+1</span><span class="cl rea">h+5 · h+15</span>
+      </div>
     </div>
-  </div>
+    <div class="split">
+      <canvas id="forecastChart" class="chart" height="360"></canvas>
+      <div class="panel">
+        <div class="line"><span>t</span><b id="fcT">t+0</b></div>
+        <div class="line"><span>h+1</span><b id="fc1">—</b></div>
+        <div class="line"><span>h+5</span><b id="fc5">—</b></div>
+        <div class="line"><span>h+15</span><b id="fc15">—</b></div>
+        <div class="line"><span>action</span><b id="fcAlert">—</b></div>
+      </div>
+    </div>
+  </section>
 
   <nav class="page-jump">
     <a class="prev" href="/results.html"><span class="pj-k">← prev</span><span class="pj-v">Results</span></a>
-    <a class="next" href="/confidence.html"><span class="pj-k">next →</span><span class="pj-v">Confidence bands</span></a>
+    <a class="next" href="/predict.html"><span class="pj-k">next →</span><span class="pj-v">Live demo</span></a>
   </nav>
 </div></main>
 
-<script src="/scripts/data.js?v=11"></script>
-<script src="/scripts/chrome.js?v=11"></script>
-<script src="/scripts/particles.js?v=11"></script>
-<script src="/scripts/charts.js?v=11"></script>
-<script src="/scripts/animations.js?v=11"></script>
+<script src="/scripts/data.js?v=12"></script>
+<script src="/scripts/charts.js?v=12"></script>
+<script src="/scripts/site.js?v=3"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_CHARTS) window.LEO_CHARTS.drawForecastChart();

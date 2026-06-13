@@ -19,11 +19,11 @@
   const KS_GUIDE = 0.10;
 
   const SIGNALS = [
-    { k: 'error_rate_rolling',         label: 'error rate (rolling)',  color: '#fbbf24' },
-    { k: 'response_time_rolling_mean', label: 'response time (mean)',  color: '#dc2626' },
-    { k: 'rt_multiplier',              label: 'rt multiplier',         color: '#f59e0b' },
-    { k: 'error_rate_boost',           label: 'error-rate boost',      color: '#84cc16' },
-    { k: 'error_volatility',           label: 'error volatility',      color: '#ea580c' },
+    { k: 'error_rate_rolling',         label: 'error rate (rolling)',  color: '#4D8DFF' },
+    { k: 'response_time_rolling_mean', label: 'response time (mean)',  color: '#8B5CF6' },
+    { k: 'rt_multiplier',              label: 'rt multiplier',         color: '#38BDF8' },
+    { k: 'error_rate_boost',           label: 'error-rate boost',      color: '#34D399' },
+    { k: 'error_volatility',           label: 'error volatility',      color: '#A78BFA' },
   ];
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -80,17 +80,17 @@
     const sy = v => padT + (1 - clamp(v / maxKS, 0, 1)) * (h - padT - padB);
 
     x.clearRect(0, 0, w, h);
-    x.strokeStyle = 'rgba(220,140,100,0.08)'; x.lineWidth = 1;
+    x.strokeStyle = 'rgba(124,148,210,0.10)'; x.lineWidth = 1;
     for (let g = 0; g <= 4; g++) {
       const v = maxKS * g / 4, y = sy(v);
       x.beginPath(); x.moveTo(padL, y); x.lineTo(w - padR, y); x.stroke();
-      x.fillStyle = '#7a5b3e'; x.font = '10px JetBrains Mono'; x.textAlign = 'right';
+      x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'right';
       x.fillText(v.toFixed(2), padL - 6, y + 3);
     }
     // effect-size guide
     x.strokeStyle = 'rgba(239,68,68,0.45)'; x.setLineDash([5, 4]);
     x.beginPath(); x.moveTo(padL, sy(KS_GUIDE)); x.lineTo(w - padR, sy(KS_GUIDE)); x.stroke(); x.setLineDash([]);
-    x.fillStyle = '#ef4444'; x.font = '10px JetBrains Mono'; x.textAlign = 'left';
+    x.fillStyle = '#ef4444'; x.font = '10px IBM Plex Mono'; x.textAlign = 'left';
     x.fillText('drift guide · KS ' + KS_GUIDE.toFixed(2), padL + 6, sy(KS_GUIDE) - 5);
 
     SIGNALS.forEach(s => {
@@ -112,7 +112,7 @@
       });
     });
 
-    x.fillStyle = '#7a5b3e'; x.font = '10px JetBrains Mono'; x.textAlign = 'center';
+    x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'center';
     x.fillText('run 1', sx(0), h - 9);
     x.fillText('latest', sx(N - 1), h - 9);
   }
