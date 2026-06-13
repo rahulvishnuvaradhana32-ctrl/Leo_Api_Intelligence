@@ -1,0 +1,369 @@
+/* ============================================================
+   LEO · animations.css — keyframes + scroll reveal motion
+   ============================================================ */
+
+/* ─────────────────────  Keyframes  ───────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.35); }
+}
+
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes spin-rev  { to { transform: rotate(-360deg); } }
+
+@keyframes float-a {
+  0%, 100% { transform: translate(0,0); }
+  50%      { transform: translate(20px, -22px); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0,0); }
+  50%      { transform: translate(-24px, 18px); }
+}
+
+@keyframes caret {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes scroll-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50%      { transform: translateY(8px); opacity: 1; }
+}
+
+@keyframes core-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50%      { transform: scale(1.18); opacity: 1; }
+}
+
+@keyframes bar-fill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes dash-flow { to { stroke-dashoffset: -36; } }
+
+@keyframes pulse-arrow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6); }
+  50%      { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+}
+
+@keyframes pipe-flow {
+  0%   { left: 8%;  width: 12%; opacity: 0.4; }
+  50%  { left: 45%; width: 12%; opacity: 1; }
+  100% { left: 80%; width: 12%; opacity: 0.4; }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes ring-draw { to { stroke-dashoffset: var(--target-offset); } }
+
+/* ============================================================
+   LION LOGO  ·  Brand identity animation
+   Pattern: production-grade logo bumper.
+     1. INTRO  (plays once on first paint, 1.2s)
+        — aura blooms, mane petals snap out, face fades up,
+          eyes flash, then settle.
+     2. IDLE  (after intro, looped, near-imperceptible)
+        — aura breathes slowly, orbit ring drifts.
+     3. HOVER (snappy roar burst)
+        — punch scale w/ overshoot, flare blooms,
+          eye-flare sweeps, 8 sparks fly outward.
+   Easings borrowed from production motion (Stripe/Linear):
+     overshoot:       cubic-bezier(0.34, 1.56, 0.64, 1)
+     calm:            cubic-bezier(0.45, 0.05, 0.55, 0.95)
+   ============================================================ */
+
+/* The lion is contained in .lion-svg — outer transform-origin
+   matches the viewBox centre (50,50). transform-box ensures
+   svg-element-local origins resolve correctly. */
+.lion-svg {
+  width: 100%; height: 100%;
+  display: block;
+  overflow: visible;
+  transform-origin: center;
+  transform-box: view-box;
+}
+
+/* — SVG sub-element transform setup — */
+.lion-svg .lion-aura,
+.lion-svg .lion-flare,
+.lion-svg .lion-orbit,
+.lion-svg .mane-outer-g,
+.lion-svg .mane-mid-g,
+.lion-svg .mane-inner-g,
+.lion-svg .lion-tuft,
+.lion-svg .lion-ears,
+.lion-svg .lion-face,
+.lion-svg .lion-muzzle,
+.lion-svg .lion-eyes,
+.lion-svg .eye-flare-g,
+.lion-svg .lion-sparks,
+.lion-svg .cheek-tuft {
+  transform-origin: 50px 50px;
+  transform-box: view-box;
+}
+
+/* ──────────────────────────────────────────────────────────
+   1. INTRO BUMPER  ·  plays once when nav is injected.
+   chrome.js adds .play to <.lion-svg> on DOMContentLoaded;
+   the keyframes finish at the idle resting state.
+   ────────────────────────────────────────────────────────── */
+.lion-svg .lion-aura     { opacity: 0; transform: scale(0.4); animation: lion-aura-in 1.0s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s forwards, lion-aura-idle 6s ease-in-out 1.4s infinite; }
+.lion-svg .lion-orbit    { opacity: 0; stroke-dashoffset: 200; animation: lion-orbit-in 1.0s ease-out 0.35s forwards, lion-orbit-spin 28s linear 1.4s infinite; }
+.lion-svg .mane-outer-g  { opacity: 0; transform: scale(0.0); animation: lion-mane-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.18s forwards; }
+.lion-svg .mane-mid-g    { opacity: 0; transform: scale(0.0); animation: lion-mane-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.32s forwards; }
+.lion-svg .mane-inner-g  { opacity: 0; transform: scale(0.0); animation: lion-mane-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s forwards; }
+.lion-svg .lion-tuft     { opacity: 0; transform: scale(0.4) translateY(6px); animation: lion-tuft-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s forwards; }
+.lion-svg .lion-ears     { opacity: 0; animation: lion-fade-in 0.35s ease-out 0.6s forwards; }
+.lion-svg .lion-face     { opacity: 0; transform: scale(0.85); animation: lion-face-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) 0.55s forwards; }
+.lion-svg .lion-muzzle   { opacity: 0; animation: lion-fade-in 0.3s ease-out 0.75s forwards; }
+.lion-svg .lion-eyes     { opacity: 0; animation: lion-eyes-in 0.4s ease-out 0.85s forwards; }
+.lion-svg .cheek-tuft    { opacity: 0; transform: translateY(2px); animation: lion-fade-in 0.4s ease-out 0.95s forwards; }
+.lion-svg .eye-flare-g .eye-flare { animation: eye-flare-sweep 8s ease-in-out 2s infinite; }
+
+/* Intro keyframes — each lands in the idle resting transform */
+@keyframes lion-aura-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes lion-orbit-in {
+  from { opacity: 0; stroke-dashoffset: 200; }
+  to   { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes lion-mane-in {
+  0%   { opacity: 0; transform: scale(0); }
+  70%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes lion-tuft-in {
+  0%   { opacity: 0; transform: scale(0.3) translateY(6px); }
+  80%  { opacity: 1; transform: scale(1.08) translateY(-1px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
+}
+@keyframes lion-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lion-face-in {
+  0%   { opacity: 0; transform: scale(0.85); }
+  70%  { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes lion-eyes-in {
+  0%   { opacity: 0; filter: brightness(3); }
+  30%  { opacity: 1; filter: brightness(2.2); }
+  100% { opacity: 1; filter: brightness(1); }
+}
+
+/* ──────────────────────────────────────────────────────────
+   2. IDLE  ·  calm, almost imperceptible motion
+   ────────────────────────────────────────────────────────── */
+@keyframes lion-aura-idle {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.06); }
+}
+@keyframes lion-orbit-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes eye-flare-sweep {
+  0%, 92%, 100% { opacity: 0; transform: translateX(-5px); }
+  95%           { opacity: 1; transform: translateX(0); }
+  98%           { opacity: 0; transform: translateX(5px); }
+}
+
+/* ──────────────────────────────────────────────────────────
+   3. HOVER ROAR  ·  snappy punch + sparks + flare
+   ────────────────────────────────────────────────────────── */
+.brand .lion-svg                   { transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.brand:hover .lion-svg             { animation: lion-roar 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.brand:hover .lion-svg .lion-flare { animation: lion-flare-burst 0.7s ease-out; }
+.brand:hover .lion-svg .lion-aura  { animation: lion-aura-burst 0.7s ease-out, lion-aura-idle 6s ease-in-out 0.7s infinite; }
+.brand:hover .lion-svg .lion-sparks{ animation: sparks-go 0.7s ease-out; }
+.brand:hover .lion-svg .spark      { animation: spark-fly 0.65s cubic-bezier(0.34, 1.0, 0.64, 1); }
+.brand:hover .lion-svg .eye-flare  { animation: eye-flare-quick 0.55s ease-out; }
+
+/* spark fan-out angles (8 directions) */
+.lion-svg .spark.s1 { --ang:   0deg; }
+.lion-svg .spark.s2 { --ang:  45deg; }
+.lion-svg .spark.s3 { --ang:  90deg; }
+.lion-svg .spark.s4 { --ang: 135deg; }
+.lion-svg .spark.s5 { --ang: 180deg; }
+.lion-svg .spark.s6 { --ang: 225deg; }
+.lion-svg .spark.s7 { --ang: 270deg; }
+.lion-svg .spark.s8 { --ang: 315deg; }
+
+@keyframes lion-roar {
+  0%   { transform: scale(1) rotate(0deg); }
+  18%  { transform: scale(1.12) rotate(-2.5deg); }
+  35%  { transform: scale(1.05) rotate(2deg); }
+  55%  { transform: scale(1.02) rotate(-0.8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes lion-flare-burst {
+  0%   { opacity: 0; transform: scale(0.6); }
+  35%  { opacity: 0.9; transform: scale(1.1); }
+  100% { opacity: 0;   transform: scale(1.6); }
+}
+@keyframes lion-aura-burst {
+  0%   { opacity: 0.85; transform: scale(1); }
+  35%  { opacity: 1;    transform: scale(1.25); }
+  100% { opacity: 0.85; transform: scale(1); }
+}
+@keyframes sparks-go {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes spark-fly {
+  0%   { transform: rotate(var(--ang)) translateX(0)  scale(1); opacity: 0; }
+  15%  { opacity: 1; }
+  100% { transform: rotate(var(--ang)) translateX(36px) scale(0.4); opacity: 0; }
+}
+@keyframes eye-flare-quick {
+  0%   { opacity: 0; transform: translateX(-6px); }
+  40%  { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(6px); }
+}
+
+/* The spark group itself needs a transform-origin so child rotate works */
+.lion-svg .spark {
+  transform-origin: 50px 50px;
+  transform-box: view-box;
+}
+
+/* ─────────────────  API request flow (metrics)  ─────────────── */
+@keyframes pkt-flow {
+  0%   { transform: translateX(-20px); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+}
+
+@keyframes sonar {
+  0%   { transform: scale(0.4); opacity: 0.8; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes led-blink {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor, 0 0 8px currentColor; opacity: 1; }
+  50%      { box-shadow: 0 0 0 6px transparent,  0 0 14px currentColor; opacity: 0.6; }
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes odometer {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+@keyframes digit-shuffle {
+  0%   { transform: translateY(0); }
+  25%  { transform: translateY(-18px); }
+  50%  { transform: translateY(-9px); }
+  75%  { transform: translateY(-27px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes ping-ring {
+  0%   { transform: scale(0.6); opacity: 0.95; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* ─────────────────  Scroll reveal  ─────────────── */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.8s var(--ease-out), transform 0.8s var(--ease-out);
+  will-change: opacity, transform;
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+.reveal[data-stagger] > * {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+}
+.reveal[data-stagger].in-view > * { opacity: 1; transform: translate3d(0,0,0); }
+.reveal[data-stagger].in-view > *:nth-child(1) { transition-delay: 0.05s; }
+.reveal[data-stagger].in-view > *:nth-child(2) { transition-delay: 0.14s; }
+.reveal[data-stagger].in-view > *:nth-child(3) { transition-delay: 0.23s; }
+.reveal[data-stagger].in-view > *:nth-child(4) { transition-delay: 0.32s; }
+.reveal[data-stagger].in-view > *:nth-child(5) { transition-delay: 0.41s; }
+.reveal[data-stagger].in-view > *:nth-child(6) { transition-delay: 0.50s; }
+
+.hero-title.in-view .line .word,
+.hero-title.in-view .line .grad {
+  animation: rise 0.9s var(--ease-out) both;
+}
+.hero-title.in-view .line:nth-child(2) .word,
+.hero-title.in-view .line:nth-child(2) .grad {
+  animation-delay: 0.15s;
+}
+
+.section-title .grad, .page-title .grad {
+  background-size: 200% auto;
+  animation: shimmer 8s linear infinite;
+}
+
+.ring-progress.run { animation: ring-draw 1.6s var(--ease-out) forwards; }
+
+.horizon-card, .meta-card, .pipe-step, .conf-card, .ds-card {
+  transition: transform 0.4s var(--ease-out),
+              border-color 0.4s var(--ease-out),
+              box-shadow 0.4s var(--ease-out);
+}
+.horizon-card:hover, .meta-card:hover, .pipe-step:hover, .conf-card:hover, .ds-card:hover {
+  box-shadow: 0 18px 60px -12px rgba(220, 38, 38, 0.22);
+}
+
+/* ─────────────────  Solo Leveling system effects  ────────── */
+
+/* Two-layer chromatic glitch — RGB-split text on the system label */
+@keyframes sl-glitch-a {
+  0%, 88%, 100% { transform: translate(-1px, 0); clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); }
+  90%           { transform: translate(-3px, -1px); clip-path: polygon(0 8%, 100% 8%, 100% 28%, 0 28%); }
+  92%           { transform: translate( 2px,  1px); clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%); }
+  94%           { transform: translate(-2px,  0); clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%); }
+  96%           { transform: translate( 0,    0); }
+}
+@keyframes sl-glitch-b {
+  0%, 88%, 100% { transform: translate( 1px, 0); clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); }
+  90%           { transform: translate( 3px, 1px); clip-path: polygon(0 70%, 100% 70%, 100% 92%, 0 92%); }
+  92%           { transform: translate(-2px,-1px); clip-path: polygon(0 18%, 100% 18%, 100% 38%, 0 38%); }
+  94%           { transform: translate( 2px, 0); clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%); }
+  96%           { transform: translate( 0,   0); }
+}
+
+/* Typewriter — width-based reveal so chars appear sequentially */
+@keyframes sl-typewriter {
+  0%   { max-width: 0; }
+  100% { max-width: 100%; }
+}
+@keyframes sl-caret {
+  0%, 100% { border-right-color: rgba(251, 191, 36, 1); }
+  50%      { border-right-color: transparent; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dataset · LEO</title>
+<meta name="description" content="LEO training dataset — 1.22M rows of balanced banking-API telemetry across 5 live APIs.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">07 · Dataset</span>
+    <h1 class="page-title">1.22M rows of <span class="grad">balanced</span> banking-API telemetry</h1>
+    <p class="page-lede">
+      Five live APIs · 2023-01 → 2024-12 · 43 engineered signals · forward-filled cross-API correlation
+      features for <em>systemic stress detection</em>.
+    </p>
+  </div>
+
+  <div class="leo-says reveal"
+       data-msg="The training corpus comprises **24 months of live banking-API telemetry** — **1.22 million observations** across payment, market-data, equities, crypto and FX endpoints — balanced to prevent dominant-service bias. Five **cross-service correlation features** expose systemic stress signatures, the leading indicator of vendor-side incidents and concerted load events to which single-API monitoring is structurally blind."></div>
+
+  <div class="ds-grid reveal">
+    <div class="ds-card big">
+      <div class="ds-title">API mix · production dataset</div>
+      <canvas id="apiDonut" width="320" height="320"></canvas>
+      <div class="ds-legend" id="apiLegend"></div>
+    </div>
+
+    <div class="ds-card"><div class="ds-k">Total rows</div><div class="ds-v">1,220,008</div>
+      <div class="ds-x">post-dedup &amp; downsample</div></div>
+    <div class="ds-card"><div class="ds-k">Failure rate</div><div class="ds-v warn">13.88%</div>
+      <div class="ds-x">positive-class share</div></div>
+    <div class="ds-card"><div class="ds-k">Date range</div><div class="ds-v small">2023-01 → 2024-12</div>
+      <div class="ds-x">24 months · 1-minute bucket</div></div>
+    <div class="ds-card"><div class="ds-k">Signals</div><div class="ds-v">43</div>
+      <div class="ds-x">8 families · 11 precursors</div></div>
+    <div class="ds-card"><div class="ds-k">Sequence</div><div class="ds-v">30 steps</div>
+      <div class="ds-x">~30 min lookback</div></div>
+    <div class="ds-card"><div class="ds-k">Size on disk</div><div class="ds-v">~430 MB</div>
+      <div class="ds-x">balanced &amp; cleaned CSV</div></div>
+  </div>
+
+  <div class="ds-families reveal">
+    <div class="dsf"><span>Core telemetry</span><b>2</b></div>
+    <div class="dsf"><span>Calendar</span><b>6</b></div>
+    <div class="dsf"><span>Rolling stats</span><b>5</b></div>
+    <div class="dsf"><span>Lag</span><b>3</b></div>
+    <div class="dsf"><span>EMA</span><b>3</b></div>
+    <div class="dsf"><span>Cyclical enc.</span><b>4</b></div>
+    <div class="dsf"><span>API flags</span><b>2</b></div>
+    <div class="dsf"><span>Event signals</span><b>2</b></div>
+    <div class="dsf"><span>Differential</span><b>4</b></div>
+    <div class="dsf"><span>Spike / burst</span><b>3</b></div>
+    <div class="dsf"><span>Trend slopes</span><b>2</b></div>
+    <div class="dsf"><span>Traffic</span><b>2</b></div>
+    <div class="dsf hl"><span>Cross-API stress</span><b>5</b></div>
+  </div>
+
+  <nav class="page-jump">
+    <a class="prev" href="/pipeline.html"><span class="pj-k">← prev</span><span class="pj-v">Self-healing pipeline</span></a>
+    <a class="next" href="/cite.html"><span class="pj-k">next →</span><span class="pj-v">Cite</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/charts.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.LEO_CHARTS) window.LEO_CHARTS.drawApiDonut();
+});
+</script>
+</body>
+</html>

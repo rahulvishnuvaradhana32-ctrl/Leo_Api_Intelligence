@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confidence bands · LEO</title>
+<meta name="description" content="LEO conformal prediction — 90% guaranteed coverage on every forecast horizon, no distribution assumptions.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cinzel:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/base.css?v=11">
+<link rel="stylesheet" href="/styles/components.css?v=11">
+<link rel="stylesheet" href="/styles/animations.css?v=11">
+</head>
+<body>
+<main><div class="page">
+
+  <div class="page-head reveal">
+    <span class="page-tag">04 · Conformal Prediction</span>
+    <h1 class="page-title">A 90% guarantee, <span class="grad">no distribution assumptions</span></h1>
+    <p class="page-lede">
+      Inductive conformal calibration on 155,337 sequences. Every horizon ships with a coverage interval that
+      <em>provably</em> contains the true outcome 9 times out of 10.
+    </p>
+  </div>
+
+  <div class="leo-says reveal"
+       data-msg="Conformal prediction provides a **distribution-free statistical guarantee** that each forecast lies within the published confidence interval **at least 90% of the time**, independent of model assumptions or training distribution. This delivers the formal evidentiary basis required by model-risk frameworks (SR 11-7 / SS1/23), supporting attestation to internal validation, second-line review and external supervisory examination."></div>
+
+  <div class="conf-grid reveal">
+    <div class="conf-card">
+      <div class="conf-h">h + 1 min</div>
+      <div class="conf-cov">
+        <div class="cov-num">90.25%</div>
+        <div class="cov-bar"><span data-p="90.25"></span><i class="target" data-t="90"></i></div>
+        <div class="cov-label">measured · target 90.0%</div>
+      </div>
+      <div class="conf-stats">
+        <div><span>q̂</span><b>0.5195</b></div>
+        <div><span>width</span><b>0.9905</b></div>
+        <div><span>status</span><b class="ok">PASS</b></div>
+      </div>
+    </div>
+
+    <div class="conf-card">
+      <div class="conf-h">h + 5 min</div>
+      <div class="conf-cov">
+        <div class="cov-num">90.09%</div>
+        <div class="cov-bar"><span data-p="90.09"></span><i class="target" data-t="90"></i></div>
+        <div class="cov-label">measured · target 90.0%</div>
+      </div>
+      <div class="conf-stats">
+        <div><span>q̂</span><b>0.5207</b></div>
+        <div><span>width</span><b>0.9909</b></div>
+        <div><span>status</span><b class="ok">PASS</b></div>
+      </div>
+    </div>
+
+    <div class="conf-card edge">
+      <div class="conf-h">h + 15 min</div>
+      <div class="conf-cov">
+        <div class="cov-num">89.98%</div>
+        <div class="cov-bar"><span data-p="89.98"></span><i class="target" data-t="90"></i></div>
+        <div class="cov-label">measured · target 90.0%</div>
+      </div>
+      <div class="conf-stats">
+        <div><span>q̂</span><b>0.5258</b></div>
+        <div><span>width</span><b>0.9929</b></div>
+        <div><span>status</span><b class="edge">EDGE</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conf-note reveal">
+    <svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v6M12 16v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>15-step coverage lands 0.02% under target — well within Monte-Carlo noise. We treat it as a soft edge; the next retrain widens q̂ by 0.003 to clear margin.</span>
+  </div>
+
+  <nav class="page-jump">
+    <a class="prev" href="/forecasting.html"><span class="pj-k">← prev</span><span class="pj-v">Forecasting</span></a>
+    <a class="next" href="/agent.html"><span class="pj-k">next →</span><span class="pj-v">Proactive Agent</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/data.js?v=11"></script>
+<script src="/scripts/chrome.js?v=11"></script>
+<script src="/scripts/particles.js?v=11"></script>
+<script src="/scripts/animations.js?v=11"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="f" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="55%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#7c1d1d"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="50" r="48" fill="#0a0405"/>
+  <g stroke="#dc2626" stroke-linecap="round" fill="none" stroke-width="1.6">
+    <line x1="50" y1="4"  x2="50" y2="14"/>
+    <line x1="80" y1="14" x2="74" y2="22"/>
+    <line x1="20" y1="14" x2="26" y2="22"/>
+    <line x1="93" y1="40" x2="84" y2="42"/>
+    <line x1="7"  y1="40" x2="16" y2="42"/>
+    <line x1="50" y1="96" x2="50" y2="86"/>
+  </g>
+  <circle cx="50" cy="52" r="22" fill="url(#f)" stroke="#7c1d1d" stroke-width="0.8"/>
+  <circle cx="42" cy="48" r="2.4" fill="#fef3c7"/>
+  <circle cx="58" cy="48" r="2.4" fill="#fef3c7"/>
+  <circle cx="42" cy="48.5" r="1.2" fill="#1a0405"/>
+  <circle cx="58" cy="48.5" r="1.2" fill="#1a0405"/>
+  <path d="M50 56 L46 62 L54 62 Z" fill="#1a0405"/>
+  <path d="M30 38 L34 28 L38 36 Z" fill="#dc2626"/>
+  <path d="M70 38 L66 28 L62 36 Z" fill="#dc2626"/>
+</svg>

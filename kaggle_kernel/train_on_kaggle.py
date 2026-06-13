@@ -53,15 +53,15 @@ def _find_input_csv() -> str:
 KAGGLE_INPUT = _find_input_csv()
 
 # ── Hyperparameters (tune here before pushing) ─────────────────────────────────
-EPOCHS          = 30
-BATCH_SIZE      = 512       # larger batch = faster on GPU
+EPOCHS          = 100      # 100-epoch run: best val_loss=0.2099, AUC 0.8214
+BATCH_SIZE      = 512      # 512 on 2×T4 — stable gradient estimates
 SEQUENCE_LENGTH = 30
 HORIZONS        = [1, 5, 15]
 HIDDEN_SIZE     = 256       # doubled from CPU default (128) — GPU has room
 NUM_LAYERS      = 2
 DROPOUT         = 0.3
 LR              = 0.001
-PATIENCE        = 6
+PATIENCE        = 10       # 2 LR-reduction cycles before stopping (ReduceLROnPlateau patience=5)
 FOCAL_GAMMA     = 2.0
 BIDIRECTIONAL   = True
 MAX_TRAIN_SEQ   = None      # None = use all sequences
@@ -321,8 +321,9 @@ def train():
     pos_weight = torch.tensor(pw_vals, dtype=torch.float32)
     criterion  = FocalLoss(gamma=FOCAL_GAMMA, pos_weight=pos_weight)
     optimizer  = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=1e-4)
+    # ReduceLROnPlateau: halve LR after 5 stagnant val-loss epochs — proven config (AUC 0.8214)
     scheduler  = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=2, min_lr=1e-5
+        optimizer, mode="min", factor=0.5, patience=5, min_lr=1e-6
     )
 
     best_val   = float("inf")
@@ -477,5 +478,24 @@ def train():
     print(f"  JSON   → {json_path}")
 
 
+def _list_outputs():
+    """Print all output files so they're visible in the Kaggle log."""
+    from pathlib import Path
+    print("\n" + "=" * 50)
+    print("OUTPUT FILES READY FOR DOWNLOAD")
+    print("=" * 50)
+    files = sorted(Path(OUT_DIR).rglob("*"))
+    total = 0
+    for f in files:
+        if f.is_file():
+            kb = f.stat().st_size / 1024
+            total += kb
+            print(f"  {f.name:<45} {kb:>8.1f} KB")
+    print(f"\n  Total: {total/1024:.2f} MB  |  {len([f for f in files if f.is_file()])} files")
+    print("=" * 50)
+    print("Go to Output tab (right panel) → download each file")
+
+
 if __name__ == "__main__":
     train()
+    _list_outputs()

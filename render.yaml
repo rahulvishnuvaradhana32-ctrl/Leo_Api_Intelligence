@@ -4,6 +4,14 @@ services:
     runtime: python
     pythonVersion: "3.11"
     buildCommand: pip install -r requirements-render.txt
-    startCommand: python scripts/dashboard_server.py
+    startCommand: python scripts/web_server.py
     healthCheckPath: /health
     plan: free
+
+  - type: cron
+    name: leo-self-healing-midnight
+    runtime: python
+    pythonVersion: "3.11"
+    schedule: "0 5 * * *"   # 00:00 EST (UTC-5)
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: python scripts/self_improving_pipeline.py --data_path data/banking_api_features_v7.csv
