@@ -120,7 +120,7 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 600; letter-spacing: -0.
 .btn-accent { background: var(--grad-brand); background-size: 180% 180%; color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,.30); }
 .btn-accent:hover { transform: translateY(-1px); background-position: 100% 50%; box-shadow: 0 8px 22px rgba(124,58,237,.38); }
 .btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--line-2); }
-.btn-ghost:hover { border-color: var(--navy); }
+.btn-ghost:hover { border-color: var(--accent); color: var(--ink); }
 .btn-link { padding: 11px 4px; color: var(--accent-d); }
 .btn-link:hover { gap: 11px; }
 
@@ -149,7 +149,7 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 600; letter-spacing: -0.
   font-size: 14.5px; color: var(--body); padding: 8px 12px; border-radius: 8px; transition: all .15s;
 }
 .nav-links a:hover { color: var(--ink); background: var(--subtle); }
-.nav-links a[aria-current="page"] { color: var(--navy); font-weight: 500; }
+.nav-links a[aria-current="page"] { color: var(--accent-d); font-weight: 500; }
 .nav-cta { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 .nav-status { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .nav-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pos); box-shadow: 0 0 0 3px rgba(14,142,109,.16); }
@@ -191,7 +191,11 @@ h1, h2, h3 { color: var(--ink); margin: 0; font-weight: 600; letter-spacing: -0.
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); }
 .kpi { padding: 30px 24px; border-right: 1px solid var(--line); }
 .kpi:last-child { border-right: 0; }
-.kpi .num { font-family: var(--serif); font-size: clamp(28px, 3vw, 38px); color: var(--navy); font-weight: 500; letter-spacing: -0.02em; }
+.kpi .num {
+  font-family: var(--serif); font-size: clamp(28px, 3vw, 38px); font-weight: 500; letter-spacing: -0.02em;
+  background: var(--grad-brand); -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: var(--accent-d);
+}
 .kpi .lab { font-size: 13px; color: var(--muted); margin-top: 4px; }
 
 /* ── sections ── */

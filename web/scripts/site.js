@@ -150,7 +150,7 @@
       <div class="foot-grid">
         <div class="foot-brand">
           <a class="brand" href="/"><span class="mark">L</span> LEO</a>
-          <p>Predictive reliability for banking &amp; fintech APIs. Call the alarm before the failure lands.</p>
+          <p>We turn ‘the API went down’ into ‘the API was about to.’</p>
         </div>
         <div class="foot-col"><h4>Platform</h4>
           <a href="/architecture.html">Architecture</a><a href="/forecasting.html">Forecasting</a>
