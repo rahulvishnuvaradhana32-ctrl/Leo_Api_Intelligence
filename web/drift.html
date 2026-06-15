@@ -9,22 +9,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
     <span class="page-tag">📈 Drift Monitor</span>
-    <h1 class="page-title">Catch the data <span class="grad">moving under the model</span></h1>
+    <h1 class="page-title">The data drifts. <span class="grad">LEO feels it first.</span></h1>
     <p class="page-lede">
-      Every night the self-healing pipeline KS-tests each input signal against the training distribution.
-      Here's that record — the trend per signal, what's drifting right now, and when LEO retrained itself.
+      Models decay when the world moves underneath them. Every night LEO KS-tests each signal against the
+      distribution it trained on — and retrains <em>only when the shift is real</em>, not on nervous noise.
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="A model is only as good as the distribution it was trained on. LEO runs a **Kolmogorov–Smirnov test** per signal on a rolling window and retrains only when the effect size is large enough to matter — not on every nervous p-value."></div>
+       data-msg="A model is only as good as the distribution it learned. LEO runs a **Kolmogorov–Smirnov test** per signal on a rolling window and acts on **effect size, not p-value theatre** — so it retrains when it matters and stays still when it doesn't."></div>
 
   <section class="rel-section reveal">
     <div class="drift-summary" id="driftSummary"></div>
@@ -33,16 +33,16 @@
   <section class="rel-section reveal">
     <div class="rel-head">
       <div><h3 class="rel-h">Per-signal drift trend</h3>
-        <span class="rel-sub">KS statistic across self-healing runs · dot = flagged drift · source: <span id="driftSource">loading…</span></span></div>
+        <span class="rel-sub">KS statistic across nightly runs · the dashed line is the retrain trigger · source: <span id="driftSource">loading…</span></span></div>
     </div>
-    <canvas id="driftChart" height="260"></canvas>
+    <div id="driftChart" class="chart" style="height:260px"></div>
     <div class="drift-legend" id="driftLegend"></div>
   </section>
 
   <section class="rel-section reveal">
     <div class="rel-head">
-      <div><h3 class="rel-h">Latest run · signal-by-signal</h3>
-        <span class="rel-sub">KS statistic, p-value and drift verdict for the most recent check</span></div>
+      <div><h3 class="rel-h">Where each signal stands now</h3>
+        <span class="rel-sub">latest check · KS, p-value and verdict per signal</span></div>
     </div>
     <div class="signal-grid" id="signalGrid"></div>
   </section>
@@ -54,8 +54,9 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
-<script src="/scripts/drift.js?v=12"></script>
+<script src="/scripts/vendor/echarts.min.js"></script>
+<script src="/scripts/site.js?v=14"></script>
+<script src="/scripts/drift.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_DRIFT) window.LEO_DRIFT.init();

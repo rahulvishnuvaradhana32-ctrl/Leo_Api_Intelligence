@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
@@ -31,24 +31,29 @@
       <div><h3 class="rel-h">Corpus at a glance</h3>
         <span class="rel-sub">post-dedup &amp; downsample · 1-minute buckets</span></div>
     </div>
-    <div class="stat-grid">
+    <div class="stat-grid even">
       <div class="stat"><b>1.22M</b><span>rows · positive + negative</span></div>
       <div class="stat"><b>43</b><span>input signals</span></div>
       <div class="stat"><b>13.88%</b><span>base failure rate</span></div>
       <div class="stat"><b>5 + 1</b><span>live APIs + cross-stress</span></div>
       <div class="stat"><b>30</b><span>sequence length (steps)</span></div>
-      <div class="stat"><b>2023-01 → 2024-12</b><span>date range · 24 months</span></div>
+      <div class="stat"><b class="dt">2023-01 → 2024-12</b><span>date range · 24 months</span></div>
     </div>
   </section>
 
   <section class="rel-section reveal" data-d="2">
     <div class="rel-head">
       <div><h3 class="rel-h">API distribution</h3>
-        <span class="rel-sub">production dataset · share by endpoint · <code>window.LEO_DATA.dataset.apis</code></span></div>
+        <span class="rel-sub">production dataset · share by endpoint · click a slice to inspect</span></div>
     </div>
     <div class="split">
-      <canvas id="apiDonut" class="chart"></canvas>
-      <div id="apiLegend"></div>
+      <div id="apiDonut" class="chart" style="height:340px"></div>
+      <div class="panel" id="apiDetail">
+        <div class="line"><span>endpoint</span><b id="adName">—</b></div>
+        <div class="line"><span>share of corpus</span><b id="adShare">—</b></div>
+        <div class="line"><span>≈ rows</span><b id="adRows">—</b></div>
+        <p class="mc-note" id="adRole">Click a slice to inspect that API.</p>
+      </div>
     </div>
   </section>
 
@@ -59,11 +64,49 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/charts.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
+<script src="/scripts/vendor/echarts.min.js"></script>
+<script src="/scripts/site.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.LEO_CHARTS) window.LEO_CHARTS.drawApiDonut();
+  const el = document.getElementById('apiDonut');
+  const D = window.LEO_DATA || {};
+  const apis = (D.dataset && D.dataset.apis) || [];
+  const total = (D.dataset && D.dataset.rows) || 1220008;
+  if (!el || !window.echarts || !apis.length) return;
+
+  const ROLE = {
+    transaction_api: 'Core payments — card & account transactions.',
+    market_data_api: 'Real-time quotes & market data feeds.',
+    stock_price_api: 'Equity price lookups.',
+    crypto_api: 'Crypto pricing & order checks.',
+    forex_api: 'FX rates & currency conversion.',
+    other: 'Aggregate of smaller endpoints.',
+  };
+  const t = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  function show(a) {
+    t('adName', a.name);
+    t('adShare', (a.share * 100).toFixed(1) + '%');
+    t('adRows', Math.round(a.share * total).toLocaleString());
+    t('adRole', ROLE[a.name] || '');
+  }
+
+  const inst = echarts.init(el, null, { renderer: 'canvas' });
+  inst.setOption({
+    backgroundColor: 'transparent', animationDuration: 800,
+    tooltip: { trigger: 'item', backgroundColor: 'rgba(14,20,36,.96)', borderColor: 'rgba(124,148,210,.25)', borderWidth: 1,
+      textStyle: { color: '#EAF1FF', fontFamily: 'IBM Plex Mono', fontSize: 11 }, formatter: p => `${p.name}<br/><b>${p.percent}%</b>` },
+    series: [{
+      type: 'pie', radius: ['45%', '74%'], center: ['50%', '50%'], avoidLabelOverlap: true,
+      padAngle: 2, itemStyle: { borderRadius: 6, borderColor: '#0E1424', borderWidth: 2 },
+      label: { color: '#A6B2D0', fontFamily: 'IBM Plex Mono', fontSize: 11, formatter: '{b}' },
+      labelLine: { lineStyle: { color: 'rgba(124,148,210,.3)' } },
+      emphasis: { scale: true, scaleSize: 8, itemStyle: { shadowBlur: 18, shadowColor: 'rgba(77,141,255,.4)' } },
+      data: apis.map(a => ({ value: +(a.share).toFixed(4), name: a.name, itemStyle: { color: a.color } })),
+    }],
+  });
+  inst.on('click', p => { const a = apis.find(x => x.name === p.name); if (a) show(a); });
+  show(apis.reduce((m, a) => a.share > m.share ? a : m, apis[0]));   // default: largest
+  let tm; window.addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => inst.resize(), 160); });
 });
 </script>
 </body>

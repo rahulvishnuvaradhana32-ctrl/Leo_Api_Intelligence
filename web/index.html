@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 
@@ -45,14 +45,14 @@
 
       <!-- product card -->
       <div class="product-card reveal" data-d="2" aria-hidden="true">
-        <div class="pc-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="t">leo · live forecast</span></div>
+        <div class="pc-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="t">leo · live forecast</span><span class="pc-live"><i></i>LIVE</span></div>
         <div class="pc-body">
-          <span class="pc-chip"><span class="chip-dot"></span> outage detected on the horizon</span>
-          <canvas id="heroSpark" class="pc-spark" height="90"></canvas>
-          <div class="pc-row"><span class="k">Time to failure</span><span class="v">1 / 5 / 15 min</span></div>
-          <div class="pc-row"><span class="k">Confidence</span><span class="v pos">90.1%</span></div>
-          <div class="pc-row"><span class="k">Recommended action</span><span class="v pos">reroute</span></div>
-          <div class="pc-row"><span class="k">Decision latency</span><span class="v">279&nbsp;ms</span></div>
+          <span class="pc-chip ok" id="liveChip"><span class="chip-dot"></span><span class="chip-tx">all clear · auto-failover armed</span></span>
+          <div id="heroSpark" class="pc-spark"></div>
+          <div class="pc-row"><span class="k">Time to failure</span><span class="v" id="liveTtf">monitored</span></div>
+          <div class="pc-row"><span class="k">Confidence</span><span class="v pos" id="liveConf">90.1%</span></div>
+          <div class="pc-row"><span class="k">Recommended action</span><span class="v pos" id="liveAction">standby</span></div>
+          <div class="pc-row"><span class="k">Decision latency</span><span class="v" id="liveLat">279&nbsp;ms</span></div>
         </div>
       </div>
     </div>
@@ -141,6 +141,7 @@
 </main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
+<script src="/scripts/vendor/echarts.min.js"></script>
+<script src="/scripts/site.js?v=14"></script>
 </body>
 </html>

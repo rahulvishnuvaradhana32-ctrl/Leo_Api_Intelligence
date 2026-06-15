@@ -152,8 +152,9 @@
     if (!ref) return;
     const { c, x, w, h } = ref;
 
-    // Synthesize a plausible 120-step time series with an emerging failure event
-    const N = 120;
+    // Synthesize a plausible time series (t+0 … t+100) with an emerging failure event
+    const N = 101;            // data ends exactly at t+100
+    const DOMAIN = 110;       // x-axis runs past 100 so there's room after t+100
     const seed = 42;
     let rnd = mulberry32(seed);
     function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -180,7 +181,7 @@
 
       const drawN = Math.floor(N * progress);
 
-      const sx = i => padL + (i / (N - 1)) * (w - padL - padR);
+      const sx = i => padL + (i / DOMAIN) * (w - padL - padR);
       const sy = v => h - padB - v * (h - padT - padB);
 
       // grid + y labels
@@ -211,7 +212,7 @@
       // x ticks
       x.fillStyle = COLORS.mute;
       x.textAlign = 'center';
-      for (let i = 0; i < N; i += 20) {
+      for (let i = 0; i <= 100; i += 20) {
         x.fillText('t+' + i, sx(i), h - 12);
       }
 
@@ -280,19 +281,6 @@
           else                  { setA.textContent = 'normal'; setA.style.color = '#34d399'; }
         }
       }
-
-      // legend
-      x.font = '11px JetBrains Mono';
-      x.textAlign = 'left';
-      let lx = padL + 8;
-      const ly = padT - 14;
-      [['h+1', COLORS.gold], ['h+5', COLORS.ember], ['h+15', COLORS.crimson]].forEach(([k, col]) => {
-        x.fillStyle = col;
-        x.fillRect(lx, ly - 4, 10, 3);
-        x.fillStyle = COLORS.text;
-        x.fillText(k, lx + 14, ly);
-        lx += 60;
-      });
     }
 
     // animate once on first reveal, then loop slowly forever

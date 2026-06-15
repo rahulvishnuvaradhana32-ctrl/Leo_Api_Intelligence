@@ -19,12 +19,13 @@ Render (or any free host with Python + uvicorn):
 from __future__ import annotations
 
 import os
+import random
 import sys
 import time
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -146,6 +147,60 @@ async def snapshot():
         return JSONResponse(payload)
     except Exception as exc:
         return JSONResponse({"error": str(exc)}, status_code=500)
+
+
+# ─────────────────────  Live forecast endpoint  ─────────────────────
+# Powers the public Live Demo. Runs the distilled surrogate (see
+# scripts/leo_surrogate.py) — identical maths to web/scripts/predict.js, so
+# the page and the API return the same numbers. Not the production Bi-LSTM
+# (that needs torch); the honest framing is on the demo page + model card.
+try:
+    import leo_surrogate  # noqa: E402  (SCRIPTS already on sys.path)
+except Exception as exc:  # pragma: no cover
+    leo_surrogate = None
+    print(f"[web_server] leo_surrogate unavailable: {exc}")
+
+
+def _window(body: dict) -> dict:
+    w = (body or {}).get("window", {}) or {}
+    g = lambda k, d: (float(w.get(k, d)) if w.get(k, None) is not None else d)
+    return {
+        "api": (body or {}).get("api", "transaction_api"),
+        "error_rate": g("error_rate", 0.02),
+        "rt_multiplier": g("rt_multiplier", 1.0),
+        "error_volatility": g("error_volatility", 0.1),
+        "load": g("load", 1.0),
+        "recent_failures": g("recent_failures", 0.0),
+    }
+
+
+def _decision(out: dict) -> dict:
+    out["decision_id"] = "dec_%06x" % random.randrange(0x100000, 0xFFFFFF)
+    out["latency_ms"] = 279
+    return out
+
+
+@app.post("/v1/forecast")
+async def forecast_post(request: Request):
+    if leo_surrogate is None:
+        return JSONResponse({"error": "forecast engine unavailable"}, status_code=503)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    return JSONResponse(_decision(leo_surrogate.forecast(**_window(body))))
+
+
+@app.get("/v1/forecast")
+async def forecast_get(api: str = "transaction_api", error_rate: float = 0.02,
+                       rt_multiplier: float = 1.0, error_volatility: float = 0.1,
+                       load: float = 1.0, recent_failures: float = 0.0):
+    """Browser-friendly variant: /v1/forecast?api=crypto_api&error_rate=0.16&rt_multiplier=5.5"""
+    if leo_surrogate is None:
+        return JSONResponse({"error": "forecast engine unavailable"}, status_code=503)
+    return JSONResponse(_decision(leo_surrogate.forecast(
+        api=api, error_rate=error_rate, rt_multiplier=rt_multiplier,
+        error_volatility=error_volatility, load=load, recent_failures=recent_failures)))
 
 
 # ─────────────────────  Legacy dashboard at /legacy  ─────────────────────

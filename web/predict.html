@@ -3,112 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Playground · LEO</title>
-<meta name="description" content="Drive LEO's failure-risk model live — move the signals, watch the 1/5/15-minute risk and the recommended action update in real time.">
+<title>Live Demo · LEO</title>
+<meta name="description" content="See LEO forecast a banking-API failure on a realistic scenario — risk per horizon, the auto-routing decision, the real API request/response, and the business impact.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
 
+  <!-- 1 · FRAME ───────────────────────────────────────────── -->
   <div class="page-head reveal">
-    <span class="page-tag">⚡ Live Playground</span>
-    <h1 class="page-title">Drive the model — <span class="grad">watch the failure fan open</span></h1>
+    <span class="page-tag">⚡ Live Demo</span>
+    <h1 class="page-title">See LEO call a failure — <span class="grad">before it lands</span></h1>
     <p class="page-lede">
-      Move the operational signals on the left and LEO re-scores the <em>1, 5 and 15-minute</em> failure
-      risk instantly, with its 90% conformal band and the action it would take. Try the scenario presets.
+      A guided walk-through on representative banking-API traffic: pick a scenario, watch LEO forecast the
+      <em>1, 5 and 15-minute</em> failure risk, take the routing decision, and see exactly what you'd
+      integrate and what it's worth to the business.
     </p>
+    <div class="demo-trust">
+      <span>● Conformal-calibrated (90%)</span>
+      <span>● Reversible, logged failover</span>
+      <span>● 279 ms decision latency</span>
+    </div>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="This public playground runs a **distilled surrogate** of LEO — hand-calibrated to reproduce the real model's behaviour (monotone in the right signals, anchored to the true **13.88% base rate**, longer horizons regressing toward it). The bands use the **real conformal q̂** from calibration. The full **Bi-LSTM + attention** model and every headline metric elsewhere on the site come from the genuine held-out evaluation."></div>
+       data-msg="This public demo runs a **distilled surrogate** of LEO, hand-calibrated to reproduce the production model's behaviour and anchored to the real **13.88% base rate** and the measured conformal q̂. The headline accuracy, coverage and savings elsewhere on the site come from the genuine held-out evaluation of the full **Bi-LSTM + attention** model. On your own estate, LEO runs on your live telemetry behind your VPC."></div>
 
-  <div class="predict-stage reveal">
+  <!-- 2 · SCENARIO SELECTOR ───────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">1 · Choose a scenario</h3>
+        <span class="rel-sub">a realistic situation on a representative API estate — not a blank sandbox</span></div>
+    </div>
+    <div class="scn-grid" id="scnGrid"></div>
+  </section>
 
-    <!-- ── Controls ── -->
-    <div class="predict-controls">
-      <div class="pc-head">
-        <h3>Input signals</h3>
-        <div class="preset-row">
-          <button data-preset="calm" class="preset active">Calm</button>
-          <button data-preset="degrading" class="preset">Degrading</button>
-          <button data-preset="outage" class="preset">Outage</button>
+  <!-- 3 · LIVE INFERENCE ──────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">2 · LEO's forecast</h3>
+        <span class="rel-sub">tweak the live signals on the left — the model re-scores instantly, with its 90% interval</span></div>
+    </div>
+    <div class="predict-stage">
+      <div class="predict-controls">
+        <div class="pc-head">
+          <h3>Input signals</h3>
+          <span class="rel-sub" id="scnTag">—</span>
+        </div>
+        <label class="ctrl">
+          <span class="ctrl-k">API endpoint</span>
+          <select id="pApi" class="ctrl-select">
+            <option value="transaction_api">transaction_api</option>
+            <option value="market_data_api">market_data_api</option>
+            <option value="stock_price_api">stock_price_api</option>
+            <option value="crypto_api">crypto_api</option>
+            <option value="forex_api">forex_api</option>
+          </select>
+        </label>
+        <label class="ctrl"><span class="ctrl-k">Error rate <b id="pErrV">1.5%</b></span>
+          <input id="pErr" type="range" min="0" max="25" step="0.5" value="1.5"></label>
+        <label class="ctrl"><span class="ctrl-k">Response-time multiplier <b id="pRtV">1.0×</b></span>
+          <input id="pRt" type="range" min="1" max="8" step="0.1" value="1"></label>
+        <label class="ctrl"><span class="ctrl-k">Error volatility <b id="pVolV">8%</b></span>
+          <input id="pVol" type="range" min="0" max="100" step="1" value="8"></label>
+        <label class="ctrl"><span class="ctrl-k">Load (vs nominal) <b id="pTputV">0.9×</b></span>
+          <input id="pTput" type="range" min="0.2" max="3" step="0.1" value="0.9"></label>
+        <label class="ctrl"><span class="ctrl-k">Recent failures (last 30 steps) <b id="pRecentV">0</b></span>
+          <input id="pRecent" type="range" min="0" max="15" step="1" value="0"></label>
+      </div>
+
+      <div class="predict-output">
+        <div class="gauge-row">
+          <div class="gauge"><canvas id="gaugeH1"></canvas></div>
+          <div class="gauge"><canvas id="gaugeH5"></canvas></div>
+          <div class="gauge"><canvas id="gaugeH15"></canvas></div>
+        </div>
+        <div class="verdict ok" id="verdictCard">
+          <div class="vc-head">
+            <span class="vc-bracket">[</span>
+            <span class="vc-title">SYSTEM · AUTOMATED ACTION</span>
+            <span class="vc-bracket">]</span>
+            <span class="vc-peak">peak risk <b id="vPeak">—</b></span>
+          </div>
+          <div class="vc-action" id="vAction">—</div>
+          <div class="vc-msg" id="vMsg">—</div>
         </div>
       </div>
-
-      <label class="ctrl">
-        <span class="ctrl-k">API endpoint</span>
-        <select id="pApi" class="ctrl-select">
-          <option value="transaction_api">transaction_api</option>
-          <option value="market_data_api">market_data_api</option>
-          <option value="stock_price_api">stock_price_api</option>
-          <option value="crypto_api">crypto_api</option>
-          <option value="forex_api">forex_api</option>
-        </select>
-      </label>
-
-      <label class="ctrl">
-        <span class="ctrl-k">Error rate <b id="pErrV">1.5%</b></span>
-        <input id="pErr" type="range" min="0" max="25" step="0.5" value="1.5">
-      </label>
-
-      <label class="ctrl">
-        <span class="ctrl-k">Response-time multiplier <b id="pRtV">1.0×</b></span>
-        <input id="pRt" type="range" min="1" max="8" step="0.1" value="1">
-      </label>
-
-      <label class="ctrl">
-        <span class="ctrl-k">Error volatility <b id="pVolV">8%</b></span>
-        <input id="pVol" type="range" min="0" max="100" step="1" value="8">
-      </label>
-
-      <label class="ctrl">
-        <span class="ctrl-k">Load (vs nominal) <b id="pTputV">0.9×</b></span>
-        <input id="pTput" type="range" min="0.2" max="3" step="0.1" value="0.9">
-      </label>
-
-      <label class="ctrl">
-        <span class="ctrl-k">Recent failures (last 30 steps) <b id="pRecentV">0</b></span>
-        <input id="pRecent" type="range" min="0" max="15" step="1" value="0">
-      </label>
     </div>
+  </section>
 
-    <!-- ── Output ── -->
-    <div class="predict-output">
-      <div class="gauge-row">
-        <div class="gauge"><canvas id="gaugeH1"></canvas></div>
-        <div class="gauge"><canvas id="gaugeH5"></canvas></div>
-        <div class="gauge"><canvas id="gaugeH15"></canvas></div>
+  <!-- 4 · DECISION TRACE ──────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">3 · Why LEO made the call</h3>
+        <span class="rel-sub">explainable, governed decisions — every action is reversible and logged</span></div>
+    </div>
+    <div class="split">
+      <div class="driver-block" style="margin-top:0">
+        <div class="db-head"><h3>Top drivers · h+1 (log-odds)</h3>
+          <p>Signed contribution of each signal to the near-term risk. Drag a slider and watch the dominant driver shift.</p></div>
+        <div class="driver-bars" id="driverBars"></div>
       </div>
-
-      <div class="verdict ok" id="verdictCard">
-        <div class="vc-head">
-          <span class="vc-bracket">[</span>
-          <span class="vc-title">SYSTEM · RECOMMENDED ACTION</span>
-          <span class="vc-bracket">]</span>
-          <span class="vc-peak">peak risk <b id="vPeak">—</b></span>
-        </div>
-        <div class="vc-action" id="vAction">—</div>
-        <div class="vc-msg" id="vMsg">—</div>
+      <div class="panel">
+        <div class="line"><span>recommended action</span><b id="dtAction">—</b></div>
+        <div class="line"><span>lead time to failure</span><b id="dtLead">—</b></div>
+        <div class="line"><span>decision latency</span><b>279 ms</b></div>
+        <div class="line"><span>reversible</span><b class="badge ok">yes · auto-rollback</b></div>
+        <div class="line"><span>audit</span><b id="dtAudit">logged</b></div>
+        <p class="db-note">Action thresholds: pre-warm ≥ 0.35 · auto-reroute ≥ 0.55. No irreversible action is automated — a human can override, and every decision is written to the audit log.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ── What-if driver breakdown ── -->
-  <div class="driver-block reveal">
-    <div class="db-head">
-      <h3>What's driving this call?</h3>
-      <p>Signed contribution of each signal to the h+1 risk score (log-odds). Drag a slider and watch the dominant driver shift — this is the what-if view.</p>
+  <!-- 5 · THE API CALL ────────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">4 · The actual API call</h3>
+        <span class="rel-sub">the request your services send and the real response LEO returns · source: <code id="apiSource">—</code></span></div>
     </div>
-    <div class="driver-bars" id="driverBars"></div>
+    <div class="split">
+      <div class="panel"><div class="code-h">Request · <code>POST /v1/forecast</code></div><pre class="code" id="reqJson"></pre></div>
+      <div class="panel"><div class="code-h">Response · <code>200 OK</code></div><pre class="code" id="resJson"></pre></div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="code-h">
+        <span class="cmd-tabs">
+          <button class="cmd-tab active" data-cmd="curl" type="button">cURL</button>
+          <button class="cmd-tab" data-cmd="powershell" type="button">PowerShell</button>
+          <button class="cmd-tab" data-cmd="get" type="button">GET</button>
+        </span>
+        <button class="copy-btn" id="copyCurl" type="button">Copy</button>
+      </div>
+      <pre class="code" id="curlCmd"></pre>
+    </div>
+    <p class="db-note">Endpoints on this deployment: <code>POST /v1/forecast</code> · <code>GET /v1/forecast?api=crypto_api&amp;error_rate=0.16&amp;rt_multiplier=5.5</code> · <code>GET /health</code> · <code>GET /api/snapshot</code>. Live numbers above are served by this API; if it's unreachable the page falls back to an in-browser copy of the same model.</p>
+  </section>
+
+  <!-- 6 · BUSINESS IMPACT ─────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">5 · What it's worth</h3>
+        <span class="rel-sub" id="roiNote">illustrative · enter your own numbers</span></div>
+      <div class="roi-inputs">
+        <label>your incidents / yr<input id="roiIncidents" type="number" min="0" step="100" value="14200"></label>
+        <label>$ / incident<input id="roiCost" type="number" min="0" step="10" value="220"></label>
+      </div>
+    </div>
+    <div class="cmp-headline" id="roiTiles"></div>
     <p class="db-note">
-      Band = 90% conformal coverage (α=0.10), half-width scaled by the calibration q̂ per horizon
-      (h+1 0.519 · h+5 0.521 · h+15 0.526). Action thresholds: retry ≥ 0.35 · reroute ≥ 0.55.
+      Sizing <code>$/incident</code> — it depends how you count one: a failed <b>transaction</b> (~2× its base cost in retries),
+      a degradation <b>event</b> (thousands), or a major <b>outage</b>. For reference, enterprise downtime averages
+      <b>~$300K/hour</b> (<a href="https://itic-corp.com/itic-2024-hourly-cost-of-downtime-report/" target="_blank" rel="noopener">ITIC 2024</a>),
+      and financial-services outages run <b>~$152M/year</b> — including ~$22M in regulatory fines and ~$4.88M per major incident
+      (<a href="https://resolvepay.com/blog/statistics-indicating-api-downtimes-cost-to-finance-operations" target="_blank" rel="noopener">Splunk × Oxford Economics, 2024</a>).
+      Enter the figure that matches your estate; LEO applies the measured 52.07% reduction to it.
     </p>
-  </div>
+  </section>
+
+  <!-- 7 · ADOPT ───────────────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">6 · Adopt it in an afternoon</h3>
+        <span class="rel-sub">a drop-in client in front of your routing layer — no model ops on your side</span></div>
+    </div>
+    <div class="split">
+      <div class="panel"><div class="code-h">Python · drop-in guard</div><pre class="code" id="adoptCode"></pre></div>
+      <div class="stat-grid">
+        <div class="stat"><b>279 ms</b><span class="sub">p50 decision</span><span>inference latency</span></div>
+        <div class="stat"><b>VPC</b><span class="sub">your cloud</span><span>deployment</span></div>
+        <div class="stat"><b>SOC-ready</b><span class="sub">no PII used</span><span>per-API scores only</span></div>
+        <div class="stat"><b>5 + agg</b><span class="sub">per endpoint</span><span>API coverage</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 · CTA ─────────────────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="cta-band compact">
+      <h2 class="display">Run LEO on your own API estate.</h2>
+      <p>Send us a week of telemetry and we'll show you the failures it would have caught — and the spend it would have recovered.</p>
+      <div class="hero-ctas" style="justify-content:center">
+        <a class="btn btn-accent" href="/cite.html">Book a demo</a>
+        <a class="btn btn-ghost" href="/modelcard.html">Read the model card</a>
+      </div>
+    </div>
+  </section>
 
   <nav class="page-jump">
     <a class="prev" href="/forecasting.html"><span class="pj-k">← prev</span><span class="pj-v">Forecasting</span></a>
@@ -117,8 +200,8 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
-<script src="/scripts/predict.js?v=12"></script>
+<script src="/scripts/predict.js?v=16"></script>
+<script src="/scripts/site.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_PREDICT) window.LEO_PREDICT.init();

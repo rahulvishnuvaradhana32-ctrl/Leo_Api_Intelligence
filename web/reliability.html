@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
@@ -41,7 +41,7 @@
         <span class="bl slow">slow-burn</span><span class="bl fast">fast-burn → h+15 breaches</span>
       </div>
     </div>
-    <canvas id="burnChart" height="240"></canvas>
+    <div id="burnChart" class="chart" style="height:260px"></div>
   </section>
 
   <!-- ── Comparison ── -->
@@ -55,17 +55,16 @@
       <div class="ch"><b>$3.10M</b><span>annual savings</span></div>
       <div class="ch"><b>20,644</b><span>failures averted / yr</span></div>
     </div>
-    <div class="cmp-legend"><span class="cl pro">Proactive (LEO)</span><span class="cl rea">Reactive (baseline)</span><span class="cl-note">green = winner · lower is better</span></div>
     <div class="compare-bars" id="compareBars"></div>
   </section>
 
-  <!-- ── Incident timeline ── -->
+  <!-- ── Self-healing ── -->
   <section class="rel-section reveal">
     <div class="rel-head">
-      <div><h3 class="rel-h">Self-healing incident timeline</h3>
-        <span class="rel-sub">real runs · live from <code>self_heal_log.jsonl</code> (<code>/api/drift</code>)</span></div>
+      <div><h3 class="rel-h">Self-healing · how LEO stays sharp</h3>
+        <span class="rel-sub">nightly drift check → conditional retrain · from <code>self_heal_log.jsonl</code></span></div>
     </div>
-    <div class="timeline" id="timeline"></div>
+    <div id="timeline"></div>
   </section>
 
   <nav class="page-jump">
@@ -75,8 +74,9 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
-<script src="/scripts/reliability.js?v=12"></script>
+<script src="/scripts/vendor/echarts.min.js"></script>
+<script src="/scripts/site.js?v=14"></script>
+<script src="/scripts/reliability.js?v=16"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_RELIABILITY) window.LEO_RELIABILITY.init();

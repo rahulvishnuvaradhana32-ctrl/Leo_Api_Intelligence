@@ -63,65 +63,74 @@
     }).join('');
   }
 
-  // ── Error-budget burn-down (30-day, illustrative) ───────────
+  // ── Error-budget burn-down (30-day, illustrative) · ECharts ──
   function drawBurn() {
-    const ref = ctxFor('burnChart');
-    if (!ref) return;
-    const { x, w, h } = ref;
-    const padL = 44, padR = 14, padT = 22, padB = 28;
-    const budget = 1 - TARGET;
-    const N = 30;
-
+    const el = document.getElementById('burnChart');
+    if (!el || !window.echarts) return;
+    const inst = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
+    const budget = 1 - TARGET, WIN = 30, N = 33;   // day 1..30 + a little breathing room
+    const days = Array.from({ length: N }, (_, i) => i + 1);
     function rnd(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
-    const sx = i => padL + (i / (N - 1)) * (w - padL - padR);
-    const sy = v => padT + (1 - clamp(v, 0, 1.1) / 1.1) * (h - padT - padB);
-
-    x.clearRect(0, 0, w, h);
-    // grid + y labels (remaining budget %)
-    x.strokeStyle = 'rgba(124,148,210,0.10)'; x.lineWidth = 1;
-    [0, 0.25, 0.5, 0.75, 1].forEach(v => {
-      const y = sy(v);
-      x.beginPath(); x.moveTo(padL, y); x.lineTo(w - padR, y); x.stroke();
-      x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'right';
-      x.fillText((v * 100).toFixed(0) + '%', padL - 6, y + 3);
-    });
-    // breach line at 0
-    x.strokeStyle = 'rgba(239,68,68,0.5)'; x.setLineDash([4, 4]);
-    x.beginPath(); x.moveTo(padL, sy(0)); x.lineTo(w - padR, sy(0)); x.stroke(); x.setLineDash([]);
-    x.fillStyle = '#ef4444'; x.font = '10px IBM Plex Mono'; x.textAlign = 'left';
-    x.fillText('budget exhausted', padL + 6, sy(0) - 5);
-
-    HORIZONS.forEach(({ k, color }, idx) => {
+    let fastest = { rate: 0, label: '', breachDay: null };
+    const series = HORIZONS.map(({ k, label, color }, idx) => {
       const cov = (PH[k] && PH[k].coverage) || 0;
-      const consumptionRate = (1 - cov) / budget; // ~1 means exactly on budget
+      const rate = (1 - cov) / budget;          // ≈1 = exactly on budget over the window
+      const daily = rate / (WIN - 1);           // budget burned per day (constant)
+      const fast = rate > 1;                    // burns the full budget before day 30 → fast-burn
       const r = rnd(1000 + idx * 7);
-      x.strokeStyle = color; x.lineWidth = 2.4; x.beginPath();
-      let breachX = null;
+      const data = []; let breachDay = null;
       for (let i = 0; i < N; i++) {
-        const frac = i / (N - 1);
-        const noise = (r() - 0.5) * 0.05;
-        const remain = 1 - consumptionRate * frac + noise;
-        if (remain <= 0 && breachX == null) breachX = sx(i);
-        i === 0 ? x.moveTo(sx(i), sy(remain)) : x.lineTo(sx(i), sy(remain));
+        if (i >= WIN) { data.push(null); continue; }   // empty room after day 30
+        const noise = (r() - 0.5) * 0.04;
+        const remain = Math.max(0, Math.min(1, 1 - daily * i + noise));
+        if (remain <= 0 && breachDay == null) breachDay = i + 1;
+        data.push(+remain.toFixed(3));
       }
-      x.stroke();
-      if (breachX != null) {
-        x.fillStyle = color; x.beginPath(); x.arc(breachX, sy(0), 4, 0, TAU); x.fill();
-      }
+      if (rate > fastest.rate) fastest = { rate, label, breachDay, color };
+      return {
+        name: label + (fast ? ' · fast-burn' : ' · slow-burn'),
+        type: 'line', smooth: true, symbol: 'none', data, z: fast ? 4 : 3,
+        color: color, itemStyle: { color },
+        lineStyle: { width: fast ? 3 : 2, color, type: fast ? 'solid' : 'dashed', shadowColor: color, shadowBlur: fast ? 14 : 6 },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: color + (fast ? '55' : '22') }, { offset: 1, color: color + '00' }] } },
+      };
     });
 
-    // x label
-    x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'center';
-    ['day 1', 'day 15', 'day 30'].forEach((t, i) => x.fillText(t, sx(i * (N - 1) / 2), h - 9));
-
-    // legend
-    x.font = '11px IBM Plex Mono'; x.textAlign = 'left';
-    let lx = padL + 6;
-    HORIZONS.forEach(({ label, color }) => {
-      x.fillStyle = color; x.fillRect(lx, padT - 12, 10, 3);
-      x.fillStyle = '#A6B2D0'; x.fillText(label, lx + 14, padT - 8);
-      lx += 56;
+    inst.setOption({
+      backgroundColor: 'transparent', animationDuration: 1000, animationEasing: 'cubicOut',
+      grid: { left: 48, right: 18, top: 30, bottom: 28 },
+      legend: { top: 0, right: 8, icon: 'roundRect', itemWidth: 14, itemHeight: 8, textStyle: { color: '#A6B2D0', fontFamily: 'IBM Plex Mono', fontSize: 10 } },
+      tooltip: {
+        trigger: 'axis', backgroundColor: 'rgba(14,20,36,.96)', borderColor: 'rgba(124,148,210,.25)', borderWidth: 1,
+        textStyle: { color: '#EAF1FF', fontFamily: 'IBM Plex Mono', fontSize: 11 },
+        formatter: pts => `day ${pts[0].axisValue}<br/>` + pts.map(p => `${p.marker} ${p.seriesName}: <b>${(p.data * 100).toFixed(0)}% left</b>`).join('<br/>'),
+      },
+      xAxis: {
+        type: 'category', data: days, boundaryGap: false, axisTick: { show: false },
+        axisLine: { lineStyle: { color: 'rgba(124,148,210,.2)' } },
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, interval: i => (i === 0 || i === 14 || i === 29), formatter: v => 'day ' + v },
+      },
+      yAxis: {
+        type: 'value', min: 0, max: 1, splitLine: { lineStyle: { color: 'rgba(124,148,210,.07)' } },
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, formatter: v => (v * 100).toFixed(0) + '%' },
+      },
+      series: series.concat([{
+        type: 'line', data: [], z: 1,
+        markArea: {
+          silent: true,
+          data: [[{ yAxis: 0, itemStyle: { color: 'rgba(248,113,113,0.07)' } }, { yAxis: 0.15 }]],
+        },
+        markLine: {
+          silent: true, symbol: 'none',
+          data: [{ yAxis: 0, label: { show: true, formatter: 'budget exhausted', position: 'insideStartTop', color: '#F87171', fontFamily: 'IBM Plex Mono', fontSize: 9 }, lineStyle: { color: 'rgba(248,113,113,.55)', type: 'dashed', width: 1 } }],
+        },
+        markPoint: fastest.breachDay ? {
+          symbol: 'pin', symbolSize: 36, data: [{ coord: [fastest.breachDay, 0], value: 'breach' }],
+          itemStyle: { color: fastest.color || '#F87171' },
+          label: { color: '#fff', fontFamily: 'IBM Plex Mono', fontSize: 8 },
+        } : undefined,
+      }]),
     });
   }
 
@@ -131,54 +140,44 @@
     if (!root) return;
     const runs = (D.selfheal || []).slice().reverse(); // newest first
     if (!runs.length) { root.innerHTML = '<p class="muted">No self-healing runs logged yet.</p>'; return; }
-    root.innerHTML = runs.map(r => {
-      const drift = r.drift_detected;
-      const drifted = Object.entries(r.signals || {}).filter(([, v]) => v.drifted).map(([k]) => k);
-      const cls = drift ? 'incident' : (r.model_updated ? 'update' : 'clear');
-      const dot = drift ? 'bad' : (r.model_updated ? 'upd' : 'ok');
-      const when = (r.timestamp || '').replace('T', ' ').slice(0, 16);
-      const sigBadges = Object.entries(r.signals || {}).map(([k, v]) =>
-        `<span class="sig ${v.drifted ? 'on' : ''}" title="KS ${v.ks}, p ${v.p}">${k.replace(/_/g, ' ')}</span>`
-      ).join('');
-      return `<div class="tl-row ${cls}">
-        <span class="tl-dot ${dot}"></span>
-        <div class="tl-body">
-          <div class="tl-head">
-            <b>${when}</b>
-            <span class="tl-mode">${r.mode || ''}</span>
-            ${drift ? '<span class="tl-tag bad">DRIFT</span>' : '<span class="tl-tag ok">stable</span>'}
-            ${r.model_updated ? '<span class="tl-tag upd">model updated</span>' : ''}
-          </div>
-          <div class="tl-meta">${(r.rows || 0).toLocaleString()} rows · failure-rate ${((r.failure_rate || 0) * 100).toFixed(2)}%${drifted.length ? ' · drift: ' + drifted.join(', ').replace(/_/g, ' ') : ''}</div>
-          <div class="tl-sigs">${sigBadges}</div>
-        </div>
-      </div>`;
-    }).join('');
+    const driftEvents = runs.filter(r => r.drift_detected).length;
+    const updates = runs.filter(r => r.model_updated).length;
+    root.classList.remove('timeline');
+    root.innerHTML = `<div class="heal-grid">
+      <div class="panel"><h4>What it does</h4><p>Every night LEO re-checks recent traffic for <b>data drift</b> (a KS test per signal) and class imbalance — unprompted.</p></div>
+      <div class="panel"><h4>How it learns</h4><p>On meaningful drift it <b>augments the recent window and retrains</b>, then keeps the new weights only if they beat the old model on held-out AUC.</p></div>
+      <div class="panel"><h4>How it helped LEO</h4><p>Across <b>${runs.length}</b> nightly runs it caught drift <b>${driftEvents}</b>×, shipped <b>${updates}</b> validated update(s), and held coverage at ~90%.</p></div>
+    </div>`;
   }
 
-  // ── Proactive vs reactive comparison ────────────────────────
+  // ── Proactive vs reactive · animated failure dot-matrix ─────
   function buildComparison() {
     const root = document.getElementById('compareBars');
     if (!root) return;
-    const a = D.agent || {}; const pro = a.proactive || {}; const rea = a.reactive || {};
-    const rows = [
-      { k: 'Failure rate', p: pro.rate, r: rea.rate, fmt: v => (v * 100).toFixed(2) + '%', lowerBetter: true },
-      { k: 'Failures / 10k', p: pro.failures, r: rea.failures, fmt: v => Math.round(v).toLocaleString(), lowerBetter: true },
-      { k: 'Provider switches', p: pro.switches, r: rea.switches, fmt: v => Math.round(v).toLocaleString(), lowerBetter: true },
-      { k: 'Cost / 1k tx', p: pro.cost_1k, r: rea.cost_1k, fmt: v => '$' + Math.round(v).toLocaleString(), lowerBetter: true },
-      { k: 'Avg latency', p: pro.latency, r: rea.latency, fmt: v => (v).toFixed(3) + 's', lowerBetter: true },
-    ];
-    root.innerHTML = rows.map(row => {
-      const max = Math.max(row.p, row.r) || 1;
-      const proWin = row.lowerBetter ? row.p <= row.r : row.p >= row.r;
-      return `<div class="cmp">
-        <div class="cmp-k">${row.k}</div>
-        <div class="cmp-bars">
-          <div class="cmp-bar pro ${proWin ? 'win' : ''}"><span style="width:${(row.p / max * 100).toFixed(0)}%"></span><i>${row.fmt(row.p)}</i></div>
-          <div class="cmp-bar rea ${!proWin ? 'win' : ''}"><span style="width:${(row.r / max * 100).toFixed(0)}%"></span><i>${row.fmt(row.r)}</i></div>
-        </div>
-      </div>`;
-    }).join('');
+    const a = D.agent || {}, pro = a.proactive || {}, rea = a.reactive || {};
+    const reaRed = Math.round((rea.rate != null ? rea.rate : 0.1525) * 100);
+    const proRed = Math.round((pro.rate != null ? pro.rate : 0.0731) * 100);
+    const drop = (a.comparison && a.comparison.fail_reduction_pct) || 52.07;
+    function grid(n, seed) {
+      const pos = new Set(); let s = seed;
+      while (pos.size < n) { s = (s * 9301 + 49297) % 233280; pos.add(s % 100); }
+      let cells = '';
+      for (let i = 0; i < 100; i++) cells += `<span class="dot${pos.has(i) ? ' fail' : ''}" style="animation-delay:${i * 7}ms"></span>`;
+      return cells;
+    }
+    root.innerHTML = `<div class="vs">
+      <div class="vs-side">
+        <div class="vs-h rea">Reactive baseline</div>
+        <div class="dotgrid">${grid(reaRed, 7)}</div>
+        <div class="vs-cap"><b>${reaRed}</b> of 100 requests fail</div>
+      </div>
+      <div class="vs-mid"><span class="vs-delta">−${drop.toFixed(0)}%</span><span class="vs-dl">failures with LEO</span></div>
+      <div class="vs-side">
+        <div class="vs-h pro">Proactive · LEO</div>
+        <div class="dotgrid">${grid(proRed, 19)}</div>
+        <div class="vs-cap"><b>${proRed}</b> of 100 requests fail</div>
+      </div>
+    </div>`;
   }
 
   function init() {

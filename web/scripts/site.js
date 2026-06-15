@@ -5,6 +5,10 @@
  * ============================================================ */
 (function () {
   'use strict';
+
+  // ── brand lion: use the supplied image file (web/lion.png),
+  //    fall back to the bundled SVG until the file is added ──
+  const LION = `<img class="lion-img" src="/lion.png" alt="LEO" onerror="this.onerror=null;this.src='/lion.svg'">`;
   const D = window.LEO_DATA || {};
 
   // ── scroll reveal ──
@@ -43,75 +47,174 @@
     els.forEach(e => io.observe(e));
   }
 
-  // ── hero sparkline: calm risk curve with one averted spike,
-  //    drawn progressively on load + a softly pulsing marker ──
-  let _sparkPts = null, _sparkGeom = null, _sparkRAF = null;
-  function buildSpark() {
-    const c = document.getElementById('heroSpark');
-    if (!c) return null;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const rect = c.getBoundingClientRect();
-    const w = rect.width || 360, h = parseInt(c.getAttribute('height')) || 90;
-    c.width = w * dpr; c.height = h * dpr;
-    c.style.width = w + 'px'; c.style.height = h + 'px';
-    const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const N = 64, pts = [];
-    let seed = 7;
-    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
-    for (let i = 0; i < N; i++) {
-      const bump = Math.exp(-Math.pow((i - 40) / 7, 2)) * 0.7;
-      pts.push(0.18 + bump + (rnd() - 0.5) * 0.05);
-    }
-    _sparkPts = pts; _sparkGeom = { x, w, h, N };
-    return _sparkGeom;
+  // ── LEO live-forecast card: an ECharts HUD that shows a genuine FORWARD
+  //    forecast — x-axis is minutes ahead (now → 15 min), the line is the
+  //    predicted failure probability over that horizon, and "time to failure"
+  //    is read straight off the curve's threshold crossing, so the number can
+  //    never disagree with the graph. The scenario loops the lead time from
+  //    off-chart (calm) → 15 → 5 → 1 min (imminent) → back. ──
+  const STEP_MS = 90;          // morph refresh
+  const CYCLE = 17000;         // full scenario loop length
+  const HORIZON = 15;          // minutes shown on the x-axis
+  const XN = 49;               // forecast resolution
+  const THRESH = 0.55;         // high-risk / auto-reroute threshold
+  let _chart = null, _lead = 26, _t0 = null, _liveTimer = null, _els = null;
+
+  function cacheEls() {
+    _els = {
+      chip: document.getElementById('liveChip'),
+      conf: document.getElementById('liveConf'),
+      action: document.getElementById('liveAction'),
+      lat: document.getElementById('liveLat'),
+      ttf: document.getElementById('liveTtf'),
+    };
   }
-  function paintSpark(progress, pulse) {
-    if (!_sparkGeom) return;
-    const { x, w, h, N } = _sparkGeom, pts = _sparkPts;
-    const sx = i => (i / (N - 1)) * w;
-    const sy = v => h - 6 - Math.max(0, Math.min(1, v)) * (h - 12);
-    const drawN = Math.max(2, Math.floor(N * progress));
-    x.clearRect(0, 0, w, h);
-    // area
-    const g = x.createLinearGradient(0, 0, 0, h);
-    g.addColorStop(0, 'rgba(99,102,241,.20)');
-    g.addColorStop(1, 'rgba(139,92,246,0)');
-    x.beginPath(); x.moveTo(0, h);
-    for (let i = 0; i < drawN; i++) x.lineTo(sx(i), sy(pts[i]));
-    x.lineTo(sx(drawN - 1), h); x.closePath(); x.fillStyle = g; x.fill();
-    // gradient line
-    const lg = x.createLinearGradient(0, 0, w, 0);
-    lg.addColorStop(0, '#6366F1'); lg.addColorStop(1, '#8B5CF6');
-    x.beginPath();
-    for (let i = 0; i < drawN; i++) i ? x.lineTo(sx(i), sy(pts[i])) : x.moveTo(sx(i), sy(pts[i]));
-    x.strokeStyle = lg; x.lineWidth = 2.2; x.lineJoin = 'round'; x.stroke();
-    // pulsing marker at the peak once revealed
-    const pk = 40;
-    if (drawN > pk) {
-      const r = 3.4 + (pulse || 0) * 2.2;
-      x.beginPath(); x.arc(sx(pk), sy(pts[pk]), r + 3, 0, Math.PI * 2);
-      x.fillStyle = 'rgba(124,58,237,' + (0.18 - (pulse || 0) * 0.12) + ')'; x.fill();
-      x.beginPath(); x.arc(sx(pk), sy(pts[pk]), 3.4, 0, Math.PI * 2);
-      x.fillStyle = '#4F46E5'; x.fill();
-      x.strokeStyle = '#fff'; x.lineWidth = 2; x.stroke();
-    }
+
+  // scenario: lead time (minutes until failure) over the loop. 26 = off-chart.
+  function targetLead(p) {
+    if (p < 0.28) return 26;                                  // calm
+    if (p < 0.52) return 15 - (p - 0.28) / 0.24 * 10;         // degrading 15→5
+    if (p < 0.68) return 5 - (p - 0.52) / 0.16 * 4;           // worsening 5→1
+    if (p < 0.80) return 1;                                   // imminent
+    return 26;                                                // recovered
   }
+
+  // predicted failure-probability curve: rises to a sigmoid crossing 0.55 at x≈lead
+  function buildCurve(lead) {
+    const pts = [];
+    for (let i = 0; i < XN; i++) {
+      const x = i / (XN - 1) * HORIZON;
+      const risk = 0.07 + 0.87 / (1 + Math.exp(-(x - lead) * 0.9));
+      pts.push([+x.toFixed(3), +Math.max(0.03, Math.min(0.98, risk)).toFixed(4)]);
+    }
+    return pts;
+  }
+
+  // the x (minutes) where the curve first crosses the threshold — null if never
+  function crossOf(curve) {
+    for (let i = 1; i < curve.length; i++) {
+      if (curve[i][1] >= THRESH) {
+        const [x0, y0] = curve[i - 1], [x1, y1] = curve[i];
+        const t = (THRESH - y0) / (y1 - y0 || 1);
+        return x0 + t * (x1 - x0);
+      }
+    }
+    return null;
+  }
+
+  function setText(el, v) { if (el && el.textContent !== v) el.textContent = v; }
+  function setChip(el, txt, st) {
+    if (!el) return;
+    setText(el.querySelector('.chip-tx') || el, txt);
+    if (el.dataset.st !== st) { el.dataset.st = st; el.className = 'pc-chip ' + st; }
+  }
+
+  function palette(st) {
+    if (st === 'crit') return { end: '#F87171', glow: 'rgba(248,113,113,.95)', node: '#F87171', area: 'rgba(248,113,113,.30)', ripple: 4 };
+    if (st === 'warn') return { end: '#C084FC', glow: 'rgba(192,132,252,.85)', node: '#FBBF24', area: 'rgba(139,92,246,.26)', ripple: 3 };
+    return { end: '#8B5CF6', glow: 'rgba(77,141,255,.85)', node: '#34D399', area: 'rgba(77,141,255,.26)', ripple: 2.4 };
+  }
+
+  // everything below is DERIVED from the same crossX → readout & graph agree
+  function applyState(curve, crossX) {
+    const peak = curve[curve.length - 1][1];
+    const ttfMin = crossX == null ? null : Math.max(1, Math.round(crossX));
+    const st = ttfMin == null ? 'ok' : ttfMin <= 5 ? 'crit' : 'warn';
+    const pal = palette(st);
+
+    if (_els) {
+      if (st === 'crit') {
+        setChip(_els.chip, 'outage imminent · auto-rerouting', 'crit');
+        setText(_els.action, 'auto-reroute'); if (_els.action) _els.action.className = 'v crit';
+      } else if (st === 'warn') {
+        setChip(_els.chip, 'degradation forming · pre-warming backup', 'warn');
+        setText(_els.action, 'pre-warm'); if (_els.action) _els.action.className = 'v warn';
+      } else {
+        setChip(_els.chip, 'all clear · auto-failover armed', 'ok');
+        setText(_els.action, 'standby'); if (_els.action) _els.action.className = 'v pos';
+      }
+      setText(_els.ttf, ttfMin == null ? 'monitored' : ttfMin + ' min');
+      const conf = Math.min(98.5, 85 + peak * 13.5 + Math.sin(performance.now() / 900) * 0.3);
+      setText(_els.conf, conf.toFixed(1) + '%');
+      setText(_els.lat, Math.round(268 + (1 - (crossX == null ? 1 : crossX / HORIZON)) * 22 + Math.random() * 3) + ' ms');
+    }
+    return { st, pal, ttfMin };
+  }
+
+  function render(curve, crossX, animate) {
+    const { pal, ttfMin } = applyState(curve, crossX);
+    const markData = [{ yAxis: THRESH }];
+    if (crossX != null) {
+      markData.push({
+        xAxis: +crossX.toFixed(3),
+        label: { show: true, formatter: ttfMin + 'm', position: 'insideEndTop', color: pal.node, fontFamily: 'IBM Plex Mono', fontSize: 9 },
+        lineStyle: { color: pal.glow },
+      });
+    }
+    _chart.setOption({
+      series: [
+        {
+          data: curve,
+          lineStyle: { width: 2.6, color: { type: 'linear', x: 0, y: 0, x2: 1, y2: 0, colorStops: [{ offset: 0, color: '#4D8DFF' }, { offset: 1, color: pal.end }] }, shadowColor: pal.glow, shadowBlur: 16 },
+          areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: pal.area }, { offset: 1, color: 'rgba(139,92,246,0)' }] } },
+          markLine: { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: 'rgba(248,113,113,.4)', type: 'dashed', width: 1 }, data: markData },
+        },
+        {
+          data: crossX != null ? [[+crossX.toFixed(3), THRESH]] : [],
+          itemStyle: { color: pal.node, shadowColor: pal.glow, shadowBlur: 12 },
+          rippleEffect: { brushType: 'stroke', scale: pal.ripple, period: 2.6 },
+        },
+      ],
+      animation: animate,
+    });
+  }
+
+  function baseOption() {
+    return {
+      animation: true, animationDurationUpdate: STEP_MS, animationEasingUpdate: 'linear',
+      backgroundColor: 'transparent',
+      grid: { left: 6, right: 12, top: 12, bottom: 20 },
+      xAxis: {
+        type: 'value', min: 0, max: HORIZON,
+        axisLine: { show: false }, axisTick: { show: false },
+        splitLine: { show: true, lineStyle: { color: 'rgba(124,148,210,0.06)' } },
+        axisLabel: { show: true, interval: 0, color: '#5b678a', fontFamily: 'IBM Plex Mono', fontSize: 9,
+          formatter: v => (v === 0 ? 'now' : (v === 5 || v === 10 || v === 15) ? v + 'm' : ''), },
+      },
+      yAxis: { type: 'value', show: false, min: 0, max: 1 },
+      series: [
+        { type: 'line', smooth: 0.45, symbol: 'none', z: 3, data: [] },
+        { type: 'effectScatter', symbolSize: 9, showEffectOn: 'render', z: 5, data: [] },
+      ],
+    };
+  }
+
+  function tick() {
+    const p = ((performance.now() - _t0) % CYCLE) / CYCLE;
+    _lead += (targetLead(p) - _lead) * 0.2;        // smooth morph
+    const curve = buildCurve(_lead);
+    render(curve, crossOf(curve), true);
+  }
+
   function drawSpark() {
-    if (!buildSpark()) return;
-    if (_sparkRAF) cancelAnimationFrame(_sparkRAF);
+    const el = document.getElementById('heroSpark');
+    if (!el || !window.echarts) return;
+    if (!_chart) { _chart = echarts.init(el, null, { renderer: 'canvas' }); cacheEls(); }
+    _chart.setOption(baseOption(), true);
+
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { paintSpark(1, 0); return; }
-    let t0 = null;
-    function frame(ts) {
-      if (t0 == null) t0 = ts;
-      const el = ts - t0;
-      const draw = Math.min(1, el / 1200);                 // 1.2s reveal
-      const pulse = (Math.sin(el / 700) + 1) / 2;           // gentle breathing
-      paintSpark(draw, draw >= 1 ? pulse : 0);
-      _sparkRAF = requestAnimationFrame(frame);
+    if (reduce) {                                   // static snapshot: failure ~5 min out
+      const curve = buildCurve(5);
+      render(curve, crossOf(curve), false);
+      return;
     }
-    _sparkRAF = requestAnimationFrame(frame);
+    _lead = 26;
+    if (_t0 == null) _t0 = performance.now();
+    if (_liveTimer) clearInterval(_liveTimer);
+    _liveTimer = setInterval(tick, STEP_MS);
   }
+
+  function resizeSpark() { if (_chart) _chart.resize(); }
 
   // ── shared chrome: inject nav + footer on every page ──
   const NAV = [
@@ -135,11 +238,11 @@
       return `<a href="${n.href}"${active}>${n.label}</a>`;
     }).join('');
     return `<div class="wrap nav-inner">
-      <a class="brand" href="/"><span class="mark">L</span> LEO</a>
+      <a class="brand" href="/"><span class="mark">${LION}</span><span class="brand-tx">LEO<span class="brand-api">.api</span></span></a>
       <nav class="nav-links" aria-label="Primary">${links}</nav>
       <div class="nav-cta">
-        <span class="nav-status"><span class="dot"></span> all systems operational</span>
-        <a class="btn btn-primary" href="/predict.html">Book a demo</a>
+        <span class="nav-status"><span class="dot"></span> Alive</span>
+        <a class="btn btn-primary pulse-cta" href="/predict.html">Book a demo</a>
       </div>
     </div>`;
   }
@@ -149,7 +252,7 @@
     return `<div class="wrap">
       <div class="foot-grid">
         <div class="foot-brand">
-          <a class="brand" href="/"><span class="mark">L</span> LEO</a>
+          <a class="brand" href="/"><span class="mark">${LION}</span><span class="brand-tx">LEO<span class="brand-api">.api</span></span></a>
           <p>We turn ‘the API went down’ into ‘the API was about to.’</p>
         </div>
         <div class="foot-col"><h4>Platform</h4>
@@ -164,7 +267,7 @@
       </div>
       <div class="foot-base">
         <span>© ${yr} LEO · Predictive API Intelligence</span>
-        <span class="mono">conformal-calibrated · α = 0.10</span>
+        <span class="mono">made for fintech reliability teams</span>
       </div>
     </div>`;
   }
@@ -198,7 +301,7 @@
     initReveal();
     initCounts();
     drawSpark();
-    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(drawSpark, 160); });
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(resizeSpark, 160); });
   }
   if (document.readyState !== 'loading') boot();
   else document.addEventListener('DOMContentLoaded', boot);

@@ -63,58 +63,52 @@
   }
 
   let RUNS = [];
+  let SELECTED = null;   // signal key to isolate in the trend chart (null = all)
 
   function drawDriftChart() {
-    const ref = ctxFor('driftChart');
-    if (!ref || !RUNS.length) return;
-    const { x, w, h } = ref;
-    const padL = 44, padR = 14, padT = 22, padB = 30;
+    const el = document.getElementById('driftChart');
+    if (!el || !window.echarts || !RUNS.length) return;
+    const inst = echarts.getInstanceByDom(el) || echarts.init(el, null, { renderer: 'canvas' });
     const N = RUNS.length;
-    let maxKS = KS_GUIDE * 1.4;
-    RUNS.forEach(r => SIGNALS.forEach(s => {
-      const v = r.signals && r.signals[s.k] && r.signals[s.k].ks;
-      if (v != null) maxKS = Math.max(maxKS, v);
+    const idx = RUNS.map((_, i) => i + 1);
+    const shown = SELECTED ? SIGNALS.filter(s => s.k === SELECTED) : SIGNALS;
+
+    const series = shown.map(s => ({
+      name: s.label, type: 'line', smooth: true, symbol: 'circle', symbolSize: 5,
+      data: RUNS.map(r => { const c = r.signals && r.signals[s.k]; return (c && c.ks != null) ? +c.ks.toFixed(4) : null; }),
+      color: s.color, itemStyle: { color: s.color },
+      lineStyle: { width: 2, color: s.color, shadowColor: s.color, shadowBlur: 8 },
+      // glow the points that actually flagged drift
+      markPoint: {
+        symbol: 'circle', symbolSize: 9,
+        data: RUNS.map((r, i) => { const c = r.signals && r.signals[s.k]; return (c && c.drifted) ? { coord: [i + 1, +c.ks.toFixed(4)] } : null; }).filter(Boolean),
+        itemStyle: { color: s.color, shadowColor: s.color, shadowBlur: 14 }, label: { show: false },
+      },
     }));
 
-    const sx = i => padL + (N === 1 ? 0.5 : i / (N - 1)) * (w - padL - padR);
-    const sy = v => padT + (1 - clamp(v / maxKS, 0, 1)) * (h - padT - padB);
-
-    x.clearRect(0, 0, w, h);
-    x.strokeStyle = 'rgba(124,148,210,0.10)'; x.lineWidth = 1;
-    for (let g = 0; g <= 4; g++) {
-      const v = maxKS * g / 4, y = sy(v);
-      x.beginPath(); x.moveTo(padL, y); x.lineTo(w - padR, y); x.stroke();
-      x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'right';
-      x.fillText(v.toFixed(2), padL - 6, y + 3);
-    }
-    // effect-size guide
-    x.strokeStyle = 'rgba(239,68,68,0.45)'; x.setLineDash([5, 4]);
-    x.beginPath(); x.moveTo(padL, sy(KS_GUIDE)); x.lineTo(w - padR, sy(KS_GUIDE)); x.stroke(); x.setLineDash([]);
-    x.fillStyle = '#ef4444'; x.font = '10px IBM Plex Mono'; x.textAlign = 'left';
-    x.fillText('drift guide · KS ' + KS_GUIDE.toFixed(2), padL + 6, sy(KS_GUIDE) - 5);
-
-    SIGNALS.forEach(s => {
-      x.strokeStyle = s.color; x.lineWidth = 2; x.beginPath();
-      let started = false;
-      RUNS.forEach((r, i) => {
-        const v = r.signals && r.signals[s.k] && r.signals[s.k].ks;
-        if (v == null) return;
-        started ? x.lineTo(sx(i), sy(v)) : x.moveTo(sx(i), sy(v));
-        started = true;
-      });
-      x.stroke();
-      // dot on drifted points
-      RUNS.forEach((r, i) => {
-        const cell = r.signals && r.signals[s.k];
-        if (cell && cell.drifted) {
-          x.fillStyle = s.color; x.beginPath(); x.arc(sx(i), sy(cell.ks), 3.5, 0, TAU); x.fill();
-        }
-      });
-    });
-
-    x.fillStyle = '#6F7C9C'; x.font = '10px IBM Plex Mono'; x.textAlign = 'center';
-    x.fillText('run 1', sx(0), h - 9);
-    x.fillText('latest', sx(N - 1), h - 9);
+    inst.setOption({
+      backgroundColor: 'transparent', animationDuration: 900, animationEasing: 'cubicOut',
+      grid: { left: 46, right: 16, top: 16, bottom: 26 },
+      tooltip: {
+        trigger: 'axis', backgroundColor: 'rgba(14,20,36,.96)', borderColor: 'rgba(124,148,210,.25)', borderWidth: 1,
+        textStyle: { color: '#EAF1FF', fontFamily: 'IBM Plex Mono', fontSize: 11 },
+      },
+      xAxis: {
+        type: 'category', data: idx, boundaryGap: false, axisTick: { show: false },
+        axisLine: { lineStyle: { color: 'rgba(124,148,210,.2)' } },
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, interval: i => (i === 0 || i === N - 1), formatter: v => (v === 1 ? 'run 1' : v === N ? 'latest' : '') },
+      },
+      yAxis: {
+        type: 'value', min: 0, splitLine: { lineStyle: { color: 'rgba(124,148,210,.07)' } },
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, formatter: v => v.toFixed(2) },
+      },
+      series: series.concat([{
+        type: 'line', data: [],
+        markLine: { silent: true, symbol: 'none', data: [{ yAxis: KS_GUIDE }],
+          label: { show: true, formatter: 'drift trigger · KS ' + KS_GUIDE.toFixed(2), position: 'insideStartTop', color: '#F87171', fontFamily: 'IBM Plex Mono', fontSize: 9 },
+          lineStyle: { color: 'rgba(248,113,113,.5)', type: 'dashed', width: 1 } },
+      }]),
+    }, true);
   }
 
   function buildLegend() {
@@ -132,7 +126,8 @@
       const ks = cell.ks != null ? cell.ks : 0;
       const drifted = !!cell.drifted;
       const ratio = clamp(ks / (KS_GUIDE * 1.6), 0, 1);
-      return `<div class="sg-card ${drifted ? 'drift' : ''}">
+      const active = SELECTED === s.k ? ' active' : '';
+      return `<div class="sg-card${drifted ? ' drift' : ''}${active}" data-sig="${s.k}" role="button" tabindex="0" title="Isolate this signal in the trend">
         <div class="sg-top"><span class="sg-dot" style="background:${s.color}"></span><span class="sg-name">${s.label}</span>
           <span class="sg-badge ${drifted ? 'bad' : 'ok'}">${drifted ? 'DRIFT' : 'stable'}</span></div>
         <div class="sg-ks">KS ${ks.toFixed(4)}</div>
@@ -163,6 +158,20 @@
     drawDriftChart();
     buildGrid();
     buildSummary();
+
+    // click a signal card → isolate its line in the trend (click again to reset)
+    const grid = document.getElementById('signalGrid');
+    if (grid) {
+      const toggle = el => {
+        const card = el.closest('[data-sig]'); if (!card) return;
+        SELECTED = (SELECTED === card.dataset.sig) ? null : card.dataset.sig;
+        grid.querySelectorAll('.sg-card').forEach(c => c.classList.toggle('active', c.dataset.sig === SELECTED));
+        drawDriftChart();
+      };
+      grid.addEventListener('click', e => toggle(e.target));
+      grid.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(e.target); } });
+    }
+
     let t;
     window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(drawDriftChart, 160); });
   }

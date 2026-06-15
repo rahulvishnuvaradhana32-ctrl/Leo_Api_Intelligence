@@ -9,23 +9,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
 
   <div class="page-head reveal">
     <span class="page-tag">Cite &amp; Docs</span>
-    <h1 class="page-title">Cite the work, read the <span class="grad">docs</span></h1>
+    <h1 class="page-title">Cite the work, read the <span class="grad">methodology</span></h1>
     <p class="page-lede">
-      LEO is reproducible end-to-end. Every figure on this site traces back to its underlying JSON,
-      and the conformal guarantee is independently verifiable on any held-out partition. Reference it below,
-      browse the source, or hit the live API.
+      LEO is reproducible end-to-end. Every metric on this site traces to a source artifact, the conformal
+      coverage guarantee is independently verifiable on any held-out partition, and the training and
+      evaluation pipeline carries no proprietary dependencies. Reference it, audit it, or call the live API.
     </p>
   </div>
 
   <div class="leo-says reveal"
-       data-msg="The deployment surface is intentionally lean: pure **PyTorch** with no proprietary dependencies, suitable for in-house GPU infrastructure or CPU inference inside existing risk-segregated environments. The training pipeline is reproducible end-to-end and every result is traceable to its source JSON. The platform is engineered to **withstand model validation**, not to evade it."></div>
+       data-msg="Methodologically, LEO pairs a **Bi-LSTM with multi-head attention** for multi-horizon forecasting with **split-conformal calibration** for distribution-free coverage — a guarantee that holds without assumptions on the score distribution. The stack is pure **PyTorch**, deployable on in-house GPU or CPU inside risk-segregated environments, and engineered to **withstand model validation**, not evade it."></div>
 
   <!-- ── Citation ── -->
   <section class="rel-section reveal">
@@ -34,7 +34,7 @@
       <p class="muted" style="margin:0 0 12px;font-size:13px">BibTeX</p>
       <pre style="overflow:auto;font-family:var(--mono);font-size:12.5px;color:var(--accent-d);background:var(--bg-2);padding:16px;border-radius:10px">@misc{vishnuvardhana2026leo,
   author = {Rahul Vishnuvardhana},
-  title  = {LEO: Multi-Horizon Conformal Forecasting of Banking-API Failures},
+  title  = {LEO API Intelligence},
   year   = {2026},
   url    = {https://github.com/rahulvishnuvaradhana32-ctrl/Leo_Api_Intelligence}
 }</pre>
@@ -44,19 +44,12 @@
   <!-- ── Quick facts & links ── -->
   <section class="rel-section reveal" data-d="1">
     <h3 class="rel-h">Quick facts &amp; links</h3>
-    <div class="split">
-      <div class="panel">
-        <div class="line"><span>source</span><b><a href="https://github.com/rahulvishnuvaradhana32-ctrl/Leo_Api_Intelligence" target="_blank" rel="noopener" style="color:var(--accent-d)">github.com/…/Leo_Api_Intelligence</a></b></div>
-        <div class="line"><span>live api</span><b><a href="https://leo-api-intelligence.onrender.com" target="_blank" rel="noopener" style="color:var(--accent-d)">leo-api-intelligence.onrender.com</a></b></div>
-        <div class="line"><span>license</span><b>MIT</b></div>
-        <div class="line"><span>contact</span><b>Rahul Vishnuvardhana</b></div>
-      </div>
-      <div class="stat-grid">
-        <div class="stat"><b>MIT</b><span>license</span></div>
-        <div class="stat"><b>LSTM</b><span>MultiHorizonLSTM</span></div>
-        <div class="stat"><b>1.22M</b><span>dataset rows</span></div>
-        <div class="stat"><b>2026</b><span>release year</span></div>
-      </div>
+    <div class="panel">
+      <div class="line"><span>source</span><b><a href="https://github.com/rahulvishnuvaradhana32-ctrl/Leo_Api_Intelligence" target="_blank" rel="noopener" style="color:var(--accent-d)">github.com/…/Leo_Api_Intelligence</a></b></div>
+      <div class="line"><span>live api</span><b><a href="https://leo-api-intelligence.onrender.com" target="_blank" rel="noopener" style="color:var(--accent-d)">leo-api-intelligence.onrender.com</a></b></div>
+      <div class="line"><span>model</span><b>Bi-LSTM + multi-head attention · conformal-calibrated</b></div>
+      <div class="line"><span>license</span><b>MIT</b></div>
+      <div class="line"><span>contact</span><b>Rahul Vishnuvardhana</b></div>
     </div>
   </section>
 
@@ -80,6 +73,6 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
+<script src="/scripts/site.js?v=14"></script>
 </body>
 </html>

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
@@ -33,12 +33,12 @@
         <span class="rel-sub">attention-LSTM · live from <code>lstm_results.json</code></span></div>
     </div>
     <div class="stat-grid" id="resultStats">
-      <div class="stat"><b id="statAuc">0.8202</b><span>avg ROC-AUC · 82.02%</span></div>
-      <div class="stat"><b id="statH1">0.8373</b><span>AUC · h+1 (1-min)</span></div>
-      <div class="stat"><b id="statH5">0.8140</b><span>AUC · h+5 (5-min)</span></div>
-      <div class="stat"><b id="statH15">0.8092</b><span>AUC · h+15 (15-min)</span></div>
-      <div class="stat"><b id="statPr">0.5383</b><span>avg PR-AUC</span></div>
-      <div class="stat"><b id="statP100">1.000</b><span>precision @ 100</span></div>
+      <div class="stat"><b id="statAuc">82.02%</b><span class="sub" id="statAucRaw">0.8202 ROC-AUC</span><span>avg across 3 horizons</span></div>
+      <div class="stat"><b id="statH1">83.73%</b><span class="sub" id="statH1Raw">0.8373 ROC-AUC</span><span>h+1 · 1-min ahead</span></div>
+      <div class="stat"><b id="statH5">81.40%</b><span class="sub" id="statH5Raw">0.8140 ROC-AUC</span><span>h+5 · 5-min ahead</span></div>
+      <div class="stat"><b id="statH15">80.92%</b><span class="sub" id="statH15Raw">0.8092 ROC-AUC</span><span>h+15 · 15-min ahead</span></div>
+      <div class="stat"><b id="statPr">53.83%</b><span class="sub" id="statPrRaw">0.5383 PR-AUC</span><span>avg precision–recall</span></div>
+      <div class="stat"><b id="statP100">100.0%</b><span class="sub" id="statP100Raw">1.000 P@100</span><span>top-100 alert precision</span></div>
     </div>
   </section>
 
@@ -47,11 +47,12 @@
     <div class="rel-head">
       <div><h3 class="rel-h">Training trajectory</h3>
         <span class="rel-sub">30 epochs · live from <code>lstm_results.json</code></span></div>
-      <div class="cmp-legend">
-        <span class="cl pro">Train</span><span class="cl rea">Validation</span>
+      <div class="rel-sub" style="display:flex;gap:16px;align-items:center">
+        <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4D8DFF;margin-right:6px;vertical-align:middle"></i>Train</span>
+        <span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#8B5CF6;margin-right:6px;vertical-align:middle"></i>Validation</span>
       </div>
     </div>
-    <canvas id="lossChart" class="chart" height="240"></canvas>
+    <div id="lossChart" class="chart" style="height:280px"></div>
   </section>
 
   <!-- ── Feature-group ablation ── -->
@@ -70,30 +71,82 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/charts.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
+<script src="/scripts/charts.js?v=14"></script>
+<script src="/scripts/vendor/echarts.min.js"></script>
+<script src="/scripts/site.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   // Pull verified numbers straight from data.js where present.
   const L = (window.LEO_DATA && window.LEO_DATA.lstm) || null;
   if (L) {
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('statAuc', L.avg_auc.toFixed(4));
-    set('statH1',  L.per_horizon.h1.auc.toFixed(4));
-    set('statH5',  L.per_horizon.h5.auc.toFixed(4));
-    set('statH15', L.per_horizon.h15.auc.toFixed(4));
-    set('statPr',  L.avg_pr_auc.toFixed(4));
-    set('statP100', L.per_horizon.h1.p100.toFixed(3));
+    const pct = (v, d = 2) => (v * 100).toFixed(d) + '%';   // headline = percentage
+    const ph = L.per_horizon;
+    // main number = %, subtitle = the raw value we measured
+    set('statAuc',  pct(L.avg_auc));      set('statAucRaw',  L.avg_auc.toFixed(4) + ' ROC-AUC');
+    set('statH1',   pct(ph.h1.auc));      set('statH1Raw',   ph.h1.auc.toFixed(4) + ' ROC-AUC');
+    set('statH5',   pct(ph.h5.auc));      set('statH5Raw',   ph.h5.auc.toFixed(4) + ' ROC-AUC');
+    set('statH15',  pct(ph.h15.auc));     set('statH15Raw',  ph.h15.auc.toFixed(4) + ' ROC-AUC');
+    set('statPr',   pct(L.avg_pr_auc));   set('statPrRaw',   L.avg_pr_auc.toFixed(4) + ' PR-AUC');
+    set('statP100', pct(ph.h1.p100, 1));  set('statP100Raw', ph.h1.p100.toFixed(3) + ' P@100');
   }
-  if (window.LEO_CHARTS) {
-    window.LEO_CHARTS.drawLossChart();
-    window.LEO_CHARTS.buildAblationBars();
-    let t;
-    window.addEventListener('resize', () => {
-      clearTimeout(t);
-      t = setTimeout(() => window.LEO_CHARTS.drawLossChart(), 180);
+
+  // ── Training trajectory · ECharts neon line (glow + gradient + best-val node) ──
+  function drawLossEC() {
+    const el = document.getElementById('lossChart');
+    if (!el || !window.echarts || !L || !L.train_losses.length) return;
+    const inst = echarts.init(el, null, { renderer: 'canvas' });
+    const train = L.train_losses, val = L.val_losses, N = train.length;
+    const minVal = Math.min(...val), minIdx = val.indexOf(minVal);
+    const all = train.concat(val), lo = Math.min(...all), hi = Math.max(...all);
+    const area = (c) => ({ type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: c }, { offset: 1, color: 'rgba(139,92,246,0)' }] });
+    inst.setOption({
+      backgroundColor: 'transparent', animationDuration: 900,
+      grid: { left: 56, right: 40, top: 16, bottom: 30 },
+      tooltip: {
+        trigger: 'axis', backgroundColor: 'rgba(14,20,36,.96)', borderColor: 'rgba(124,148,210,.25)', borderWidth: 1,
+        textStyle: { color: '#EAF1FF', fontFamily: 'IBM Plex Mono', fontSize: 11 },
+        formatter: pts => `epoch ${pts[0].axisValue}<br/>` + pts.map(p => `${p.marker} ${p.seriesName}: <b>${(+p.data[1]).toFixed(4)}</b>`).join('<br/>'),
+      },
+      xAxis: {
+        type: 'value', min: 1, max: N + 3, axisTick: { show: false },
+        axisLine: { lineStyle: { color: 'rgba(124,148,210,.2)' } },
+        splitLine: { show: false },
+        // label only real epochs (1, 5, 10, …, N); leave the tail after eN empty
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, interval: 0,
+          formatter: v => (v <= N && (v === 1 || v % 5 === 0)) ? 'e' + v : '' },
+      },
+      yAxis: {
+        type: 'value', min: +(lo - 0.001).toFixed(4), max: +(hi + 0.001).toFixed(4),
+        splitLine: { lineStyle: { color: 'rgba(124,148,210,.07)' } },
+        axisLabel: { color: '#6F7C9C', fontFamily: 'IBM Plex Mono', fontSize: 10, formatter: v => v.toFixed(4) },
+      },
+      series: [
+        {
+          name: 'Train', type: 'line', smooth: true, symbol: 'none', z: 3,
+          data: train.map((y, i) => [i + 1, y]),
+          lineStyle: { width: 2.4, color: '#4D8DFF', shadowColor: 'rgba(77,141,255,.8)', shadowBlur: 12 },
+          areaStyle: { color: area('rgba(77,141,255,.16)') },
+        },
+        {
+          name: 'Validation', type: 'line', smooth: true, symbol: 'none', z: 4,
+          data: val.map((y, i) => [i + 1, y]),
+          lineStyle: { width: 2.6, color: '#8B5CF6', shadowColor: 'rgba(139,92,246,.85)', shadowBlur: 14 },
+          areaStyle: { color: area('rgba(139,92,246,.16)') },
+          markPoint: {
+            symbol: 'circle', symbolSize: 10,
+            data: [{ coord: [minIdx + 1, minVal] }],
+            itemStyle: { color: '#34D399', shadowColor: 'rgba(52,211,153,.9)', shadowBlur: 14 },
+            label: { show: true, formatter: 'best\n' + minVal.toFixed(4), position: 'right', distance: 10, align: 'left', lineHeight: 13, color: '#34D399', fontFamily: 'IBM Plex Mono', fontSize: 10 },
+          },
+        },
+      ],
     });
+    let t; window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(() => inst.resize(), 180); });
   }
+
+  drawLossEC();
+  if (window.LEO_CHARTS) window.LEO_CHARTS.buildAblationBars();
 });
 </script>
 </body>

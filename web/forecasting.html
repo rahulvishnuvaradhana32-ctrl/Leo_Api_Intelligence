@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=4">
+<link rel="stylesheet" href="/styles/leo.css?v=33">
 </head>
 <body>
 <main><div class="page">
@@ -31,9 +31,6 @@
     <div class="rel-head">
       <div><h3 class="rel-h">Three calibrated futures from a single forward pass</h3>
         <span class="rel-sub">animated playback · dashed line marks the <code>0.55</code> high-risk threshold</span></div>
-      <div class="cmp-legend">
-        <span class="cl pro">h+1</span><span class="cl rea">h+5 · h+15</span>
-      </div>
     </div>
     <div class="split">
       <canvas id="forecastChart" class="chart" height="360"></canvas>
@@ -54,8 +51,8 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/charts.js?v=12"></script>
-<script src="/scripts/site.js?v=5"></script>
+<script src="/scripts/charts.js?v=14"></script>
+<script src="/scripts/site.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_CHARTS) window.LEO_CHARTS.drawForecastChart();
