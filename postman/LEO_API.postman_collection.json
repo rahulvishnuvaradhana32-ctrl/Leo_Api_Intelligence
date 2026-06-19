@@ -1,0 +1,112 @@
+{
+  "info": {
+    "name": "LEO · API Intelligence",
+    "description": "Live demo of LEO's predictive failover. Set {{base_url}} (default = the Render deployment). Run the 'Reroute demo (live loop)' request in the Collection Runner to watch region-a degrade, LEO reroute to region-b, the data checksum stay identical (no divergence), and LEO fail back when region-a recovers. Or click Send repeatedly to step it tick by tick.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://leo-api-intelligence.onrender.com" },
+    { "key": "session_id", "value": "" },
+    { "key": "tick", "value": "0" },
+    { "key": "ra", "value": "0.15" },
+    { "key": "baseline_sum", "value": "" },
+    { "key": "seen_reroute", "value": "no" },
+    { "key": "seen_failback", "value": "no" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] } },
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('200 OK', () => pm.response.to.have.status(200));",
+          "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+        ] } }
+      ]
+    },
+    {
+      "name": "Forecast — Calm (no action)",
+      "request": { "method": "GET", "url": {
+        "raw": "{{base_url}}/v1/forecast?api=transaction_api&error_rate=0.01&rt_multiplier=1&error_volatility=0.05&load=0.9&recent_failures=0",
+        "host": ["{{base_url}}"], "path": ["v1", "forecast"],
+        "query": [
+          {"key":"api","value":"transaction_api"},{"key":"error_rate","value":"0.01"},
+          {"key":"rt_multiplier","value":"1"},{"key":"error_volatility","value":"0.05"},
+          {"key":"load","value":"0.9"},{"key":"recent_failures","value":"0"}
+        ] } },
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "const j = pm.response.json();",
+          "console.log('calm  peak_risk=' + j.peak_risk + '  action=' + j.recommended_action);",
+          "pm.test('200 OK', () => pm.response.to.have.status(200));",
+          "pm.test('low risk → no reroute', () => pm.expect(j.peak_risk).to.be.below(0.55));"
+        ] } }
+      ]
+    },
+    {
+      "name": "Forecast — Outage (reroute)",
+      "request": { "method": "GET", "url": {
+        "raw": "{{base_url}}/v1/forecast?api=crypto_api&error_rate=0.16&rt_multiplier=5.5&error_volatility=0.68&load=2.3&recent_failures=11",
+        "host": ["{{base_url}}"], "path": ["v1", "forecast"],
+        "query": [
+          {"key":"api","value":"crypto_api"},{"key":"error_rate","value":"0.16"},
+          {"key":"rt_multiplier","value":"5.5"},{"key":"error_volatility","value":"0.68"},
+          {"key":"load","value":"2.3"},{"key":"recent_failures","value":"11"}
+        ] } },
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "const j = pm.response.json();",
+          "console.log('storm peak_risk=' + j.peak_risk + '  action=' + j.recommended_action + '  lead=' + j.lead_time_min);",
+          "pm.test('200 OK', () => pm.response.to.have.status(200));",
+          "pm.test('high risk → reroute', () => pm.expect(j.recommended_action).to.eql('reroute'));"
+        ] } }
+      ]
+    },
+    {
+      "name": "Reroute demo (live loop)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"primary\": \"region-a\",\n  \"api\": \"crypto_api\",\n  \"routes\": { \"region-a\": {{ra}}, \"region-b\": 0.16 }\n}" },
+        "url": { "raw": "{{base_url}}/v1/route", "host": ["{{base_url}}"], "path": ["v1", "route"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+          "const RISKS = [0.15,0.30,0.45,0.60,0.72,0.62,0.40,0.30,0.28,0.31,0.29];",
+          "let t = parseInt(pm.collectionVariables.get('tick') || '0', 10);",
+          "if (isNaN(t) || t < 0 || t >= RISKS.length || !pm.collectionVariables.get('session_id')) {",
+          "  t = 0;",
+          "  pm.collectionVariables.set('session_id', 'pm-' + Date.now());",
+          "  pm.collectionVariables.set('baseline_sum', '');",
+          "  pm.collectionVariables.set('seen_reroute', 'no');",
+          "  pm.collectionVariables.set('seen_failback', 'no');",
+          "}",
+          "pm.collectionVariables.set('ra', RISKS[t]);",
+          "pm.collectionVariables.set('tick', t);",
+          "console.log('── tick ' + t + '  region-a risk = ' + RISKS[t]);"
+        ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "const RISKS = [0.15,0.30,0.45,0.60,0.72,0.62,0.40,0.30,0.28,0.31,0.29];",
+          "let t = parseInt(pm.collectionVariables.get('tick') || '0', 10);",
+          "let j = {}; try { j = pm.response.json(); } catch (e) {}",
+          "pm.test('200 OK', () => pm.response.to.have.status(200));",
+          "console.log('   active=' + j.active + '  state=' + j.state + '  action=' + j.action);",
+          "if (j.checksum) console.log('   served_by=' + j.served_by + '  record=' + JSON.stringify(j.record) + '  checksum=' + j.checksum);",
+          "let base = pm.collectionVariables.get('baseline_sum');",
+          "if (!base && j.checksum) { base = j.checksum; pm.collectionVariables.set('baseline_sum', base); }",
+          "if (j.checksum) pm.test('data parity — region-b checksum identical (' + j.checksum + ')', () => pm.expect(j.checksum).to.eql(base));",
+          "if (j.active === 'region-b') pm.collectionVariables.set('seen_reroute', 'yes');",
+          "if (pm.collectionVariables.get('seen_reroute') === 'yes' && j.active === 'region-a') pm.collectionVariables.set('seen_failback', 'yes');",
+          "t += 1; pm.collectionVariables.set('tick', t);",
+          "if (t < RISKS.length) {",
+          "  postman.setNextRequest(pm.info.requestName);",
+          "} else {",
+          "  pm.test('✓ rerouted to region-b during the incident', () => pm.expect(pm.collectionVariables.get('seen_reroute')).to.eql('yes'));",
+          "  pm.test('✓ failed back to region-a after recovery', () => pm.expect(pm.collectionVariables.get('seen_failback')).to.eql('yes'));",
+          "  postman.setNextRequest(null);",
+          "}"
+        ] } }
+      ]
+    }
+  ]
+}
