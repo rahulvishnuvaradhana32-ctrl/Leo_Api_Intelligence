@@ -9,6 +9,7 @@ jupyter
 requests
 fastapi
 uvicorn
+slowapi
 httpx
 mapie
 crepes

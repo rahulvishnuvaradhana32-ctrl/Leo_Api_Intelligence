@@ -184,9 +184,27 @@ if _EXTRA_ORIGINS:
 
 
 # ─────────────────────  Rate limiting (in-memory; Render free has no Redis)  ──
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
+# slowapi is optional: if the dependency is missing in the deploy env, fall
+# back to a no-op limiter so the app still boots (rate limiting simply off).
+try:
+    from slowapi import Limiter, _rate_limit_exceeded_handler
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
+    _SLOWAPI = True
+except Exception as exc:  # pragma: no cover
+    print(f"[web_server] slowapi unavailable ({exc}); rate limiting disabled")
+    _SLOWAPI = False
+
+    def get_remote_address(request):
+        return request.client.host if request.client else "0.0.0.0"
+
+    class Limiter:                       # no-op shim with the same surface
+        def __init__(self, *a, **k): pass
+        def limit(self, *a, **k):
+            def deco(fn): return fn
+            return deco
+
+    RateLimitExceeded = None
 
 
 def _client_ip(request: Request) -> str:
@@ -203,7 +221,8 @@ def _client_ip(request: Request) -> str:
 
 limiter = Limiter(key_func=_client_ip, headers_enabled=True)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+if _SLOWAPI:
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.get("/health")
