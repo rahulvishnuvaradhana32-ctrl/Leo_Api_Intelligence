@@ -294,6 +294,22 @@ def train(args) -> None:
         print(f"Natural distribution: {len(tr_idx):,} train sequences "
               f"({fail_count:,} failures = {100*fail_count/max(1,len(tr_idx)):.1f}%)")
 
+    # Oversample failure (negative-outcome) sequences — TRAIN split only,
+    # so validation/test distributions stay honest and leak-free.
+    if args.oversample_failures and args.oversample_failures > 1.0:
+        fail_tr = tr_idx[fail_labels[tr_idx] == 1]
+        extra   = int(round(len(fail_tr) * (args.oversample_failures - 1.0)))
+        if len(fail_tr) > 0 and extra > 0:
+            rng    = np.random.default_rng(7)
+            dup    = rng.choice(fail_tr, size=extra, replace=True)
+            tr_idx = np.concatenate([tr_idx, dup])
+            rng.shuffle(tr_idx)
+            new_f = int(fail_labels[tr_idx].sum())
+            print(f"Oversampled failures x{args.oversample_failures:g}: +{extra:,} seqs "
+                  f"→ {len(tr_idx):,} train ({100*new_f/len(tr_idx):.1f}% failures)")
+        else:
+            print("oversample_failures set but no failures to replicate — skipping.")
+
     # Cap training sequences
     if args.max_train_sequences and len(tr_idx) > args.max_train_sequences:
         rng    = np.random.default_rng(42)
@@ -309,7 +325,7 @@ def train(args) -> None:
         h_labels = labels_per_h[h][tr_idx]
         n_f = int(h_labels.sum())
         n_n = len(tr_idx) - n_f
-        cap = 20.0 if h == 15 else 10.0
+        cap = (args.pos_weight_cap * 2.0) if h == 15 else args.pos_weight_cap
         pw_vals.append(min(n_n / max(1, n_f), cap))
     print(f"  pos_weight per horizon {args.horizons}: "
           f"{[round(w, 3) for w in pw_vals]}")
@@ -552,6 +568,13 @@ if __name__ == "__main__":
     parser.add_argument("--balance",             action="store_true",
                         default=False,
                         help="50/50 balanced sampling on training split only")
+    parser.add_argument("--oversample_failures", type=float, default=1.0,
+                        help="Replicate failure sequences in the TRAIN split by this "
+                             "factor (e.g. 3.0 = 3x more negatives). 1.0 = off. "
+                             "Train-only, so val/test stay honest.")
+    parser.add_argument("--pos_weight_cap",      type=float, default=10.0,
+                        help="Cap on per-horizon pos_weight (h+15 uses 2x this). "
+                             "Raise to weight rare failures harder.")
     parser.add_argument("--start_date",          type=str,   default=None,
                         help="Filter rows from YYYY-MM-DD (inclusive)")
     parser.add_argument("--end_date",            type=str,   default=None,

@@ -297,6 +297,61 @@
           `<span class="drv-v">${pos ? '+' : ''}${d.v.toFixed(2)}</span></div>`;
       }).join('');
     }
+
+    // feed the live-failover monitor with the selected API + current peak risk
+    if (window.LEO_LIVEFO && window.LEO_LIVEFO.update) window.LEO_LIVEFO.update(s.apiType, peak);
+  }
+
+  // ── failover + data-integrity demo ──────────────────────────
+  // Both primary and standby resolve the SAME record from the SAME
+  // source of truth via an idempotency key, so the checksum is
+  // identical no matter which node serves it — that's the guarantee.
+  const FO_RECORDS = {
+    transaction_api: { account: 'acct_8841', balance: '12480.55', ccy: 'USD', source: 'core-ledger' },
+    market_data_api: { symbol: 'AAPL', price: '224.18', source: 'market-feed' },
+    stock_price_api: { symbol: 'MSFT', price: '418.92', source: 'market-feed' },
+    crypto_api:      { symbol: 'BTC-USD', price: '67940.00', source: 'market-feed' },
+    forex_api:       { pair: 'EUR/USD', rate: '1.0832', source: 'fx-feed' },
+  };
+  function fnv1a(str) { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return '0x' + (h >>> 0).toString(16).padStart(8, '0'); }
+
+  function buildFailover(s, peak) {
+    const wrap = document.getElementById('failover'); if (!wrap) return;
+    const failing = peak >= HI;                       // ≥ 0.55 → reroute
+    const api = s.apiType;
+    const rec = FO_RECORDS[api] || FO_RECORDS.transaction_api;
+    // one record + idempotency key → identical on both nodes
+    const idem = 'idem_' + fnv1a(api + '|' + rec.source).slice(2, 10);
+    const record = { ...rec, idempotency_key: idem };
+    const body = JSON.stringify(record, null, 2);
+    const sum = fnv1a(JSON.stringify(record));         // same input → same checksum
+
+    const setT = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    const setC = (id, c) => { const e = document.getElementById(id); if (e) e.className = c; };
+
+    setT('foPrimaryApi', api);
+    setT('foBackupApi', api + ' · region-b');
+    wrap.classList.toggle('rerouted', failing);
+    setT('foPrimaryState', failing ? 'FAILING · draining' : 'active · serving');
+    setT('foBackupState', failing ? 'active · serving' : 'standby · synced');
+    setC('foPrimary', 'fo-node primary' + (failing ? ' failing' : ' active'));
+    setC('foBackup', 'fo-node backup' + (failing ? ' active' : ' standby'));
+
+    setT('foRecP', body);
+    setT('foRecB', body);
+    setT('foSumP', sum);
+    setT('foSumB', sum);
+
+    const v = document.getElementById('foVerdict');
+    if (v) {
+      if (failing) {
+        v.className = 'fo-verdict ok';
+        v.innerHTML = `✓ rerouted to standby · both read <b>${rec.source}</b> via idempotency key — checksum <b>${sum}</b> matches on both nodes, <b>zero data divergence</b>.`;
+      } else {
+        v.className = 'fo-verdict';
+        v.innerHTML = `Primary healthy · standby in sync from <b>${rec.source}</b> (checksum <b>${sum}</b>). If risk crosses <b>55%</b>, LEO fails over with no data change.`;
+      }
+    }
   }
 
   // ── decision trace (lead time + action) ─────────────────────

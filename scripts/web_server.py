@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import os
 import random
+import secrets
 import sys
 import time
 from pathlib import Path
@@ -28,6 +29,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.datastructures import MutableHeaders
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
@@ -56,13 +58,163 @@ app = FastAPI(
 )
 
 
+# ─────────────────────  Security hardening  ─────────────────────
+# Cloudflare / Render protect the network layer (L3/L4 DDoS, TLS); these
+# guard the L7 application: security headers + a per-request-nonce CSP on the
+# static frontend, plus IP-based rate limiting on the dynamic endpoints.
+#
+# Frontend currently lives on the same origin as the API. When it moves to
+# Cloudflare Pages, set ALLOWED_ORIGINS (comma-separated) to the Pages origin —
+# that value extends both CORS and the CSP connect-src directive automatically.
+_EXTRA_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+# HSTS only matters over HTTPS (Cloudflare/Render terminate TLS). On by default;
+# set ENABLE_HSTS=0 to disable (e.g. plain-HTTP local testing). No includeSubDomains
+# / preload here — onrender.com is a shared parent domain; add those on a custom domain.
+_ENABLE_HSTS = os.environ.get("ENABLE_HSTS", "1") != "0"
+
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-XSS-Protection": "0",  # modern guidance: disable the legacy, buggy XSS auditor
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Permissions-Policy": (
+        "accelerometer=(), autoplay=(), camera=(), display-capture=(), "
+        "geolocation=(), gyroscope=(), magnetometer=(), microphone=(), "
+        "payment=(), usb=()"
+    ),
+}
+
+
+def _csp(nonce: str, relaxed: bool = False) -> str:
+    # relaxed = the legacy dashboard at /legacy, which relies on inline event
+    # handlers (onclick=...). Those can't carry a nonce, so it gets unsafe-inline.
+    # The main static site is nonce-locked.
+    script_src = "'self' 'unsafe-inline'" if relaxed else f"'self' 'nonce-{nonce}'"
+    connect = " ".join(["'self'", *_EXTRA_ORIGINS])
+    return "; ".join([
+        "default-src 'self'",
+        f"script-src {script_src}",
+        # style-src needs unsafe-inline: a handful of inline style="" attributes +
+        # the Google Fonts stylesheet. Style injection is low-risk vs script.
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data:",
+        f"connect-src {connect}",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "upgrade-insecure-requests",
+    ])
+
+
+def _apply_headers(headers: MutableHeaders, nonce: str, relaxed: bool) -> None:
+    headers["Content-Security-Policy"] = _csp(nonce, relaxed)
+    for k, v in _SECURITY_HEADERS.items():
+        headers[k] = v
+    if _ENABLE_HSTS:
+        headers["Strict-Transport-Security"] = "max-age=31536000"
+
+
+class SecurityHeadersMiddleware:
+    """Pure-ASGI middleware (not BaseHTTPMiddleware, which buffers and would
+    break the legacy dashboard's SSE streams). Sets security headers on every
+    response and rewrites static HTML to inject the per-request CSP nonce into
+    <script> tags — StaticFiles serves files verbatim, so the body is patched here.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        path = scope.get("path", "")
+        relaxed = path.startswith("/legacy")
+        nonce = secrets.token_urlsafe(16)
+        scope.setdefault("state", {})["csp_nonce"] = nonce
+
+        deferred = {}      # holds the start message while we buffer HTML
+        chunks: list[bytes] = []
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(raw=message["headers"])
+                _apply_headers(headers, nonce, relaxed)
+                # Only buffer + rewrite real HTML on the nonce-locked site.
+                if headers.get("content-type", "").startswith("text/html") and not relaxed:
+                    deferred["start"] = message
+                    deferred["headers"] = headers
+                    return
+                await send(message)
+
+            elif message["type"] == "http.response.body" and "start" in deferred:
+                chunks.append(message.get("body", b""))
+                if message.get("more_body"):
+                    return
+                body = b"".join(chunks).replace(
+                    b"<script", b'<script nonce="' + nonce.encode() + b'"'
+                )
+                deferred["headers"]["content-length"] = str(len(body))
+                await send(deferred["start"])
+                await send({"type": "http.response.body", "body": body, "more_body": False})
+
+            else:
+                await send(message)
+
+        await self.app(scope, receive, send_wrapper)
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+# CORS only when the frontend is served from a different origin (Cloudflare Pages).
+# Same-origin today needs no CORS, so this stays inert unless ALLOWED_ORIGINS is set.
+if _EXTRA_ORIGINS:
+    from fastapi.middleware.cors import CORSMiddleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_EXTRA_ORIGINS,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+        allow_credentials=False,  # no cookies/sessions — token-free public API
+        max_age=600,
+    )
+
+
+# ─────────────────────  Rate limiting (in-memory; Render free has no Redis)  ──
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+
+
+def _client_ip(request: Request) -> str:
+    # Behind Cloudflare → Render the socket peer is a proxy. Trust the real
+    # client IP from the proxy headers (Cloudflare sets CF-Connecting-IP).
+    cf = request.headers.get("cf-connecting-ip")
+    if cf:
+        return cf
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return get_remote_address(request)
+
+
+limiter = Limiter(key_func=_client_ip, headers_enabled=True)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
 @app.get("/health")
 async def health():
+    # No limit: Render keep-alive pings this and it must always answer.
     return JSONResponse({"status": "ok", "ts": time.time()})
 
 
 @app.get("/api/last_modified")
-async def last_modified():
+@limiter.limit("60/minute")  # frontend polls every 20s; allow several open tabs
+async def last_modified(request: Request):
     """Latest mtime across models/*.json — polled by the frontend for auto-refresh."""
     try:
         mtimes = [f.stat().st_mtime for f in MODELS.glob("*.json") if f.is_file()]
@@ -73,7 +225,8 @@ async def last_modified():
 
 
 @app.get("/api/drift")
-async def drift(limit: int = 40):
+@limiter.limit("30/minute")
+async def drift(request: Request, limit: int = 40):
     """Live self-healing / drift timeline parsed from models/self_heal_log.jsonl.
 
     Stdlib-only (no torch/sklearn) so it stays within the free-tier image.
@@ -121,7 +274,8 @@ async def drift(limit: int = 40):
 
 
 @app.get("/api/snapshot")
-async def snapshot():
+@limiter.limit("30/minute")
+async def snapshot(request: Request):
     """Return the bundled data.js payload as raw JSON for programmatic access."""
     try:
         # parse data.js → the JSON literal after 'Object.assign(window.LEO_DATA, '
@@ -181,6 +335,7 @@ def _decision(out: dict) -> dict:
 
 
 @app.post("/v1/forecast")
+@limiter.limit("30/minute")  # the compute endpoint — the most abuse-prone
 async def forecast_post(request: Request):
     if leo_surrogate is None:
         return JSONResponse({"error": "forecast engine unavailable"}, status_code=503)
@@ -192,7 +347,9 @@ async def forecast_post(request: Request):
 
 
 @app.get("/v1/forecast")
-async def forecast_get(api: str = "transaction_api", error_rate: float = 0.02,
+@limiter.limit("30/minute")
+async def forecast_get(request: Request,
+                       api: str = "transaction_api", error_rate: float = 0.02,
                        rt_multiplier: float = 1.0, error_volatility: float = 0.1,
                        load: float = 1.0, recent_failures: float = 0.0):
     """Browser-friendly variant: /v1/forecast?api=crypto_api&error_rate=0.16&rt_multiplier=5.5"""
@@ -201,6 +358,51 @@ async def forecast_get(api: str = "transaction_api", error_rate: float = 0.02,
     return JSONResponse(_decision(leo_surrogate.forecast(
         api=api, error_rate=error_rate, rt_multiplier=rt_multiplier,
         error_volatility=error_volatility, load=load, recent_failures=recent_failures)))
+
+
+# ─────────────────────  Routing endpoint (real failover state machine)  ─────
+# Powers the live failover widget. The engine (scripts/route_engine.py) is
+# stateful — hysteresis, cooldown, fail-back — so we keep one instance per
+# session_id and advance exactly one tick per call.
+try:
+    import route_engine  # noqa: E402
+except Exception as exc:  # pragma: no cover
+    route_engine = None
+    print(f"[web_server] route_engine unavailable: {exc}")
+
+_ROUTERS: dict = {}          # session_id -> RouteEngine
+_ROUTERS_MAX = 500
+
+
+@app.post("/v1/route")
+@limiter.limit("120/minute")  # one call per UI tick — looser than the compute endpoint
+async def route_post(request: Request):
+    if route_engine is None:
+        return JSONResponse({"error": "route engine unavailable"}, status_code=503)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    routes = (body or {}).get("routes") or {}
+    if not isinstance(routes, dict) or not routes:
+        return JSONResponse({"error": "body.routes must be {route: risk, ...}"}, status_code=400)
+    try:
+        risks = {str(k): float(v) for k, v in routes.items()}
+    except Exception:
+        return JSONResponse({"error": "route risks must be numbers"}, status_code=400)
+
+    names = list(risks.keys())
+    primary = (body or {}).get("primary") or names[0]
+    sid = str((body or {}).get("session_id", "default"))[:64]
+
+    eng = _ROUTERS.get(sid)
+    if eng is None or eng.routes != names or eng.primary != primary:
+        if len(_ROUTERS) >= _ROUTERS_MAX:
+            _ROUTERS.clear()                       # crude bound; sessions are cheap
+        eng = route_engine.RouteEngine(names, primary)
+        _ROUTERS[sid] = eng
+
+    return JSONResponse(eng.step(risks))
 
 
 # ─────────────────────  Legacy dashboard at /legacy  ─────────────────────

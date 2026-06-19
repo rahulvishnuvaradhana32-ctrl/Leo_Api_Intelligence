@@ -402,37 +402,66 @@ def step2_identify(df_eval, df_train_pool, per_api_auc, model, scaler):
         if not missed:
             print("  No missed failure types (all recall >= threshold or too few samples)")
 
-    # 2c. Data drift
+    # 2c. Data drift — recent window vs a PERSISTED historical baseline
+    #     (replaces the old half-vs-half test, which had no stable reference
+    #      and missed slow drift already present across the window).
     try:
+        import os as _os, json as _json
         from scipy.stats import ks_2samp
         drift_features = ["error_rate_rolling", "response_time_rolling_mean",
                           "rt_multiplier", "error_rate_boost", "error_volatility"]
-        n        = len(df_train_pool)
-        half     = n // 2
-        old_half = df_train_pool.iloc[:half]
-        new_half = df_train_pool.iloc[half:]
+        BASELINE_PATH = _os.path.join("models", "drift_baseline.json")
+        MAX_BASE = 5000
+        _rng = np.random.default_rng(0)
 
-        n_drifted    = 0
-        drift_report = {}
-        for feat in drift_features:
-            if feat not in df_train_pool.columns:
-                continue
-            stat, p = ks_2samp(
-                old_half[feat].fillna(0).values,
-                new_half[feat].fillna(0).values,
-            )
-            drifted = bool(stat > DRIFT_KS_THRESHOLD and p < DRIFT_P_THRESHOLD)
-            drift_report[feat] = {"ks": round(float(stat), 4),
-                                  "p":  round(float(p), 6),
-                                  "drifted": drifted}
-            if drifted:
-                n_drifted += 1
-                print(f"  Drift detected: {feat}  KS={stat:.3f}  p={p:.4f}")
+        def _samp(series):
+            v = series.fillna(0).to_numpy(dtype=float)
+            if len(v) > MAX_BASE:
+                v = _rng.choice(v, MAX_BASE, replace=False)
+            return v
 
-        problems["drift_detected"] = (n_drifted >= DRIFT_MIN_FEATURES)
-        problems["drift_report"]   = drift_report
-        if not problems["drift_detected"]:
-            print(f"  No significant drift ({n_drifted}/{len(drift_features)} features drifted)")
+        feats_present = [f for f in drift_features if f in df_train_pool.columns]
+
+        baseline = None
+        if _os.path.exists(BASELINE_PATH):
+            try:
+                baseline = _json.loads(open(BASELINE_PATH, "r", encoding="utf-8").read())
+            except Exception:
+                baseline = None
+
+        if not baseline or "features" not in baseline:
+            # first run (or file deleted to refresh) — snapshot current as the
+            # fixed historical reference; no comparison possible yet.
+            base = {f: _samp(df_train_pool[f]).tolist() for f in feats_present}
+            _os.makedirs("models", exist_ok=True)
+            with open(BASELINE_PATH, "w", encoding="utf-8") as fh:
+                _json.dump({"features": base, "n_rows": int(len(df_train_pool))}, fh)
+            problems["drift_detected"] = False
+            problems["drift_report"]   = {"baseline": "initialized"}
+            print(f"  Drift baseline initialized from {len(df_train_pool):,} rows "
+                  f"-> {BASELINE_PATH} (no comparison this run; delete to refresh).")
+        else:
+            basef = baseline["features"]
+            n_drifted    = 0
+            drift_report = {}
+            for feat in feats_present:
+                if feat not in basef:
+                    continue
+                stat, p = ks_2samp(np.asarray(basef[feat], dtype=float),
+                                   _samp(df_train_pool[feat]))
+                drifted = bool(stat > DRIFT_KS_THRESHOLD and p < DRIFT_P_THRESHOLD)
+                drift_report[feat] = {"ks": round(float(stat), 4),
+                                      "p":  round(float(p), 6),
+                                      "drifted": drifted}
+                if drifted:
+                    n_drifted += 1
+                    print(f"  Drift vs baseline: {feat}  KS={stat:.3f}  p={p:.4f}")
+
+            problems["drift_detected"] = (n_drifted >= DRIFT_MIN_FEATURES)
+            problems["drift_report"]   = drift_report
+            if not problems["drift_detected"]:
+                print(f"  No significant drift vs baseline "
+                      f"({n_drifted}/{len(feats_present)} features drifted)")
     except ImportError:
         print("  scipy not available -- skipping drift detection")
 

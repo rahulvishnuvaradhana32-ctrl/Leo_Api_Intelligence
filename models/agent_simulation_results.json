@@ -1,46 +1,46 @@
 {
-  "n_transactions": 10000,
-  "seed": 190901,
+  "n_transactions": 200,
+  "seed": 42,
   "proactive": {
     "label": "Proactive (LSTM)",
-    "n_transactions": 10000,
-    "successes": 9269,
-    "failures": 731,
-    "failure_rate": 0.0731,
-    "switches": 1140,
-    "avg_latency_sec": 0.2791,
-    "cost_per_1000": 109650.0,
-    "annual_cost_usd": 2850900.0,
+    "n_transactions": 200,
+    "successes": 184,
+    "failures": 16,
+    "failure_rate": 0.08,
+    "switches": 5,
+    "avg_latency_sec": 0.2427,
+    "cost_per_1000": 800.0,
+    "annual_cost_usd": 1040000.0,
     "action_distribution": {
-      "retry": 7593,
-      "normal": 1267,
-      "switch": 1140
+      "retry": 143,
+      "normal": 52,
+      "switch": 5
     }
   },
   "reactive": {
     "label": "Reactive (baseline)",
-    "n_transactions": 10000,
-    "successes": 8475,
-    "failures": 1525,
-    "failure_rate": 0.1525,
-    "switches": 1472,
-    "avg_latency_sec": 0.1686,
-    "cost_per_1000": 228750.0,
-    "annual_cost_usd": 5947500.0,
+    "n_transactions": 200,
+    "successes": 174,
+    "failures": 26,
+    "failure_rate": 0.13,
+    "switches": 25,
+    "avg_latency_sec": 0.1613,
+    "cost_per_1000": 1300.0,
+    "annual_cost_usd": 1690000.0,
     "action_distribution": {
-      "normal": 8528,
-      "switch": 1472
+      "normal": 175,
+      "switch": 25
     }
   },
   "comparison": {
-    "failure_reduction_pct": 52.07,
-    "annual_cost_saving_usd": 3096600.0,
-    "annual_failures_avoided": 20644.0
+    "failure_reduction_pct": 38.46,
+    "annual_cost_saving_usd": 650000.0,
+    "annual_failures_avoided": 13000.0
   },
   "assumptions": {
-    "cost_per_failure_usd": 150.0,
+    "cost_per_failure_usd": 50.0,
     "transactions_per_year": 260000,
-    "high_risk_threshold": 0.55,
+    "high_risk_threshold": 0.65,
     "low_risk_threshold": 0.35,
     "latency_normal_sec": 0.12,
     "latency_retry_sec": 0.28,

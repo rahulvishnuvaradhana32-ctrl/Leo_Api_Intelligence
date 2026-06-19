@@ -180,25 +180,44 @@ def predict_batch(model, seqs: np.ndarray):
 
 
 # ── Proactive agent ───────────────────────────────────────────────────────────
-def run_proactive(transactions, probs_h1):
+def run_proactive(transactions, probs_h1, apis=None, fail_rates=None):
     """
     Decision logic per transaction:
-      p > 0.65  → switch to backup before sending
-      0.35-0.65 → retry with reduced timeout
-      p < 0.35  → proceed normally
-    Returns stats dict.
+      p > HIGH → reroute to the LEAST-RISK backup (chosen from measured
+                 per-API failure rates), outcome governed by that backup's
+                 REAL failure rate — not a hardcoded assumption.
+      LOW-HIGH → retry with reduced timeout (halves failure odds).
+      p < LOW  → proceed normally.
+
+    If no backup is meaningfully healthier than the primary's own measured
+    rate (systemic stress), it HOLDS on primary instead of switching blindly.
     """
+    fr = fail_rates or {}
+    apis_set = set(apis) if apis is not None else set()
+
+    def least_risk_backup(primary):
+        """Healthiest alternative endpoint by measured failure rate."""
+        cands = sorted(((a, fr.get(a, 1.0)) for a in apis_set if a != primary),
+                       key=lambda kv: kv[1])
+        return cands[0] if cands else (None, 0.04)
+
     results = []
     for i, (outcome, p) in enumerate(zip(transactions, probs_h1)):
+        primary = apis[i] if apis is not None else None
         if p > HIGH_RISK_THRESHOLD:
-            # Switch to backup — backup API has lower failure rate
-            # Assume backup failure prob = p * 0.25 (backup is healthier)
-            backup_fail = np.random.random() < (p * 0.25)
-            actual_fail = int(backup_fail)
-            latency     = LATENCY_SWITCH
-            action      = 'switch'
+            bk, bk_fr = least_risk_backup(primary)
+            primary_fr = fr.get(primary, float(p))
+            if bk is None or bk_fr >= primary_fr:
+                # systemic — no healthier route; hold + degrade (don't thrash)
+                actual_fail = int(outcome)
+                latency     = LATENCY_RETRY
+                action      = 'hold'
+            else:
+                # reroute — outcome from the backup's MEASURED failure rate
+                actual_fail = int(np.random.random() < bk_fr)
+                latency     = LATENCY_SWITCH
+                action      = 'switch'
         elif p > LOW_RISK_THRESHOLD:
-            # Retry with reduced timeout — halve the failure probability
             actual_fail = int(outcome and (np.random.random() < 0.5))
             latency     = LATENCY_RETRY
             action      = 'retry'
@@ -427,7 +446,8 @@ def main(args):
 
     # Step 3 & 4 — Run both approaches
     print('\nStep 3 — Running proactive agent ...')
-    proactive_results = run_proactive(all_outcomes, probs_h1)
+    proactive_results = run_proactive(all_outcomes, probs_h1,
+                                      apis=all_api_shuf[:N], fail_rates=fail_rates)
 
     print('Step 4 — Running reactive baseline ...')
     reactive_results  = run_reactive(all_outcomes)

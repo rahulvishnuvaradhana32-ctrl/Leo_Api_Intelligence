@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/styles/leo.css?v=33">
+<link rel="stylesheet" href="/styles/leo.css?v=35">
 </head>
 <body>
 <main><div class="page">
@@ -119,10 +119,33 @@
     </div>
   </section>
 
+  <!-- 4 · LIVE FAILOVER ───────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="rel-head">
+      <div><h3 class="rel-h">4 · Live failover — watch a primary fail &amp; reroute</h3>
+        <span class="rel-sub" id="lfStatus">monitoring crypto_api · region-a …</span></div>
+    </div>
+    <div class="livefo">
+      <canvas id="lfCanvas" class="lf-monitor" height="150"></canvas>
+      <div class="lf-nodes">
+        <div class="fo-node primary active" id="lfPrimary">
+          <div class="fo-h">Primary</div><div class="fo-api">crypto_api · region-a</div>
+          <div class="fo-state" id="lfPrimaryState">active · serving</div>
+        </div>
+        <div class="lf-link" aria-hidden="true"><span class="lf-packet" id="lfPacket"></span></div>
+        <div class="fo-node backup standby" id="lfStandby">
+          <div class="fo-h">Warm standby</div><div class="fo-api">crypto_api · region-b</div>
+          <div class="fo-state" id="lfStandbyState">standby · synced</div>
+        </div>
+      </div>
+      <div class="fo-verdict" id="lfVerdict">Monitoring — if risk crosses <b>0.55</b>, LEO reroutes with zero data divergence.</div>
+    </div>
+  </section>
+
   <!-- 5 · THE API CALL ────────────────────────────────────── -->
   <section class="rel-section reveal">
     <div class="rel-head">
-      <div><h3 class="rel-h">4 · The actual API call</h3>
+      <div><h3 class="rel-h">5 · The actual API call</h3>
         <span class="rel-sub">the request your services send and the real response LEO returns · source: <code id="apiSource">—</code></span></div>
     </div>
     <div class="split">
@@ -146,7 +169,7 @@
   <!-- 6 · BUSINESS IMPACT ─────────────────────────────────── -->
   <section class="rel-section reveal">
     <div class="rel-head">
-      <div><h3 class="rel-h">5 · What it's worth</h3>
+      <div><h3 class="rel-h">6 · What it's worth</h3>
         <span class="rel-sub" id="roiNote">illustrative · enter your own numbers</span></div>
       <div class="roi-inputs">
         <label>your incidents / yr<input id="roiIncidents" type="number" min="0" step="100" value="14200"></label>
@@ -167,7 +190,7 @@
   <!-- 7 · ADOPT ───────────────────────────────────────────── -->
   <section class="rel-section reveal">
     <div class="rel-head">
-      <div><h3 class="rel-h">6 · Adopt it in an afternoon</h3>
+      <div><h3 class="rel-h">7 · Adopt it in an afternoon</h3>
         <span class="rel-sub">a drop-in client in front of your routing layer — no model ops on your side</span></div>
     </div>
     <div class="split">
@@ -200,11 +223,13 @@
 </div></main>
 
 <script src="/scripts/data.js?v=12"></script>
-<script src="/scripts/predict.js?v=16"></script>
+<script src="/scripts/predict.js?v=19"></script>
+<script src="/scripts/livefo.js?v=3"></script>
 <script src="/scripts/site.js?v=14"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   if (window.LEO_PREDICT) window.LEO_PREDICT.init();
+  if (window.LEO_LIVEFO) window.LEO_LIVEFO.init();
 });
 </script>
 </body>
