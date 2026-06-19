@@ -405,10 +405,10 @@ _REC = {
 
 
 def _served_record(api: str) -> dict:
-    import hashlib
+    import hashlib, json as _json
     m = _REC.get(api, _REC["transaction_api"])
     rec = {"idempotency_key": f"req-{api}-001", "api": api, "source": m["source"], **m["rec"]}
-    blob = json.dumps(rec, sort_keys=True, separators=(",", ":")).encode()
+    blob = _json.dumps(rec, sort_keys=True, separators=(",", ":")).encode()
     return {"record": rec, "checksum": "sha256:" + hashlib.sha256(blob).hexdigest()[:16]}
 
 
