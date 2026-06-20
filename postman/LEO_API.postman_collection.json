@@ -99,12 +99,34 @@
           "if (pm.collectionVariables.get('seen_reroute') === 'yes' && j.active === 'region-a') pm.collectionVariables.set('seen_failback', 'yes');",
           "t += 1; pm.collectionVariables.set('tick', t);",
           "if (t < RISKS.length) {",
-          "  postman.setNextRequest(pm.info.requestName);",
+          "  pm.execution.setNextRequest(pm.info.requestName);",
           "} else {",
           "  pm.test('✓ rerouted to region-b during the incident', () => pm.expect(pm.collectionVariables.get('seen_reroute')).to.eql('yes'));",
           "  pm.test('✓ failed back to region-a after recovery', () => pm.expect(pm.collectionVariables.get('seen_failback')).to.eql('yes'));",
-          "  postman.setNextRequest(null);",
+          "  pm.execution.setNextRequest(null);",
           "}"
+        ] } }
+      ]
+    },
+    {
+      "name": "Systemic — all routes down (hold + alert)",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{session_id}}\",\n  \"primary\": \"region-a\",\n  \"api\": \"crypto_api\",\n  \"routes\": { \"region-a\": 0.70, \"region-b\": 0.65 }\n}" },
+        "url": { "raw": "{{base_url}}/v1/route", "host": ["{{base_url}}"], "path": ["v1", "route"] }
+      },
+      "event": [
+        { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [
+          "pm.collectionVariables.set('session_id', 'sys-' + Date.now());"
+        ] } },
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "let j = {}; try { j = pm.response.json(); } catch (e) {}",
+          "console.log('SYSTEMIC  active=' + j.active + '  state=' + j.state + '  alert=' + j.alert + '  action=' + j.action);",
+          "pm.test('200 OK', () => pm.response.to.have.status(200));",
+          "pm.test('state is SYSTEMIC (all routes degraded)', () => pm.expect(j.state).to.eql('SYSTEMIC'));",
+          "pm.test('no blind switch — holds on primary', () => pm.expect(j.active).to.eql('region-a'));",
+          "pm.test('alert raised for on-call', () => pm.expect(j.alert).to.eql(true));"
         ] } }
       ]
     }
