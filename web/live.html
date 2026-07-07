@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Self-Healing · LEO</title>
+<meta name="description" content="Watch LEO detect a real API failure, reroute traffic, diagnose the root cause, apply a fix, and restore the primary — live on real HTTP traffic.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles/leo.css?v=35">
+<style>
+/* ── Live dashboard specific styles ─────────────────────────────────────── */
+.live-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 28px;
+}
+@media (max-width: 860px) {
+  .live-grid { grid-template-columns: 1fr; }
+}
+
+.live-card {
+  background: #0b1320;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.live-card-full { grid-column: 1 / -1; }
+
+.live-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+/* Status row */
+.status-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 100px;
+}
+.status-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  letter-spacing: .05em;
+}
+.status-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e2e8f0;
+}
+.status-value.ok    { color: #22c55e; }
+.status-value.warn  { color: #f97316; }
+.status-value.error { color: #ef4444; }
+.status-value.muted { color: #64748b; }
+
+/* Risk bar */
+.risk-bar-wrap { margin: 12px 0 4px; }
+.risk-bar-track {
+  height: 6px;
+  background: #1e293b;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #22c55e;
+  transition: width .6s ease, background .4s;
+  width: 0%;
+}
+.risk-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+  margin-top: 4px;
+}
+
+/* Heal cycle steps */
+.heal-steps {
+  display: flex;
+  gap: 0;
+  margin-top: 12px;
+}
+.heal-step {
+  flex: 1;
+  text-align: center;
+  padding: 10px 4px;
+  font-size: 11px;
+  color: #475569;
+  border-top: 2px solid #1e293b;
+  transition: color .3s, border-color .3s;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: .02em;
+}
+.heal-step.active {
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+.heal-step.done {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.heal-step-icon { display: block; font-size: 16px; margin-bottom: 4px; }
+
+/* Action buttons */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.action-btn {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: 'IBM Plex Mono', monospace;
+  transition: opacity .15s, transform .1s;
+  letter-spacing: .02em;
+}
+.action-btn:active { transform: scale(.97); }
+.action-btn:disabled { opacity: .4; cursor: not-allowed; }
+.action-btn.danger  { background: #7f1d1d; border-color: #ef4444; color: #fca5a5; }
+.action-btn.warn    { background: #431407; border-color: #f97316; color: #fdba74; }
+.action-btn.safe    { background: #052e16; border-color: #22c55e; color: #86efac; }
+.action-btn.neutral { background: #0f172a; border-color: #334155; color: #94a3b8; }
+.action-btn .btn-sub { display: block; font-size: 10px; font-weight: 400; opacity: .7; margin-top: 2px; font-family: Inter, sans-serif; }
+
+/* Event feed */
+.event-feed {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #94a3b8;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
+.event-row {
+  display: flex;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid #0f1a2e;
+  align-items: baseline;
+}
+.event-row:last-child { border-bottom: none; }
+.event-time { color: #334155; flex-shrink: 0; font-size: 10px; }
+.event-phase {
+  flex-shrink: 0;
+  width: 100px;
+  font-weight: 600;
+}
+.event-phase.detect        { color: #60a5fa; }
+.event-phase.reroute       { color: #f97316; }
+.event-phase.diagnose      { color: #c084fc; }
+.event-phase.fix           { color: #fbbf24; }
+.event-phase.fix_complete  { color: #34d399; }
+.event-phase.restore       { color: #22c55e; }
+.event-phase.circuit_breaker { color: #f43f5e; }
+.event-phase.health_check  { color: #475569; }
+.event-phase.startup       { color: #64748b; }
+.event-msg { color: #94a3b8; flex: 1; min-width: 0; word-break: break-word; }
+
+/* Offline banner */
+.offline-banner {
+  display: none;
+  background: #1c0a0a;
+  border: 1px solid #7f1d1d;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #fca5a5;
+  margin-bottom: 20px;
+}
+.offline-banner.show { display: block; }
+
+/* Metrics row */
+.metric-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.metric-item { display: flex; flex-direction: column; gap: 3px; }
+.metric-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1;
+}
+.metric-lbl { font-size: 11px; color: #64748b; }
+
+/* Canary progress */
+.canary-track {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+.canary-seg {
+  flex: 1;
+  height: 4px;
+  background: #1e293b;
+  border-radius: 99px;
+  transition: background .4s;
+}
+.canary-seg.active { background: #22c55e; }
+.canary-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #475569;
+  margin-top: 4px;
+}
+
+/* Spinner for action feedback */
+.action-feedback {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  min-height: 18px;
+}
+.action-feedback.ok   { color: #22c55e; }
+.action-feedback.fail { color: #ef4444; }
+
+/* Proxy-offline note */
+.proxy-note {
+  font-size: 12px;
+  color: #475569;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+.proxy-note code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: #0f172a;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+}
+</style>
+</head>
+<body>
+<main><div class="page">
+
+  <!-- HEADER ──────────────────────────────────────────────────────────── -->
+  <div class="page-head reveal">
+    <span class="page-tag">⚡ Live Self-Healing POC</span>
+    <h1 class="page-title">LEO detects, reroutes, diagnoses, and fixes — <span class="grad">on real traffic</span></h1>
+    <p class="page-lede">
+      A real HTTP reverse proxy sits in front of two live banking API services.
+      Inject a failure, watch LEO detect it via LSTM risk scoring, reroute to the backup,
+      classify the root cause, apply a targeted fix, and restore the primary through
+      a canary rollout — all automatically, in real time.
+    </p>
+    <div class="demo-trust">
+      <span>● Real HTTP traffic, not simulation</span>
+      <span>● Bi-LSTM + Attention on live telemetry</span>
+      <span>● Shared SQLite ledger — zero double-debit</span>
+    </div>
+  </div>
+
+  <!-- OFFLINE BANNER ──────────────────────────────────────────────────── -->
+  <div class="offline-banner" id="offlineBanner">
+    LEO Proxy is offline. Start it with:
+    <code style="margin-left:8px">python scripts/leo_proxy.py</code>
+    &nbsp;·&nbsp; Primary service: <code>python -m uvicorn src.apis.transaction_service:app --port 8001</code>
+  </div>
+
+  <!-- HEAL CYCLE PIPELINE ─────────────────────────────────────────────── -->
+  <div class="live-card reveal" style="margin-top:28px">
+    <div class="live-card-title">Self-Healing Pipeline</div>
+    <div class="heal-steps" id="healSteps">
+      <div class="heal-step" id="step-detect">
+        <span class="heal-step-icon">🔍</span>DETECT
+      </div>
+      <div class="heal-step" id="step-reroute">
+        <span class="heal-step-icon">↪</span>REROUTE
+      </div>
+      <div class="heal-step" id="step-diagnose">
+        <span class="heal-step-icon">🧠</span>DIAGNOSE
+      </div>
+      <div class="heal-step" id="step-fix">
+        <span class="heal-step-icon">🔧</span>FIX
+      </div>
+      <div class="heal-step" id="step-restore">
+        <span class="heal-step-icon">✅</span>RESTORE
+      </div>
+    </div>
+  </div>
+
+  <div class="live-grid">
+
+    <!-- LEFT: STATUS ──────────────────────────────────────────────────── -->
+    <div class="live-card reveal">
+      <div class="live-card-title">Proxy Status</div>
+
+      <div class="status-row">
+        <div class="status-item">
+          <span class="status-label">Route</span>
+          <span class="status-value" id="statusRoute">—</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Circuit Breaker</span>
+          <span class="status-value" id="statusCB">—</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Primary</span>
+          <span class="status-value" id="statusPrimary">—</span>
+        </div>
+        <div class="status-item">
+          <span class="status-label">Heal Active</span>
+          <span class="status-value" id="statusHeal">—</span>
+        </div>
+      </div>
+
+      <div class="status-label">LSTM Risk Score</div>
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill" id="riskBar"></div>
+        </div>
+        <div class="risk-bar-labels">
+          <span>0.0 — safe</span>
+          <span id="riskVal">—</span>
+          <span>1.0 — critical</span>
+        </div>
+      </div>
+
+      <div style="margin-top:18px">
+        <div class="status-label" style="margin-bottom:8px">Heal Cycle</div>
+        <div class="status-row" style="margin-bottom:0">
+          <div class="status-item">
+            <span class="status-label">Root Cause</span>
+            <span class="status-value" id="healRootCause">—</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Remedy</span>
+            <span class="status-value" id="healRemedy">—</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Canary</span>
+            <span class="status-value" id="healCanary">—</span>
+          </div>
+        </div>
+        <div class="canary-track" id="canaryTrack">
+          <div class="canary-seg" id="can10"></div>
+          <div class="canary-seg" id="can50"></div>
+          <div class="canary-seg" id="can100"></div>
+        </div>
+        <div class="canary-labels"><span>10%</span><span>50%</span><span>100%</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: METRICS ────────────────────────────────────────────────── -->
+    <div class="live-card reveal">
+      <div class="live-card-title">Live Telemetry</div>
+      <div class="metric-row">
+        <div class="metric-item">
+          <span class="metric-num" id="metricReqs">—</span>
+          <span class="metric-lbl">Requests served</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricRT">—</span>
+          <span class="metric-lbl">Avg response time</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricErr">—</span>
+          <span class="metric-lbl">Error rate</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-num" id="metricFailStreak">—</span>
+          <span class="metric-lbl">CB fail streak</span>
+        </div>
+      </div>
+
+      <div style="margin-top:24px">
+        <div class="live-card-title">Inject Failure — Primary (:8001)</div>
+        <div class="action-grid">
+          <button class="action-btn danger" id="btnDown">
+            💥 DB Crash
+            <span class="btn-sub">503 on all requests</span>
+          </button>
+          <button class="action-btn warn" id="btnTimeout">
+            ⏱ Timeout
+            <span class="btn-sub">8× latency spike</span>
+          </button>
+          <button class="action-btn warn" id="btnErrorSurge">
+            ⚡ Error Surge
+            <span class="btn-sub">85% error rate</span>
+          </button>
+          <button class="action-btn warn" id="btnOverload">
+            🔥 Overload
+            <span class="btn-sub">3× latency + 40% errors</span>
+          </button>
+        </div>
+        <div class="action-grid" style="margin-top:8px">
+          <button class="action-btn safe" id="btnRestore">
+            ✓ Restore Primary
+            <span class="btn-sub">clear all chaos</span>
+          </button>
+          <button class="action-btn neutral" id="btnReset">
+            ↺ Reset Proxy
+            <span class="btn-sub">clear state + events</span>
+          </button>
+        </div>
+        <div class="action-feedback" id="actionFeedback"></div>
+      </div>
+
+      <div class="proxy-note">
+        Proxy must be running on <code>:9000</code> · Primary on <code>:8001</code> · Backup on <code>:8002</code><br>
+        Status polls every 2 s · Events refresh every 3 s
+      </div>
+    </div>
+
+    <!-- FULL-WIDTH: EVENT FEED ─────────────────────────────────────────── -->
+    <div class="live-card live-card-full reveal">
+      <div class="live-card-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>Real-Time Event Log</span>
+        <span id="eventCount" style="color:#334155;font-size:11px;font-family:'IBM Plex Mono',monospace"></span>
+      </div>
+      <div class="event-feed" id="eventFeed">
+        <div style="color:#334155;font-style:italic;font-size:12px">Waiting for events — start the proxy and send some traffic…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HOW IT WORKS SUMMARY ───────────────────────────────────────────── -->
+  <section class="rel-section reveal" style="margin-top:40px">
+    <div class="rel-head">
+      <div>
+        <h3 class="rel-h">What's running under the hood</h3>
+        <span class="rel-sub">three real processes, one shared SQLite ledger</span>
+      </div>
+    </div>
+    <div class="live-grid" style="margin-top:16px">
+      <div class="live-card">
+        <div class="live-card-title">Architecture</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.8;font-family:'IBM Plex Mono',monospace">
+          Client → <span style="color:#38bdf8">:9000 LEO Proxy</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span style="color:#22c55e">:8001 Primary (region-a)</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span style="color:#f97316">:8002 Backup  (region-b)</span><br>
+          <br>
+          Shared: <span style="color:#c084fc">data/shared_ledger.db</span> (SQLite WAL)<br>
+          Model:  <span style="color:#fbbf24">Bi-LSTM · 43 features · 256 hidden</span>
+        </div>
+      </div>
+      <div class="live-card">
+        <div class="live-card-title">Detect → Restore Loop</div>
+        <div style="font-size:13px;color:#94a3b8;line-height:1.9">
+          <span style="color:#60a5fa">🔍 Detect</span> — LSTM scores risk every 10 requests on real telemetry<br>
+          <span style="color:#f97316">↪ Reroute</span> — risk ≥ 0.65 or CB opens → all traffic to backup<br>
+          <span style="color:#c084fc">🧠 Diagnose</span> — rule engine classifies: cascade / overload / timeout / error_surge<br>
+          <span style="color:#fbbf24">🔧 Fix</span> — throttle / circuit_break / backoff / isolate_dependency applied<br>
+          <span style="color:#22c55e">✅ Restore</span> — canary 10% → 50% → 100% once primary health confirmed
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA ────────────────────────────────────────────────────────────── -->
+  <section class="rel-section reveal">
+    <div class="cta-band compact">
+      <h2 class="display">Run LEO on your own API estate.</h2>
+      <p>Send us a week of telemetry and we'll show you the failures it would have caught.</p>
+      <div class="hero-ctas" style="justify-content:center">
+        <a class="btn btn-accent" href="/cite.html">Book a demo</a>
+        <a class="btn btn-ghost" href="/architecture.html">How it works</a>
+      </div>
+    </div>
+  </section>
+
+  <nav class="page-jump">
+    <a class="prev" href="/predict.html"><span class="pj-k">← prev</span><span class="pj-v">Live Forecast Demo</span></a>
+    <a class="next" href="/agent.html"><span class="pj-k">next →</span><span class="pj-v">Agent Simulation</span></a>
+  </nav>
+</div></main>
+
+<script src="/scripts/site.js?v=14"></script>
+<script src="/scripts/live.js?v=1"></script>
+</body>
+</html>

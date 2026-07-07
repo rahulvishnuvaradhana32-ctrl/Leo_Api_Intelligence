@@ -25,6 +25,7 @@ import sys
 import time
 from pathlib import Path
 
+import httpx
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
@@ -451,6 +452,98 @@ async def route_post(request: Request):
         out["checksum"] = sr["checksum"]
         out["data_parity"] = True
     return JSONResponse(out)
+
+
+# ─────────────────────  LEO Proxy bridge (live self-healing dashboard)  ──────
+# Forwards requests from the website to the LEO Proxy running on :9000.
+# The browser stays on :8000 (same origin), so no CSP changes needed.
+# If the proxy is offline these return {"offline": True} so the UI degrades gracefully.
+
+LEO_PROXY_URL = os.environ.get("LEO_PROXY_URL", "http://localhost:9000")
+PRIMARY_SVC   = os.environ.get("PRIMARY_SVC_URL", "http://localhost:8001")
+
+
+async def _proxy_get(path: str, params: dict | None = None) -> dict:
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as c:
+            r = await c.get(f"{LEO_PROXY_URL}/{path}", params=params or {})
+            return r.json()
+    except Exception as exc:
+        return {"offline": True, "error": str(exc)}
+
+
+async def _proxy_post(path: str, body: dict) -> dict:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as c:
+            r = await c.post(f"{LEO_PROXY_URL}/{path}", json=body)
+            return r.json()
+    except Exception as exc:
+        return {"offline": True, "error": str(exc)}
+
+
+@app.get("/api/proxy/status")
+@limiter.limit("120/minute")
+async def proxy_status(request: Request):
+    return JSONResponse(await _proxy_get("status"))
+
+
+@app.get("/api/proxy/events")
+@limiter.limit("60/minute")
+async def proxy_events(request: Request, limit: int = 40):
+    return JSONResponse(await _proxy_get("events", {"limit": limit}))
+
+
+@app.post("/api/proxy/action")
+@limiter.limit("30/minute")
+async def proxy_action(request: Request):
+    """
+    Unified action endpoint — action field routes to correct proxy/service call.
+
+    Actions: inject_down | inject_timeout | inject_error_surge | inject_overload
+             restore | reset | inject_risk
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "invalid JSON"}, status_code=400)
+
+    action = (body or {}).get("action", "")
+
+    if action == "inject_down":
+        result = await _proxy_post_primary("chaos/inject",
+                                           {"mode": "down", "reason": "LEO dashboard injection"})
+    elif action == "inject_timeout":
+        result = await _proxy_post_primary("chaos/inject",
+                                           {"mode": "timeout", "latency_multiplier": 8.0,
+                                            "reason": "LEO dashboard injection"})
+    elif action == "inject_error_surge":
+        result = await _proxy_post_primary("chaos/inject",
+                                           {"mode": "error_surge", "error_rate": 0.85,
+                                            "reason": "LEO dashboard injection"})
+    elif action == "inject_overload":
+        result = await _proxy_post_primary("chaos/inject",
+                                           {"mode": "overload", "latency_multiplier": 3.0,
+                                            "error_rate": 0.4, "reason": "LEO dashboard injection"})
+    elif action == "restore":
+        result = await _proxy_post_primary("chaos/clear", {})
+    elif action == "reset":
+        result = await _proxy_post("admin/reset", {})
+    elif action == "inject_risk":
+        risk = float((body or {}).get("risk", 0.8))
+        result = await _proxy_post("admin/inject-risk", {"risk": risk})
+    else:
+        return JSONResponse({"error": f"unknown action: {action}"}, status_code=400)
+
+    return JSONResponse({"action": action, "result": result})
+
+
+async def _proxy_post_primary(path: str, body: dict) -> dict:
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as c:
+            r = await c.post(f"{PRIMARY_SVC}/{path}", json=body)
+            return r.json()
+    except Exception as exc:
+        return {"offline": True, "error": str(exc)}
 
 
 # ─────────────────────  Legacy dashboard at /legacy  ─────────────────────
