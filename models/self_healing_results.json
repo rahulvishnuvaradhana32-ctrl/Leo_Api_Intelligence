@@ -1,0 +1,1864 @@
+{
+  "n_transactions": 1000,
+  "seed": 42,
+  "metrics": {
+    "label": "Self-Healing (LEO)",
+    "n_transactions": 1000,
+    "successes": 849,
+    "failures": 151,
+    "failure_rate": 0.151,
+    "switches": 619,
+    "avg_latency_sec": 0.3243,
+    "cost_per_1000": 7550.0,
+    "annual_cost_usd": 1963000.0
+  },
+  "heal_cycle": {
+    "reroutes_with_diagnosis": 282,
+    "restores_completed": 10,
+    "root_cause_distribution": {
+      "cascade": 240,
+      "intermittent": 21,
+      "timeout": 14,
+      "error_surge": 4,
+      "overload": 3
+    },
+    "remedy_distribution": {
+      "isolate_dependency": 240,
+      "retry_jitter": 21,
+      "backoff": 14,
+      "circuit_break": 4,
+      "throttle": 3
+    }
+  },
+  "sample_events": [
+    {
+      "tx_index": 26,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.285,
+      "evidence": {
+        "systemic_stress_index": 0.1582999974489212,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.0791499987244606
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 28%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 34,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 2.8399999141693115
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 36,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.708,
+      "evidence": {
+        "systemic_stress_index": 0.6499999761581421,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.16249999403953552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 71%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 40,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.222,
+      "evidence": {
+        "systemic_stress_index": 0.15000000596046448,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.07500000298023224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 22%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 42,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "timeout",
+      "confidence": 1.0,
+      "evidence": {
+        "rt_multiplier": 2.42930006980896,
+        "latency_spike": 2.0871379375457764,
+        "latency_slope": -0.037744998931884766
+      },
+      "remedy_action": "backoff",
+      "remedy_params": {
+        "timeout_factor": 0.5,
+        "retry_interval_multiplier": 2
+      },
+      "recovery_ticks": 4,
+      "explain": "[TIMEOUT 100%] Response latency spike \u2014 endpoint is slow to respond."
+    },
+    {
+      "tx_index": 46,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.545,
+      "evidence": {
+        "systemic_stress_index": 0.4374749958515167,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.14582499861717224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 55%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 48,
+      "api": "market_data_api",
+      "phase": "restore",
+      "action": "FAIL-BACK complete \u2014 primary restored"
+    },
+    {
+      "tx_index": 53,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.799,
+      "evidence": {
+        "systemic_stress_index": 0.5249999761581421,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.17499999701976776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 80%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 55,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.535,
+      "evidence": {
+        "systemic_stress_index": 0.42502498626708984,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.14167499542236328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 62,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.583,
+      "evidence": {
+        "systemic_stress_index": 0.48339998722076416,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.12084999680519104
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 58%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 68,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.847,
+      "evidence": {
+        "systemic_stress_index": 0.75,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.1875
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 85%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 71,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 0.2,
+      "evidence": {
+        "instability_index": 0.0
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 20%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 74,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.597,
+      "evidence": {
+        "systemic_stress_index": 0.53329998254776,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13332499563694
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 60%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 78,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.805,
+      "evidence": {
+        "systemic_stress_index": 0.6832000017166138,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.17080000042915344
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 80%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 87,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.375,
+      "evidence": {
+        "systemic_stress_index": 0.30000001192092896,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.10000000149011612
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 38%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 89,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.528,
+      "evidence": {
+        "systemic_stress_index": 0.4668000042438507,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.11670000106096268
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 53%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 97,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.542,
+      "evidence": {
+        "systemic_stress_index": 0.4666000008583069,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.11665000021457672
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 100,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.5666999816894531,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.14167499542236328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 105,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.708,
+      "evidence": {
+        "systemic_stress_index": 0.5499749779701233,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.18332499265670776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 71%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 114,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 1.0,
+      "evidence": {
+        "systemic_stress_index": 0.8999999761581421,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.22499999403953552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 100%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 122,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.451,
+      "evidence": {
+        "systemic_stress_index": 0.375,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.125
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 45%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 132,
+      "api": "transaction_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 40.54999923706055
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 136,
+      "api": "transaction_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.823,
+      "evidence": {
+        "systemic_stress_index": 0.9877108335494995,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.0
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 82%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 138,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.633400022983551,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15835000574588776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 143,
+      "api": "transaction_api",
+      "phase": "restore",
+      "action": "FAIL-BACK complete \u2014 primary restored"
+    },
+    {
+      "tx_index": 145,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.41,
+      "evidence": {
+        "systemic_stress_index": 0.32497501373291016,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.10832499712705612
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 41%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 153,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.469,
+      "evidence": {
+        "systemic_stress_index": 0.3624750077724457,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.12082500010728836
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 47%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 154,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 0.58,
+      "evidence": {
+        "instability_index": 0.3799999952316284
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 58%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 156,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.472,
+      "evidence": {
+        "systemic_stress_index": 0.4000999927520752,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.1000249981880188
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 47%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 157,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.597,
+      "evidence": {
+        "systemic_stress_index": 0.53329998254776,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13332499563694
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 60%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 159,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.583,
+      "evidence": {
+        "systemic_stress_index": 0.40005001425743103,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.13334999978542328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 58%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 161,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.569,
+      "evidence": {
+        "systemic_stress_index": 0.5,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.125
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 57%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 168,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "timeout",
+      "confidence": 1.0,
+      "evidence": {
+        "rt_multiplier": 3.132699966430664,
+        "latency_spike": 3.383064031600952,
+        "latency_slope": 1.2197799682617188
+      },
+      "remedy_action": "backoff",
+      "remedy_params": {
+        "timeout_factor": 0.5,
+        "retry_interval_multiplier": 2
+      },
+      "recovery_ticks": 4,
+      "explain": "[TIMEOUT 100%] Response latency spike \u2014 endpoint is slow to respond."
+    },
+    {
+      "tx_index": 169,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.309,
+      "evidence": {
+        "systemic_stress_index": 0.2374500036239624,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.0791499987244606
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 31%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 171,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.458,
+      "evidence": {
+        "systemic_stress_index": 0.41659998893737793,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.10414999723434448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 46%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 172,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 32.38999938964844
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 177,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "timeout",
+      "confidence": 1.0,
+      "evidence": {
+        "rt_multiplier": 1.1720999479293823,
+        "latency_spike": 1.3037904500961304,
+        "latency_slope": 0.07864999771118164
+      },
+      "remedy_action": "backoff",
+      "remedy_params": {
+        "timeout_factor": 0.5,
+        "retry_interval_multiplier": 2
+      },
+      "recovery_ticks": 4,
+      "explain": "[TIMEOUT 100%] Response latency spike \u2014 endpoint is slow to respond."
+    },
+    {
+      "tx_index": 179,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.444,
+      "evidence": {
+        "systemic_stress_index": 0.39989998936653137,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.09997499734163284
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 44%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 181,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.986,
+      "evidence": {
+        "systemic_stress_index": 0.8833000063896179,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.22082500159740448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 99%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 186,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "error_surge",
+      "confidence": 1.0,
+      "evidence": {
+        "error_burst": 1.0865607261657715,
+        "error_rate_boost": 0.0
+      },
+      "remedy_action": "circuit_break",
+      "remedy_params": {
+        "pause_ticks": 3,
+        "probe_interval_ticks": 2
+      },
+      "recovery_ticks": 6,
+      "explain": "[ERROR_SURGE 100%] Error rate burst \u2014 endpoint is returning errors at elevated rate."
+    },
+    {
+      "tx_index": 187,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "timeout",
+      "confidence": 1.0,
+      "evidence": {
+        "rt_multiplier": 1.0,
+        "latency_spike": 7.067380428314209,
+        "latency_slope": 0.034257449209690094
+      },
+      "remedy_action": "backoff",
+      "remedy_params": {
+        "timeout_factor": 0.5,
+        "retry_interval_multiplier": 2
+      },
+      "recovery_ticks": 4,
+      "explain": "[TIMEOUT 100%] Response latency spike \u2014 endpoint is slow to respond."
+    },
+    {
+      "tx_index": 191,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.5,
+      "evidence": {
+        "systemic_stress_index": 0.4666000008583069,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.11665000021457672
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 50%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 193,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.6000999808311462,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15002499520778656
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 195,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.67,
+      "evidence": {
+        "systemic_stress_index": 0.48750001192092896,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.16249999403953552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 67%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 199,
+      "api": "market_data_api",
+      "phase": "restore",
+      "action": "FAIL-BACK complete \u2014 primary restored"
+    },
+    {
+      "tx_index": 201,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.68,
+      "evidence": {
+        "systemic_stress_index": 0.616599977016449,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15414999425411224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 202,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 1.0132750272750854
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 204,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.222,
+      "evidence": {
+        "systemic_stress_index": 0.15000000596046448,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.07500000298023224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 22%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 206,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "timeout",
+      "confidence": 1.0,
+      "evidence": {
+        "rt_multiplier": 1.7747000455856323,
+        "latency_spike": 1.545232892036438,
+        "latency_slope": 0.19386999309062958
+      },
+      "remedy_action": "backoff",
+      "remedy_params": {
+        "timeout_factor": 0.5,
+        "retry_interval_multiplier": 2
+      },
+      "recovery_ticks": 4,
+      "explain": "[TIMEOUT 100%] Response latency spike \u2014 endpoint is slow to respond."
+    },
+    {
+      "tx_index": 213,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.483,
+      "evidence": {
+        "systemic_stress_index": 0.3625499904155731,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.12084999680519104
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 48%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 214,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.667,
+      "evidence": {
+        "systemic_stress_index": 0.5834000110626221,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.14585000276565552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 67%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 215,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.34,
+      "evidence": {
+        "systemic_stress_index": 0.2749499976634979,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.09165000170469284
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 34%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 222,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "error_surge",
+      "confidence": 1.0,
+      "evidence": {
+        "error_burst": 21.509191513061523,
+        "error_rate_boost": 0.0
+      },
+      "remedy_action": "circuit_break",
+      "remedy_params": {
+        "pause_ticks": 3,
+        "probe_interval_ticks": 2
+      },
+      "recovery_ticks": 6,
+      "explain": "[ERROR_SURGE 100%] Error rate burst \u2014 endpoint is returning errors at elevated rate."
+    },
+    {
+      "tx_index": 223,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.385,
+      "evidence": {
+        "systemic_stress_index": 0.3125250041484833,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.10417500138282776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 38%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 228,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.542,
+      "evidence": {
+        "systemic_stress_index": 0.48339998722076416,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.12084999680519104
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 230,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.847,
+      "evidence": {
+        "systemic_stress_index": 0.766700029373169,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.19167500734329224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 85%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 231,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 96.91000366210938
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 232,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.299,
+      "evidence": {
+        "systemic_stress_index": 0.19169999659061432,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.09584999829530716
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 30%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 236,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.444,
+      "evidence": {
+        "systemic_stress_index": 0.34994998574256897,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.11665000021457672
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 44%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 239,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.625,
+      "evidence": {
+        "systemic_stress_index": 0.550000011920929,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13750000298023224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 62%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 242,
+      "api": "market_data_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "intermittent",
+      "confidence": 1.0,
+      "evidence": {
+        "instability_index": 344.3399963378906
+      },
+      "remedy_action": "retry_jitter",
+      "remedy_params": {
+        "jitter_ms": 200,
+        "max_retries": 3
+      },
+      "recovery_ticks": 3,
+      "explain": "[INTERMITTENT 100%] Unstable signal without dominant cause \u2014 likely transient fault."
+    },
+    {
+      "tx_index": 243,
+      "api": "market_data_api",
+      "phase": "restore",
+      "action": "FAIL-BACK complete \u2014 primary restored"
+    },
+    {
+      "tx_index": 244,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.528,
+      "evidence": {
+        "systemic_stress_index": 0.4999000132083893,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.12497500330209732
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 53%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 247,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "error_surge",
+      "confidence": 1.0,
+      "evidence": {
+        "error_burst": 1.1582374572753906,
+        "error_rate_boost": 0.0
+      },
+      "remedy_action": "circuit_break",
+      "remedy_params": {
+        "pause_ticks": 3,
+        "probe_interval_ticks": 2
+      },
+      "recovery_ticks": 6,
+      "explain": "[ERROR_SURGE 100%] Error rate burst \u2014 endpoint is returning errors at elevated rate."
+    },
+    {
+      "tx_index": 252,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.625,
+      "evidence": {
+        "systemic_stress_index": 0.5834000110626221,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.14585000276565552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 62%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 256,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.542,
+      "evidence": {
+        "systemic_stress_index": 0.48339998722076416,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.12084999680519104
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 264,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.6500999927520752,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.1625249981880188
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 266,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.469,
+      "evidence": {
+        "systemic_stress_index": 0.3625499904155731,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.12084999680519104
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 47%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 271,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.417,
+      "evidence": {
+        "systemic_stress_index": 0.38339999318122864,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.09584999829530716
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 42%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 272,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.639,
+      "evidence": {
+        "systemic_stress_index": 0.550000011920929,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13750000298023224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 64%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 275,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.695,
+      "evidence": {
+        "systemic_stress_index": 0.633400022983551,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15835000574588776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 70%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 281,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.708,
+      "evidence": {
+        "systemic_stress_index": 0.6333000063896179,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15832500159740448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 71%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 286,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.396,
+      "evidence": {
+        "systemic_stress_index": 0.24165000021457672,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.12082500010728836
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 40%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 289,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 1.0,
+      "evidence": {
+        "systemic_stress_index": 0.8999999761581421,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.22499999403953552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 100%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 290,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.34,
+      "evidence": {
+        "systemic_stress_index": 0.22499999403953552,
+        "n_apis_elevated": 2.0,
+        "avg_error_rate_others": 0.11249999701976776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 34%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 300,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.431,
+      "evidence": {
+        "systemic_stress_index": 0.3833000063896179,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.09582500159740448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 43%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 301,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.778,
+      "evidence": {
+        "systemic_stress_index": 0.6665999889373779,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.16664999723434448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 78%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 309,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.597,
+      "evidence": {
+        "systemic_stress_index": 0.5666000247001648,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.1416500061750412
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 60%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 312,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.833,
+      "evidence": {
+        "systemic_stress_index": 0.7166000008583069,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.17915000021457672
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 83%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 315,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.583,
+      "evidence": {
+        "systemic_stress_index": 0.5333999991416931,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13334999978542328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 58%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 321,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.413,
+      "evidence": {
+        "systemic_stress_index": 0.3125250041484833,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.10417500138282776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 41%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 323,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.708,
+      "evidence": {
+        "systemic_stress_index": 0.6665999889373779,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.16664999723434448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 71%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 327,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.722,
+      "evidence": {
+        "systemic_stress_index": 0.6331999897956848,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.1582999974489212
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 72%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 331,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.806,
+      "evidence": {
+        "systemic_stress_index": 0.71670001745224,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.17917500436306
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 81%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 334,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.5666999816894531,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.14167499542236328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 336,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.681,
+      "evidence": {
+        "systemic_stress_index": 0.6000999808311462,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.15002499520778656
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 68%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 339,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.861,
+      "evidence": {
+        "systemic_stress_index": 0.6665999889373779,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.16664999723434448
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 86%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 343,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 1.0,
+      "evidence": {
+        "systemic_stress_index": 0.8666999936103821,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.21667499840259552
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 100%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 348,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.861,
+      "evidence": {
+        "systemic_stress_index": 0.8166999816894531,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.20417499542236328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 86%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 352,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.806,
+      "evidence": {
+        "systemic_stress_index": 0.71670001745224,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.17917500436306
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 81%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 357,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.552,
+      "evidence": {
+        "systemic_stress_index": 0.4124999940395355,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.13750000298023224
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 55%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 360,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.597,
+      "evidence": {
+        "systemic_stress_index": 0.5333999991416931,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.13334999978542328
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 60%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 361,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.385,
+      "evidence": {
+        "systemic_stress_index": 0.3125250041484833,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.10417500138282776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 38%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 368,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.535,
+      "evidence": {
+        "systemic_stress_index": 0.375,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.125
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 369,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.569,
+      "evidence": {
+        "systemic_stress_index": 0.5,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.125
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 57%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 374,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.806,
+      "evidence": {
+        "systemic_stress_index": 0.6833000183105469,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.17082500457763672
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 81%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 376,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.744,
+      "evidence": {
+        "systemic_stress_index": 0.8923529982566833,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.0
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 74%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 381,
+      "api": "forex_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.625,
+      "evidence": {
+        "systemic_stress_index": 0.4499250054359436,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.1499750018119812
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 62%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 384,
+      "api": "crypto_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.542,
+      "evidence": {
+        "systemic_stress_index": 0.44999998807907104,
+        "n_apis_elevated": 4.0,
+        "avg_error_rate_others": 0.11249999701976776
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 54%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    },
+    {
+      "tx_index": 385,
+      "api": "stock_price_api",
+      "phase": "reroute+diagnose+fix",
+      "root_cause": "cascade",
+      "confidence": 0.458,
+      "evidence": {
+        "systemic_stress_index": 0.3500249981880188,
+        "n_apis_elevated": 3.0,
+        "avg_error_rate_others": 0.1166749969124794
+      },
+      "remedy_action": "isolate_dependency",
+      "remedy_params": {
+        "use_cache": true,
+        "decouple_timeout_ticks": 5
+      },
+      "recovery_ticks": 8,
+      "explain": "[CASCADE 46%] Multiple APIs are degrading simultaneously \u2014 systemic upstream stress."
+    }
+  ]
+}
