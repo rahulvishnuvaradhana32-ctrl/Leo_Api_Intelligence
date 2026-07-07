@@ -19,6 +19,7 @@ Render (or any free host with Python + uvicorn):
 from __future__ import annotations
 
 import os
+import asyncio
 import random
 import secrets
 import sys
@@ -544,6 +545,54 @@ async def _proxy_post_primary(path: str, body: dict) -> dict:
             return r.json()
     except Exception as exc:
         return {"offline": True, "error": str(exc)}
+
+
+@app.post("/api/proxy/burst")
+@limiter.limit("10/minute")
+async def proxy_burst(request: Request):
+    """
+    Send N real transfer requests through the LEO Proxy so the LSTM scores,
+    circuit breaker fires, and the heal cycle activates — all visible in the
+    live dashboard without needing a separate terminal.
+
+    Body: { "count": 15, "amount": 10.0 }
+    Returns: list of per-request outcomes (status, backend, risk, route).
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    count  = min(int((body or {}).get("count", 15)), 30)
+    amount = float((body or {}).get("amount", 10.0))
+
+    results = []
+    async with httpx.AsyncClient(timeout=12.0) as c:
+        for i in range(count):
+            import uuid as _uuid
+            try:
+                r = await c.post(
+                    f"{LEO_PROXY_URL}/transfer",
+                    json={
+                        "account_from":    "acct_001",
+                        "account_to":      "acct_002",
+                        "amount":          amount,
+                        "idempotency_key": str(_uuid.uuid4()),
+                    },
+                )
+                results.append({
+                    "i":       i + 1,
+                    "status":  r.status_code,
+                    "backend": r.headers.get("x-leo-backend", "?"),
+                    "risk":    r.headers.get("x-leo-risk", "?"),
+                    "route":   r.headers.get("x-leo-route", "?"),
+                    "cb":      r.headers.get("x-leo-cb-state", "?"),
+                })
+            except Exception as exc:
+                results.append({"i": i + 1, "status": 0, "error": str(exc)})
+            await asyncio.sleep(0.25)   # 250 ms between requests — real pacing
+
+    return JSONResponse({"sent": count, "results": results})
 
 
 # ─────────────────────  Legacy dashboard at /legacy  ─────────────────────

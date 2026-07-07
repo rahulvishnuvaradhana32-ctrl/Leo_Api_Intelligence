@@ -233,6 +233,15 @@
   margin-top: 4px;
 }
 
+/* Burst traffic status */
+.burst-status {
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  margin-top: 6px;
+  min-height: 18px;
+  color: #60a5fa;
+}
+
 /* Spinner for action feedback */
 .action-feedback {
   font-size: 12px;
@@ -425,11 +434,12 @@
           </button>
         </div>
         <div class="action-feedback" id="actionFeedback"></div>
+        <div id="burstStatus" class="burst-status"></div>
       </div>
 
       <div class="proxy-note">
-        Proxy must be running on <code>:9000</code> · Primary on <code>:8001</code> · Backup on <code>:8002</code><br>
-        Status polls every 2 s · Events refresh every 3 s
+        Inject a failure → LEO automatically fires 18 real HTTP requests through the proxy → detects failure → self-heals.<br>
+        Proxy on <code>:9000</code> · Primary <code>:8001</code> · Backup <code>:8002</code> · polls every 2 s
       </div>
     </div>
 
@@ -498,6 +508,6 @@
 </div></main>
 
 <script src="/scripts/site.js?v=14"></script>
-<script src="/scripts/live.js?v=1"></script>
+<script src="/scripts/live.js?v=2"></script>
 </body>
 </html>
